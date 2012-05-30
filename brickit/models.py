@@ -18,13 +18,15 @@ class SampleContainer( models.Model ):
     
     #: actual label stuck to this container
     displayId = models.CharField('Label (ID)', max_length=20, unique=True,
-                                 help_text='example: D001 or C012 (D...DNA, C...Cells)')
+        help_text='Unique identifier. E.g. D001 or C012 (D...DNA, C...Cells)')
 
     #: [optional] annotation
-    shortDescription = models.CharField(max_length=200, blank=True )
+    shortDescription = models.CharField('Short description', max_length=200, 
+                                        blank=True,
+                        help_text='brief description for tables and listings')
 
     #: what type of container is it
-    containerType = models.CharField('type of container', max_length=30,
+    containerType = models.CharField('Type of container', max_length=30,
                                       choices=STORAGE_CONTAINER_TYPES )
 
     #: creators or users
@@ -72,10 +74,11 @@ class Sample( models.Model ):
     Sample describes a single tube or well holding DNA, cells or protein.
     """
 
-    STORAGE_WELL_TYPES = ( ('tube','tube'), ('well','well'), ('other','other'))
+    STORAGE_WELL_TYPES = ( ('tube','tube'), 
+                           ('well','well'), ('other','other') )
     STORAGE_TYPES      = ( ('dna', 'DNA'), ('cells','cells'), ('protein','protein') )
-    CONCENTRATION_UNITS= ( ('mg/l', 'mg/l'), ('mol/l','mol/l'), 
-                           ('umol/l','umol/l') )
+    CONCENTRATION_UNITS= ( ('mg/l', 'mg / l'), ('mol/l','mol / l'), 
+                           ('umol/l',u'\u00B5' + u'mol / l') )
 
     #: actual label on the tube, enforced to be unique in combination with
     #: container
@@ -85,9 +88,10 @@ class Sample( models.Model ):
     #: link to a single container
     container = models.ForeignKey( SampleContainer, related_name='samples' )
 
-    wellType = models.CharField('type of well or tube', max_length=30,
+    vesselType = models.CharField('type of well or tube', max_length=30,
+                                  blank=True, null=True,
                                  choices=STORAGE_WELL_TYPES,
-                                 default='tube')
+                                 default=None)
 
     sampleType = models.CharField('stored as', max_length=100,
                                     choices=STORAGE_TYPES, default='dna' )
@@ -172,7 +176,7 @@ class ComponentType( models.Model ):
     """
     
     #: required
-    uri = models.URLField( unique=True,
+    uri = models.URLField( unique=False,
         help_text='Typically a sequence ontology URI, example: '+\
         'http://purl.obolibrary.org/obo/SO_0000167' )
     
@@ -193,6 +197,11 @@ class Component(models.Model):
     Abstract base class for DNA and protein 'parts' as well as host cells.
     """
     
+    STATUS_CHOICES = ( ('available', 'available'),
+                       ('planning', 'planning'),
+                       ('under_construction', 'under construction'),
+                       ('abandoned', 'abandoned'))
+    
     #: required ID
     displayId = models.CharField('ID', max_length=20,
                     help_text='Identification; Unique within collection.', 
@@ -203,7 +212,7 @@ class Component(models.Model):
                             help_text='descriptive name (e.g. "TEV protease")')
     
     #: uri should be constructed from #displayId if left empty
-    uri = models.URLField( blank=True, null=True, unique=True,
+    uri = models.URLField( blank=True, null=True, unique=False,
                 help_text='Specify external URI or leave blank for local URI')
     
     #: required short description -- will be added as first line in SBOL
@@ -240,6 +249,11 @@ class Component(models.Model):
     annotations = models.ManyToManyField( 'SequenceAnnotation',
                                           verbose_name='Annotations',
                                           blank=True, null=True )
+    
+    #: non-SBOL compliant status
+    status = models.CharField( max_length=30,
+                               choices=STATUS_CHOICES,
+                               default='planning')
     
     def __unicode__(self):
         name = self.name if self.name else ''
@@ -296,7 +310,7 @@ class SequenceAnnotation(models.Model):
     Identify features and sub-components on a DNA or protein sequence.
     """
     #: uri should be constructed from #displayId if left empty
-    uri = models.URLField( blank=True, null=True, unique=True,
+    uri = models.URLField( blank=True, null=True, unique=False,
                 help_text='Specify external URI or leave blank for local URI')
     
     bioStart = models.PositiveIntegerField( 'From position', blank=True, null=True,
@@ -338,7 +352,7 @@ class Collection(models.Model):
         help_text='Very short description for listings')
 
     #: uri should be constructed from #displayId if left empty
-    uri = models.URLField( blank=True, null=True, unique=True,
+    uri = models.URLField( blank=True, null=True, unique=False,
                 help_text='Specify external URI or leave blank for local URI')
     
     #: optional long description
