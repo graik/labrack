@@ -2,6 +2,8 @@ from django.db import models
 
 from django.contrib.auth.models import User
 
+import django.core.validators as V
+
 # Create your models here.
 class SampleContainer( models.Model ):
     """
@@ -201,7 +203,8 @@ class Component(models.Model):
                             help_text='descriptive name (e.g. "TEV protease")')
     
     #: uri should be constructed from #displayId if left empty
-    uri = models.URLField( blank=True, null=True )
+    uri = models.URLField( blank=True, null=True, unique=True,
+                help_text='Specify external URI or leave blank for local URI')
     
     #: required short description -- will be added as first line in SBOL
     #: exports (where this field doesn't exist)
@@ -233,6 +236,10 @@ class Component(models.Model):
     #: creators or users authorized to change
     users = models.ManyToManyField(User, db_index=True,
                                    help_text='Primary users of this part.')
+    
+    annotations = models.ManyToManyField( 'SequenceAnnotation',
+                                          verbose_name='Annotations',
+                                          blank=True, null=True )
     
     def __unicode__(self):
         name = self.name if self.name else ''
@@ -284,4 +291,73 @@ class Chassis(Component):
         pass
 
 
+class SequenceAnnotation(models.Model):
+    """
+    Identify features and sub-components on a DNA or protein sequence.
+    """
+    #: uri should be constructed from #displayId if left empty
+    uri = models.URLField( blank=True, null=True, unique=True,
+                help_text='Specify external URI or leave blank for local URI')
+    
+    bioStart = models.PositiveIntegerField( 'From position', blank=True, null=True,
+                                    validators=[],
+                                help_text='starting position counting from 1')
+                                
+    bioEnd = models.PositiveIntegerField( 'To position', blank=True, null=True,
+                                    validators=[],
+                                help_text='End position counting from 1')
+    
+    strand = models.CharField('Strand',max_length=1, blank=True, null=True,
+                              choices=(('+','+'),('-','-')) )
+    
+    precedes = models.ManyToManyField( 'self', symmetrical=False,
+                                       null=True, blank=True )
+    
+    ## follow generic relations doc to create link to any type of component
+    ## https://docs.djangoproject.com/en/1.3/ref/contrib/contenttypes/
+    ## http://stackoverflow.com/questions/933092/generic-many-to-many-relationships
+    ## subComponent = ...
+    
 
+class Collection(models.Model):
+    """
+    Collection of parts
+    """
+    #: required ID
+    displayId = models.CharField('ID', max_length=20,
+                    help_text='Identification; Unique within context.', 
+                    unique=True)
+    
+    #: optional short name
+    name = models.CharField('Name', max_length=50, blank=True, null=True,
+                            help_text='Descriptive name.')
+    
+    #: required short description -- will be added as first line in SBOL
+    #: exports (where this field doesn't exist)
+    shortDescription = models.CharField( 'short Description', max_length=200,
+        help_text='Very short description for listings')
+
+    #: uri should be constructed from #displayId if left empty
+    uri = models.URLField( blank=True, null=True, unique=True,
+                help_text='Specify external URI or leave blank for local URI')
+    
+    #: optional long description
+    description = models.TextField( 'Detailed description', blank=True,
+        help_text='Use restructured text markup for links, lists and headlines.')
+    
+    dnaComponents = models.ManyToManyField( DnaComponent, null=True, blank=True,
+                                            verbose_name='DNA parts' )
+
+    proteinComponents = models.ManyToManyField( ProteinComponent, 
+                                                null=True, blank=True,
+                                                verbose_name='Protein parts' )
+
+    chassis = models.ManyToManyField( Chassis, 
+                                      null=True, blank=True,
+                                      verbose_name="Cell types / Chassis")
+    
+    
+    def __unicode__(self):
+        name = self.name if self.name else ''
+        return u'%s %s' % (self.displayId, name)
+     

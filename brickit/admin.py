@@ -24,3 +24,5 @@ admin.site.register(Chassis)
 admin.site.register(ComponentType)
 admin.site.register(Sample)
 admin.site.register(SampleContainer)
+admin.site.register(Collection)
+
