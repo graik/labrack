@@ -104,18 +104,29 @@ class Sample( models.Model ):
 
     created = models.DateField('created at', auto_now_add=True)
 
-##    #: link to the physical DNA contained in this sample
-##    dna = models.ForeignKey( 'DNA',
-##                             verbose_name='physical DNA',
-##                             related_name='in_samples',
-##                             blank=False)
-##
-##    #: [optional] strain this DNA is stored in, if any
-##    cell = models.ForeignKey( 'Cell',
-##                              verbose_name='in cell',
-##                              related_name='sample',
-##                              blank=True,
-##                              null=True)
+    #: [optional] link to the physical DNA contained in this sample
+    dna = models.ForeignKey( 'DnaComponent',
+                             verbose_name='DNA',
+                             related_name='dna_samples',
+                             blank=True, null=True)
+
+    #: [optional] link to the vector backbone
+    vector = models.ForeignKey( 'VectorDnaComponent',
+                             verbose_name='in vector',
+                             related_name='vector_samples',
+                             blank=True, null=True)
+
+    #: [optional] link to cell or strain that DNA is stored in, if any
+    cell = models.ForeignKey( 'Chassis',
+                              verbose_name='in cell',
+                              related_name='chassis_samples',
+                              blank=True, null=True)
+
+    #: [optional] link to protein contained in sample
+    protein = models.ForeignKey( 'ProteinComponent',
+                              verbose_name='protein',
+                              related_name='protein_samples',
+                              blank=True, null=True)
 
     #: concentration in ng / ul (=mg/l)
     concentration = models.DecimalField( max_digits=6, decimal_places=2,
@@ -146,17 +157,25 @@ class Sample( models.Model ):
 ##        return 'none'
 ##    get_sequencing_evaluation.short_description = 'Sequencing'
 
-##    def related_samples( self ):
-##        """
-##        @return: QuerySet of samples with similar DNA content
-##        """
-##        if self.dna.biobrick:
-##            r = Sample.objects.filter( dna__biobrick=self.dna.biobrick )
-##        else:
-##            r = Sample.objects.filter( dna__biobrick=self.dna.biobrick,
-##                                       dna__vector=self.dna.vector )
-##            
-##        return r.exclude( pk=self.pk )
+    def related_samples( self ):
+        """
+        @return: QuerySet of samples with similar DNA content
+        """
+        r = []
+
+        if self.dna:
+            r = Sample.objects.filter( dna=self.dna )
+        elif self.vector:
+            ## only consider vector if there is no insert:
+            r = Sample.objects.filter( vector=self.vector )
+
+        elif self.protein:
+            r = Sample.objects.filter( protein=self.protein )
+
+        elif self.cell:
+            r = Sample.objects.filter( cell=self.cell )
+            
+        return r.exclude( pk=self.pk )
     
 ##    def get_sequence( self, recenter=0 ):
 ##        return self.dna.get_sequence( recenter=recenter )
@@ -257,10 +276,15 @@ class Component(models.Model):
     
     def __unicode__(self):
         name = self.name if self.name else ''
-        return u'%s %s' % (self.displayId, name)
+        return u'%s - %s' % (self.displayId, name)
     
     class Meta:
         abstract = True
+ 
+    def isavailable(self):
+        return self.samples.count() > 0
+    isavailable.short_description = 'available'
+    isavailable.boolean = True
     
 
 class DnaComponent(Component):
@@ -282,6 +306,79 @@ class DnaComponent(Component):
     class Meta(Component.Meta):
         pass
     
+    def size(self):
+        """@return int; size in nucleotides"""
+        if self.sequence:
+            return len( self.sequence )
+        return 0
+
+    def isavailable_dna(self):
+        """True if there is a DNA-only sample containing this DnaComponent"""
+        samples = self.samples.all()
+
+        for s in samples:
+            if s.sampleType == 'dna':
+                return True
+        return False
+    isavailable_dna.short_description = 'DNA'
+    isavailable_dna.boolean = True
+    
+    def isavailable_cells(self):
+        """
+        True if there is a cell stock (DNA + cells) sample for this 
+        DnaComponent
+        """
+        samples = self.samples.all()
+
+        for s in samples:
+            if s.sampleType == 'cells':
+                return True
+        return False
+    isavailable_cells.short_description = 'Cells'
+    isavailable_cells.boolean = True
+
+    
+class SelectiveMarker( models.Model ):
+    """
+    Describes an Antibiotic or similar resistence marker
+    """
+    #: optional short name
+    name = models.CharField('Name', max_length=50, blank=True, null=True,
+                            help_text='descriptive name (e.g. "TEV protease")')
+    
+    #: required short description -- will be added as first line in SBOL
+    #: exports (where this field doesn't exist)
+    shortDescription = models.CharField( 'short Description', max_length=200,
+        help_text='very short description for listings')
+
+    #: optional long description
+    description = models.TextField( 'Detailed description', 
+                                    blank=True, null=True )
+
+    def __unicode__(self):
+        return self.name
+
+##    def get_absolute_url(self):
+##        """Define standard URL for object.get_absolute_url access in templates """
+##        return APP_URL+'/selectivemarker/%i/' % self.id
+
+    class Meta:
+        ordering = ('name',)
+    
+    
+class VectorDnaComponent(DnaComponent):
+    """
+    Description of vector backbone. So far identical to DnaComponent.
+    """
+
+    #: [optional] link to resistence or similar marker
+    marker = models.ManyToManyField( SelectiveMarker,
+                                     verbose_name='selective marker(s)',
+                                     null=True, blank=True)
+
+    class Meta(Component.Meta):
+        pass
+   
     
 class ProteinComponent(Component):
     """
@@ -293,6 +390,12 @@ class ProteinComponent(Component):
 
     class Meta(Component.Meta):
         pass
+
+    def size(self):
+        """@return int; size in aminoacids"""
+        if self.sequence:
+            return len( self.sequence )
+        return 0
 
 
 class Chassis(Component):
