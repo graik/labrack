@@ -1,7 +1,6 @@
 # Django settings for brickit2 project.
 
 DEBUG = True
-#TEMPLATE_DEBUG = DEBUG
 TEMPLATE_DEBUG = True
 
 ADMINS = (
@@ -88,8 +87,8 @@ SECRET_KEY = 'hk+*n1khs%=1)p1w0r#i*yir!vx^u^rtibfb_c&bn)=5x8r19r'
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
+    'django.template.loaders.app_directories.Loader',  ## put this first to enable overriding?
     'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
 #     'django.template.loaders.eggs.Loader',
 )
 
@@ -117,12 +116,16 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
     # Uncomment the next line to enable the admin:
     'django.contrib.admin',
+
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
+
     ## Schema migration
     'south',
+
     ## Main application
     'brickit'
 )
