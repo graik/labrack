@@ -18,38 +18,10 @@ from brickit.models import *
 from django.contrib import admin
 from django.http import HttpResponse
 
-class ComponentAdmin(admin.ModelAdmin):
-    """
-    Abstract base class with common description for DNA / protein / cell
-    forms
-    """
-    save_as        = True # activate 'Save As' button
-
-    fieldsets = (
-        (None,
-         {'fields': (('displayId', 'name', 'uri'),
-                     ('shortDescription','abstract'),
-                     ('users',))}),
-        ('Details',
-         {'fields' : ('componentType','variantOf','description',)}),
-        ('Annotations',
-         {'fields': ('annotations'),
-          'classes':('collapse',)} ),
-        )
-
-    list_display   = ('displayId','name','componentType', 'shortDescription',
-##                      'isavailable_cells',
-##                      'isavailable_dna'
-                      )
-    list_filter    = ('users', 'status', 
-                      'componentType',
-                      )
-    ordering       = ('displayId',)
-    search_fields  = ('displayId','name','shortDescription','description',
-                      'users__username' )
-
 class DnaComponentAdmin(admin.ModelAdmin):
 
+    raw_id_fields = ('translatesTo','variantOf','componentType')  
+    
     fieldsets = (
         (None,
          {'fields': (('displayId', 'name', 'uri'),
@@ -58,16 +30,19 @@ class DnaComponentAdmin(admin.ModelAdmin):
         ('Details',
          {'fields' : (('componentType','variantOf'),
                      ('optimizedFor', 'translatesTo'),
-                     ('description',))}),
+                     ('description',)),
+          'description' : 'click magnifier to select related components from'+\
+                          ' pop-up dialogs. Repeat to select more than one.'
+          }),
         ('Sequence Details',
          {'fields': ('sequence','annotations'),
           'classes':('collapse',)} ),
         )
 
     list_display   = ('displayId','name','shortDescription',
-                      'optimizedFor','translatesTo', 'status'
-##                      'isavailable_cells',
-##                      'isavailable_dna'
+                      'show_optimizedFor','show_translatesTo', 'status',
+                      'isavailable_cells',
+                      'isavailable_dna'
                       )
     list_filter    = ('users', 'status', 'optimizedFor',
                       'componentType',
@@ -77,7 +52,6 @@ class DnaComponentAdmin(admin.ModelAdmin):
                       'users__username','sequence' )
 
 admin.site.register(DnaComponent, DnaComponentAdmin)
-
 
 
 admin.site.register(ProteinComponent)
@@ -91,22 +65,32 @@ class SampleAdmin(admin.ModelAdmin):
     
     fieldsets = (
         (None, {
-        'fields' : (('displayId',), 
-                    ('container','vesselType','users'),
-                    ('sampleType',),
-                    ('concentration', 'concentrationUnit'),
-                    ('comments',)
-                    )
-        }),
-    )
+            'fields' : (
+                (),
+                ('displayId','container','vesselType')
+            )}),
+        ('Content', {
+            'fields' : (
+                ('concentration', 'concentrationUnit'),
+                ('dna', 'vector', 'cell', 'protein')
+            )}),
+         ('Additional details', {
+             'fields' : (
+                 ('users','comments',)
+             )})
+          )
 
-    list_display   = ('displayId', 'created', 'container',
-                      'concentration' )
-    list_filter    = ('vesselType','sampleType','container','created',
-                      'users')
-    ordering       = ('displayId',)
+    list_display   = ('show_Id', 'show_sampleType', 
+                      'show_dna','show_vector','show_cell','show_protein',
+                      'show_concentration', 'created', 'show_comments' )
+    list_filter    = ('vesselType','container','users')
+    ordering       = ('container','displayId',)
     search_fields  = ('displayId','comments','users__username',
-                      'container__displayId')
+                      'container__displayId', 
+                      'dna__displayId', 'vector__displayId', 'cell__displayId',
+                      'protein__displayId',
+                      'dna__name', 'vector__name', 'cell__name', 
+                      'protein__name')
     
     save_as        = True
     

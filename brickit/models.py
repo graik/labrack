@@ -93,8 +93,8 @@ class Sample( models.Model ):
                                  choices=STORAGE_WELL_TYPES,
                                  default=None)
 
-    sampleType = models.CharField('stored as', max_length=100,
-                                    choices=STORAGE_TYPES, default='dna' )
+##    sampleType = models.CharField('type of sample', max_length=100,
+##                                    choices=STORAGE_TYPES, default='dna' )
 
     #: creators or users
     users = models.ManyToManyField(User, db_index=True)
@@ -132,7 +132,7 @@ class Sample( models.Model ):
     concentration = models.DecimalField( max_digits=6, decimal_places=2,
                                          default=50 )
     #: unit of given concentration
-    concentrationUnit = models.CharField( 'conc. unit', max_length=10,
+    concentrationUnit = models.CharField( 'unit', max_length=10,
                                            choices=CONCENTRATION_UNITS,
                                            default='mg/l')
 
@@ -177,6 +177,80 @@ class Sample( models.Model ):
             
         return r.exclude( pk=self.pk )
     
+    def show_dna(self):
+        """filter '(None)' display in admin table"""
+        if self.dna:
+            return self.dna
+        return u''
+    show_dna.short_description = 'DNA'
+    show_dna.admin_order_field = 'dna'
+
+    def show_vector(self):
+        """filter '(None)' display in admin table"""
+        if self.vector:
+            return self.vector
+        return u''
+    show_vector.short_description = 'in Vector'
+    show_vector.admin_order_field = 'vector'
+
+    def show_cell(self):
+        """filter '(None)' display in admin table"""
+        if self.cell:
+            return self.cell
+        return u''
+    show_cell.short_description = 'in Cell'
+    show_cell.admin_order_field = 'cell'
+    
+    def show_protein(self):
+        """filter '(None)' display in admin table"""
+        if self.protein:
+            return self.protein
+        return u''
+    show_protein.short_description = 'Protein'
+    show_protein.admin_order_field = 'protein'
+    
+    def show_sampleType( self ):
+        """
+        @return: str; either of: , 'cells', 'DNA', 'protein' or 'unknown'
+        """
+        if self.cell:
+            return 'cells'
+        if self.dna or self.vector:
+            return 'DNA'
+        if self.protein:
+            return 'protein'
+        return 'unknown'
+    show_sampleType.short_description = 'Type'
+
+    def show_Id( self ):
+        """
+        @return: str; full ID composed of container-sample.
+        """
+        return u'%s - %s' % (self.container.displayId, self.displayId)
+    show_Id.short_description = 'full ID'
+    show_Id.allow_tags = True  ## don't HTML-escape this string
+    
+    def show_concentration( self ):
+        """
+        @return: str; concentration + unit
+        """
+        return u'%3.2f %s' % (self.concentration, self.concentrationUnit)
+    show_concentration.short_description = 'Concentration'
+    show_concentration.admin_order_field = 'concentration'
+    
+    def show_comments( self ):
+        """
+        @return: str; truncated comment
+        """
+        if not self.comments:
+            return u''
+        if len(self.comments) < 40:
+            return unicode(self.comments)
+        return unicode(self.comments[:38] + '..')
+    show_comments.short_description = 'comments'
+    
+    
+        
 ##    def get_sequence( self, recenter=0 ):
 ##        return self.dna.get_sequence( recenter=recenter )
 ##
@@ -278,6 +352,7 @@ class Component(models.Model):
         name = self.name if self.name else ''
         return u'%s - %s' % (self.displayId, name)
     
+   
     class Meta:
         abstract = True
  
@@ -285,6 +360,15 @@ class Component(models.Model):
         return self.samples.count() > 0
     isavailable.short_description = 'available'
     isavailable.boolean = True
+    
+    def related_samples( self ):
+        """
+        """
+        if self.dna_samples:
+            r = Samples.objects.filter(dna=self)
+            return r
+        return []
+    
     
 
 class DnaComponent(Component):
@@ -314,12 +398,7 @@ class DnaComponent(Component):
 
     def isavailable_dna(self):
         """True if there is a DNA-only sample containing this DnaComponent"""
-        samples = self.samples.all()
-
-        for s in samples:
-            if s.sampleType == 'dna':
-                return True
-        return False
+        return self.dna_samples.count() > 0
     isavailable_dna.short_description = 'DNA'
     isavailable_dna.boolean = True
     
@@ -328,14 +407,31 @@ class DnaComponent(Component):
         True if there is a cell stock (DNA + cells) sample for this 
         DnaComponent
         """
-        samples = self.samples.all()
+        samples = self.dna_samples.all()
 
         for s in samples:
-            if s.sampleType == 'cells':
+            if s.cell:
                 return True
         return False
     isavailable_cells.short_description = 'Cells'
     isavailable_cells.boolean = True
+    
+    def show_translatesTo(self):
+        """filter '(None)' display in admin table"""
+        if self.translatesTo:
+            return self.translatesTo
+        return u''
+    show_translatesTo.short_description = 'translates to'
+    show_translatesTo.admin_order_field = 'translatesTo'
+     
+    def show_optimizedFor(self):
+        """filter '(None)' display in admin table"""
+        if self.optimizedFor:
+            return self.optimizedFor
+        return u''
+    show_optimizedFor.short_description = 'optimized for'
+    show_optimizedFor.admin_order_field = 'optimizedFor'
+     
 
     
 class SelectiveMarker( models.Model ):
