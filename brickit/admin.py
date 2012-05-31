@@ -86,6 +86,9 @@ admin.site.register(ComponentType)
 
 
 class SampleAdmin(admin.ModelAdmin):
+    
+    raw_id_fields = ('dna','cell','vector','protein')  
+    
     fieldsets = (
         (None, {
         'fields' : (('displayId',), 
