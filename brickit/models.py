@@ -99,9 +99,6 @@ class Sample( models.Model ):
                                  choices=STORAGE_WELL_TYPES,
                                  default=None)
 
-##    sampleType = models.CharField('type of sample', max_length=100,
-##                                    choices=STORAGE_TYPES, default='dna' )
-
     #: creators or users
     users = models.ManyToManyField(User, db_index=True)
 
