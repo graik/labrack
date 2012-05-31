@@ -261,8 +261,6 @@ class Sample( models.Model ):
         return unicode(self.comments[:38] + '..')
     show_comments.short_description = 'comments'
     
-    
-        
 ##    def get_sequence( self, recenter=0 ):
 ##        return self.dna.get_sequence( recenter=recenter )
 ##
