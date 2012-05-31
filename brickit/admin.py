@@ -61,19 +61,22 @@ admin.site.register(ComponentType)
 
 class SampleAdmin(admin.ModelAdmin):
     
-    raw_id_fields = ('dna','cell','vector','protein')  
+    raw_id_fields = ('dna','cell','vector','protein') 
+    readonly_fields = ('created',)
     
     fieldsets = (
         (None, {
             'fields' : (
                 (),
-                ('displayId','container','vesselType')
+                ('displayId','container','vesselType','created')
             )}),
         ('Content', {
             'fields' : (
-                ('concentration', 'concentrationUnit'),
-                ('dna', 'vector', 'cell', 'protein')
-            )}),
+                ('dna', 'vector', 'cell', 'protein'),
+                ('concentration', 'concentrationUnit')
+                ),
+            'description' : 'Select sample content by clicking on magnifiers. '
+            }),
          ('Additional details', {
              'fields' : (
                  ('users','comments',)

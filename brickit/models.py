@@ -68,6 +68,12 @@ class SampleContainer( models.Model ):
     class Meta:
         ordering = ('displayId',)
 
+    def get_relative_url(self):
+        """
+        Define standard relative URL for object access in templates
+        """
+        return 'samplecontainer/%i/' % self.id
+    
 
 class Sample( models.Model ):
     """
@@ -139,6 +145,12 @@ class Sample( models.Model ):
     def __unicode__( self ):
         return self.container.displayId + ' / ' + self.displayId
 
+    def get_relative_url(self):
+        """
+        Define standard relative URL for object access in templates
+        """
+        return 'sample/%i/' % self.id
+    
 ##    def get_absolute_url(self):
 ##        """Define standard URL for object.get_absolute_url access in templates """
 ##        return APP_URL+'/sample/%i/' % self.id
@@ -159,7 +171,7 @@ class Sample( models.Model ):
 
     def related_samples( self ):
         """
-        @return: QuerySet of samples with similar DNA content
+        @return: QuerySet of samples with same DNA content
         """
         r = []
 
@@ -175,8 +187,11 @@ class Sample( models.Model ):
         elif self.cell:
             r = Sample.objects.filter( cell=self.cell )
             
-        return r.exclude( pk=self.pk )
+        if r:
+            return r.exclude( pk=self.pk )
+        return r
     
+
     def show_dna(self):
         """filter '(None)' display in admin table"""
         if self.dna:
@@ -364,10 +379,11 @@ class Component(models.Model):
     def related_samples( self ):
         """
         """
-        if self.dna_samples:
-            r = Samples.objects.filter(dna=self)
-            return r
-        return []
+        from django.db.models import Q
+        q = Q(dna=self) | Q(cell=self) | Q(vector=self) | Q(protein=self)
+        
+        r = Sample.objects.filter( q )
+        return r
     
     
 
@@ -390,6 +406,12 @@ class DnaComponent(Component):
     class Meta(Component.Meta):
         pass
     
+    def get_relative_url(self):
+        """
+        Define standard relative URL for object access in templates
+        """
+        return 'dnacomponent/%i/' % self.id
+
     def size(self):
         """@return int; size in nucleotides"""
         if self.sequence:
@@ -416,6 +438,11 @@ class DnaComponent(Component):
     isavailable_cells.short_description = 'Cells'
     isavailable_cells.boolean = True
     
+    def related_samples( self ):
+        """
+        """
+        return self.dna_samples.all()
+
     def show_translatesTo(self):
         """filter '(None)' display in admin table"""
         if self.translatesTo:
@@ -474,7 +501,18 @@ class VectorDnaComponent(DnaComponent):
 
     class Meta(Component.Meta):
         pass
-   
+    
+    def get_relative_url(self):
+        """
+        Define standard relative URL for object access in templates
+        """
+        return 'vectordnacomponent/%i/' % self.id
+
+    def related_samples( self ):
+        """
+        """
+        return self.vector_samples.all()
+    
     
 class ProteinComponent(Component):
     """
@@ -487,11 +525,22 @@ class ProteinComponent(Component):
     class Meta(Component.Meta):
         pass
 
+    def get_relative_url(self):
+        """
+        Define standard relative URL for object access in templates
+        """
+        return 'proteincomponent/%i/' % self.id
+
     def size(self):
         """@return int; size in aminoacids"""
         if self.sequence:
             return len( self.sequence )
         return 0
+
+    def related_samples( self ):
+        """
+        """
+        return self.protein_samples.all()
 
 
 class Chassis(Component):
@@ -502,6 +551,17 @@ class Chassis(Component):
 
     class Meta(Component.Meta):
         pass
+
+    def get_relative_url(self):
+        """
+        Define standard relative URL for object access in templates
+        """
+        return 'chassis/%i/' % self.id
+
+    def related_samples( self ):
+        """
+        """
+        return self.cell_samples.all()
 
 
 class SequenceAnnotation(models.Model):
