@@ -23,7 +23,7 @@
         <table cellspacing="0">
           <thead>
             <tr>
-              <th>ID</th><th>dna</th><th>in vector</th><th>in cell</th><th>concentration</th>
+              <th>ID</th><th>Type</th><th>dna</th><th>in vector</th><th>in cell</th><th>concentration</th>
               <th>created</th><th>comments</th>
             </tr>
           </thead>
@@ -35,6 +35,8 @@
     
               <td><b><a href="../../{{sample.get_relative_url}}" target="_blank">
                     {{sample.show_Id}}</a></b></td>
+
+              <td>{{sample.show_sampleType}}</td>
 
               <td>{{sample.dna|default:"--"}}</td>
 
