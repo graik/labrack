@@ -9,15 +9,20 @@ class Location(models.Model):
     """
     A location (fridge, freezer, shelf) where container are stored
     """
-    displayId = models.CharField('Label (ID)', max_length=20, unique=True, help_text='Unique identifier')
+    displayId = models.CharField('Location (ID)', max_length=20, unique=True, help_text='Unique identifier')
     shortDescription = models.CharField('Short description', max_length=200, blank=True, help_text='Brief description of fridge, freezer or shelf')
-    temperature = models.FloatField(help_text= unichr(176) + 'C')
-    room = models.CharField(max_length=20)
+    temperature = models.FloatField('Temperature', help_text= unichr(176) + 'C')
+    room = models.CharField('Room', max_length=20)
     creation_date = models.DateTimeField(auto_now_add=True)
     modification_date = models.DateTimeField(auto_now=True)
     def __unicode__(self):
         return self.displayId + " (" + self.temperature.__str__() + unichr(176) + "C)  [Room: " + self.room + "]"
 
+    def get_relative_url(self):
+        """
+        Define standard relative URL for object access in templates
+        """
+        return 'location/%i/' % self.id
 
 
 class Container( models.Model ):
@@ -28,23 +33,23 @@ class Container( models.Model ):
     STORAGE_CONTAINER_TYPES= (
         ('96-well-plate', '96 well plate'),
         ('384-well-plate','384 well plate'),
-        ('box', 'freezer box'),
+        ('box', 'Freezer box'),
         ('other', 'other' ) )
     
-    displayId = models.CharField('Label (ID)', max_length=20, unique=True, help_text='Unique identifier. E.g. D001 or C012 (D...DNA, C...Cells)')
-    shortDescription = models.CharField('Short description', max_length=200, blank=True, help_text='brief description for tables and listings')
+    displayId = models.CharField('Container (ID)', max_length=20, unique=True, help_text='Unique identifier. E.g. D001 or C012 (D...DNA, C...Cells)')
+    shortDescription = models.CharField('Short description', max_length=200, blank=True, help_text='Brief description for tables and listings')
     containerType = models.CharField('Type of container', max_length=30, choices=STORAGE_CONTAINER_TYPES )
     location = models.ForeignKey(Location)
 
     #: Permissions
     owner = models.ForeignKey(User, null=True, blank=True, related_name='owner')
-    users_read = models.ManyToManyField(User, related_name='users_read')
-    users_write = models.ManyToManyField(User, related_name='users_write')
-    group_read = models.ManyToManyField(Group, related_name='groups_read')
-    group_write = models.ManyToManyField(Group, related_name='groups_write')
+    users_read = models.ManyToManyField(User, null=True, blank=True, related_name='users_read')
+    users_write = models.ManyToManyField(User, null=True, blank=True, related_name='users_write')
+    group_read = models.ManyToManyField(Group, null=True, blank=True, related_name='groups_read')
+    group_write = models.ManyToManyField(Group, null=True, blank=True, related_name='groups_write')
 
     #: optional long description
-    description = models.TextField( 'Detailed description', blank=True, help_text='Use restructured text markup for links, lists and headlines')
+    description = models.TextField( 'Detailed description', blank=True)
     creation_date = models.DateTimeField(auto_now_add=True)
     modification_date = models.DateTimeField(auto_now=True)
 
@@ -87,7 +92,7 @@ class Container( models.Model ):
         """
         Define standard relative URL for object access in templates
         """
-        return 'samplecontainer/%i/' % self.id
+        return 'container/%i/' % self.id
     
     
 

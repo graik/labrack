@@ -17,6 +17,9 @@
 from tyers_site.labrack.models import *
 from django.contrib import admin
 from django.http import HttpResponse
+from django.utils.safestring import mark_safe
+
+admin_root = "/admin/labrack"
 
 
 class DnaComponentAdmin(admin.ModelAdmin):
@@ -102,17 +105,21 @@ class ContainerAdmin(admin.ModelAdmin):
         (None, {
         'fields' : (('displayId', 'shortDescription'), 
                     ('containerType','location'),
-                    'description')
+                    'description',
+                    )
         }),
+        ('Permission', {
+        'classes': ('collapse',),
+        'fields' : ((('users_read','users_write'),('group_read','group_write'))
+                    )
+        })
     )
     
-    list_display   = ('displayId', 'containerType',
-                      'shortDescription')
+    list_display   = ('displayId', 'shortDescription', 'containerType', 'location_url', 'owner', 'creation_date', 'modification_date')
+    list_filter    = ('containerType', 'location__displayId', 'location__room', 'location__temperature','owner')
     
-    list_filter    = ('containerType','location')
     ordering       = ('displayId',)
-    search_fields  = ('displayId','shortDescription','description',
-                      'users__username')
+    search_fields  = ('displayId','shortDescription','description')
     save_as        = True
     
     
@@ -121,21 +128,33 @@ class ContainerAdmin(admin.ModelAdmin):
         if getattr(obj, 'owner', None) is None:
             obj.owner = request.user
         obj.save()
-
+        
+    def location_url(self, obj):
+        url = obj.location.get_relative_url()
+        return mark_safe('<a href="%s/%s">%s</a>' % (admin_root, url, obj.location.__unicode__()))
+    location_url.allow_tags = True
+    location_url.help_text = "hehe"
+        
+    admin.ModelAdmin.urls
+        
 
 class LocationAdmin(admin.ModelAdmin):
     list_display = ('displayId', 'shortDescription', 'temperature', 'room', 'creation_date', 'modification_date')
-    list_filter = ('displayId', 'shortDescription')
+    fields = (('displayId', 'shortDescription'), 'temperature','room')
+    list_filter = ('room', 'temperature')
+    search_fields  = ('displayId', 'shortDescription',)
+    save_as        = True
 
 
-admin.site.register(Location, LocationAdmin)
 admin.site.register(Container, ContainerAdmin)
+admin.site.register(Location, LocationAdmin)
+admin.site.register(Sample, SampleAdmin) 
 
 
+#TODO check if needed
 admin.site.register(DnaComponent, DnaComponentAdmin)
 admin.site.register(ProteinComponent)
 admin.site.register(Chassis)
 admin.site.register(ComponentType)
-admin.site.register(Sample, SampleAdmin)    
 admin.site.register(Collection)
 
