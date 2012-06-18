@@ -1,2 +1,3 @@
-brickit2.db
-settings.py
+*.pyc
+tyers_site/tyers_site.db
+tmp
