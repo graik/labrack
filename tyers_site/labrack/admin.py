@@ -14,7 +14,7 @@
 ## You should have received a copy of the GNU Affero General Public
 ## License along with labhamster. If not, see <http://www.gnu.org/licenses/>.
 
-from tyers_site.s3.models import *
+from tyers_site.labrack.models import *
 from django.contrib import admin
 from django.http import HttpResponse
 
@@ -125,7 +125,7 @@ class ContainerAdmin(admin.ModelAdmin):
 
 class LocationAdmin(admin.ModelAdmin):
     list_display = ('displayId', 'shortDescription', 'temperature', 'room', 'creation_date', 'modification_date')
-    list_filter = ('displayId', 'short')
+    list_filter = ('displayId', 'shortDescription')
 
 
 admin.site.register(Location, LocationAdmin)

@@ -128,7 +128,7 @@ INSTALLED_APPS = (
     'south',
 
     ## Main application
-    'tyers_site.s3'
+    'tyers_site.labrack'
 )
 
 # A sample logging configuration. The only tangible logging
