@@ -1,24 +1,28 @@
 from django.db import models
-
 from django.contrib.auth.models import User
+from django.contrib.auth.models import Group
 
-import django.core.validators as V
+
 
 # Create your models here.
 class Location(models.Model):
-    name = models.CharField(max_length=100)
-    temperature = models.FloatField()
-    room = models.CharField(max_length=25)
+    """
+    A location (fridge, freezer, shelf) where container are stored
+    """
+    displayId = models.CharField('Label (ID)', max_length=20, unique=True, help_text='Unique identifier')
+    shortDescription = models.CharField('Short description', max_length=200, blank=True, help_text='Brief description of fridge, freezer or shelf')
+    temperature = models.FloatField(help_text= unichr(176) + 'C')
+    room = models.CharField(max_length=20)
     creation_date = models.DateTimeField(auto_now_add=True)
     modification_date = models.DateTimeField(auto_now=True)
     def __unicode__(self):
-        return self.name + " (" + self.temperature.__str__() + "\176C)  [Room: " + self.room + "]"
+        return self.displayId + " (" + self.temperature.__str__() + unichr(176) + "C)  [Room: " + self.room + "]"
 
 
 
-class SampleContainer( models.Model ):
+class Container( models.Model ):
     """
-    A container holding several physical samples of DNA or other stuff.
+    A container holding several physical samples of nucleic acids, proteins or other stuff.
     """
 
     STORAGE_CONTAINER_TYPES= (
@@ -27,25 +31,25 @@ class SampleContainer( models.Model ):
         ('box', 'freezer box'),
         ('other', 'other' ) )
     
-    #: actual label stuck to this container
-    displayId = models.CharField('Label (ID)', max_length=20, unique=True,
-        help_text='Unique identifier. E.g. D001 or C012 (D...DNA, C...Cells)')
+    displayId = models.CharField('Label (ID)', max_length=20, unique=True, help_text='Unique identifier. E.g. D001 or C012 (D...DNA, C...Cells)')
+    shortDescription = models.CharField('Short description', max_length=200, blank=True, help_text='brief description for tables and listings')
+    containerType = models.CharField('Type of container', max_length=30, choices=STORAGE_CONTAINER_TYPES )
+    location = models.ForeignKey(Location)
 
-    #: [optional] annotation
-    shortDescription = models.CharField('Short description', max_length=200, 
-                                        blank=True,
-                        help_text='brief description for tables and listings')
-
-    #: what type of container is it
-    containerType = models.CharField('Type of container', max_length=30,
-                                      choices=STORAGE_CONTAINER_TYPES )
-
-    #: creators or users
-    users = models.ManyToManyField(User, null=True, blank=True, db_index=True)
+    #: Permissions
+    owner = models.ForeignKey(User, null=True, blank=True, related_name='owner')
+    users_read = models.ManyToManyField(User, related_name='users_read')
+    users_write = models.ManyToManyField(User, related_name='users_write')
+    group_read = models.ManyToManyField(Group, related_name='groups_read')
+    group_write = models.ManyToManyField(Group, related_name='groups_write')
 
     #: optional long description
-    description = models.TextField( 'Detailed description', blank=True,
-        help_text='Use restructured text markup for links, lists and headlines')
+    description = models.TextField( 'Detailed description', blank=True, help_text='Use restructured text markup for links, lists and headlines')
+    creation_date = models.DateTimeField(auto_now_add=True)
+    modification_date = models.DateTimeField(auto_now=True)
+
+
+    ## TODO: Check these functions 
 
     def __unicode__( self ):
         return "%s" % self.displayId
@@ -85,6 +89,9 @@ class SampleContainer( models.Model ):
         """
         return 'samplecontainer/%i/' % self.id
     
+    
+
+
 
 class Sample( models.Model ):
     """
@@ -103,7 +110,7 @@ class Sample( models.Model ):
         help_text='label or well position. Must be unique within container.' )
 
     #: link to a single container
-    container = models.ForeignKey( SampleContainer, related_name='samples' )
+    container = models.ForeignKey( Container, related_name='samples' )
 
     vesselType = models.CharField('type of well or tube', max_length=30,
                                   blank=True, null=True,

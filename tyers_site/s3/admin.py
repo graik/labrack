@@ -18,6 +18,7 @@ from tyers_site.s3.models import *
 from django.contrib import admin
 from django.http import HttpResponse
 
+
 class DnaComponentAdmin(admin.ModelAdmin):
 
     raw_id_fields = ('translatesTo','variantOf','componentType')  
@@ -51,13 +52,7 @@ class DnaComponentAdmin(admin.ModelAdmin):
     search_fields  = ('displayId','name','shortDescription','description',
                       'users__username','sequence' )
 
-admin.site.register(DnaComponent, DnaComponentAdmin)
 
-
-admin.site.register(ProteinComponent)
-admin.site.register(Chassis)
-admin.site.register(ComponentType)
-admin.site.register(Location)
 
 
 class SampleAdmin(admin.ModelAdmin):
@@ -98,15 +93,15 @@ class SampleAdmin(admin.ModelAdmin):
     
     save_as        = True
     
-admin.site.register(Sample, SampleAdmin)
 
 
-class SampleContainerAdmin(admin.ModelAdmin):
+
+class ContainerAdmin(admin.ModelAdmin):
     ## options for list view in admin interface
     fieldsets = (
         (None, {
         'fields' : (('displayId', 'shortDescription'), 
-                    ('containerType','users'),
+                    ('containerType','location'),
                     'description')
         }),
     )
@@ -114,14 +109,33 @@ class SampleContainerAdmin(admin.ModelAdmin):
     list_display   = ('displayId', 'containerType',
                       'shortDescription')
     
-    list_filter    = ('containerType','users')
+    list_filter    = ('containerType','location')
     ordering       = ('displayId',)
     search_fields  = ('displayId','shortDescription','description',
                       'users__username')
     save_as        = True
     
-admin.site.register(SampleContainer, SampleContainerAdmin)
+    
+    # Save the owner of the object
+    def save_model(self, request, obj, form, change):
+        if getattr(obj, 'owner', None) is None:
+            obj.owner = request.user
+        obj.save()
 
 
+class LocationAdmin(admin.ModelAdmin):
+    list_display = ('displayId', 'shortDescription', 'temperature', 'room', 'creation_date', 'modification_date')
+    list_filter = ('displayId', 'short')
+
+
+admin.site.register(Location, LocationAdmin)
+admin.site.register(Container, ContainerAdmin)
+
+
+admin.site.register(DnaComponent, DnaComponentAdmin)
+admin.site.register(ProteinComponent)
+admin.site.register(Chassis)
+admin.site.register(ComponentType)
+admin.site.register(Sample, SampleAdmin)    
 admin.site.register(Collection)
 
