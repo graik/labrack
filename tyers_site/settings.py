@@ -1,18 +1,18 @@
-# Django settings for brickit2 project.
+# Django settings for samplesDB project.
 
 DEBUG = True
-TEMPLATE_DEBUG = True
+TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
-    # ('Your Name', 'your_email@example.com'),
+     ('Mathieu Courcelles', 'mathieu.courcelles@umontreal.ca'), ('Raik Gruenberg','raik.grunberg@umontreal.ca')
 )
 
 MANAGERS = ADMINS
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': '/home/raik/data/py/brickit2/brickit2.db',                      # Or path to database file if using sqlite3.
+        'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+        'NAME': '/home/mathieu/Documents/Aptana Studio 3 Workspace/tyers_site/tyers_site/tyers_site.db',                      # Or path to database file if using sqlite3.
         'USER': '',                      # Not used with sqlite3.
         'PASSWORD': '',                  # Not used with sqlite3.
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
@@ -27,7 +27,7 @@ DATABASES = {
 # timezone as the operating system.
 # If running in a Windows environment this must be set to the same as your
 # system time zone.
-TIME_ZONE = 'America/Chicago'
+TIME_ZONE = 'America/Montreal'
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
@@ -40,8 +40,11 @@ SITE_ID = 1
 USE_I18N = True
 
 # If you set this to False, Django will not format dates, numbers and
-# calendars according to the current locale
+# calendars according to the current locale.
 USE_L10N = True
+
+# If you set this to False, Django will not use timezone-aware datetimes.
+USE_TZ = True
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
@@ -61,11 +64,6 @@ STATIC_ROOT = ''
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
 STATIC_URL = '/static/'
-
-# URL prefix for admin static files -- CSS, JavaScript and images.
-# Make sure to use a trailing slash.
-# Examples: "http://foo.com/static/admin/", "/static/admin/".
-ADMIN_MEDIA_PREFIX = '/static/admin/'
 
 # Additional locations of static files
 STATICFILES_DIRS = (
@@ -87,8 +85,8 @@ SECRET_KEY = 'hk+*n1khs%=1)p1w0r#i*yir!vx^u^rtibfb_c&bn)=5x8r19r'
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
-    'django.template.loaders.app_directories.Loader',  ## put this first to enable overriding?
     'django.template.loaders.filesystem.Loader',
+    'django.template.loaders.app_directories.Loader',
 #     'django.template.loaders.eggs.Loader',
 )
 
@@ -98,49 +96,58 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    # Uncomment the next line for simple clickjacking protection:
+    # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
-ROOT_URLCONF = 'brickit2.urls'
+ROOT_URLCONF = 'tyers_site.urls'
+
+# Python dotted path to the WSGI application used by Django's runserver.
+WSGI_APPLICATION = 'tyers_site.wsgi.application'
 
 TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
+    "/home/mathieu/Documents/Aptana Studio 3 Workspace/tyers_site/tyers_site/templates"
 )
 
 INSTALLED_APPS = (
-    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
     # Uncomment the next line to enable the admin:
     'django.contrib.admin',
-
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
-
+    
     ## Schema migration
     'south',
 
     ## Main application
-    'brickit'
+    'tyers_site.s3'
 )
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
-# the site admins on every HTTP 500 error.
+# the site admins on every HTTP 500 error when DEBUG=False.
 # See http://docs.djangoproject.com/en/dev/topics/logging for
 # more details on how to customize your logging configuration.
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse'
+        }
+    },
     'handlers': {
         'mail_admins': {
             'level': 'ERROR',
+            'filters': ['require_debug_false'],
             'class': 'django.utils.log.AdminEmailHandler'
         }
     },
