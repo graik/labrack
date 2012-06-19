@@ -1,9 +1,18 @@
-*.pyc
+# Python compiled files
+*.py[cod]
+
+# eclipse
 .project
 .pydevproject
 .settings
+
+# database
 tyers_site/tyers_site.db
+
+# wingide
 *.wpr
 *.wpu
+
+# emacs
 *.*~
 *.*#
