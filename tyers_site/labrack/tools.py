@@ -40,9 +40,9 @@ def approot():
     @rtype: string
     """
     ## import this module
-    from labrack import tools
+    #from labrack import tools
     ## get location of this module
-    f = absfile(tools.__file__)
+    f = absfile(__file__)
     ## extract path and assume it is 'project_root/Biskit'
     f = osp.split( f )[0] + '/../'
     return absfile( f )

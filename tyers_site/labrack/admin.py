@@ -24,109 +24,74 @@ admin_root = "/admin/labrack"
 
 class DnaComponentAdmin(admin.ModelAdmin):
 
-    raw_id_fields = ('translatesTo','variantOf','componentType')  
+    raw_id_fields = ('translatesTo', 'variantOf', 'componentType')  
     
     fieldsets = (
         (None,
          {'fields': (('displayId', 'name', 'uri'),
-                     ('shortDescription','abstract'),
-                     ('users','status'))}),
+                     ('shortDescription', 'abstract'),
+                     ('users', 'status'))}),
         ('Details',
-         {'fields' : (('componentType','variantOf'),
+         {'fields' : (('componentType', 'variantOf'),
                      ('optimizedFor', 'translatesTo'),
                      ('description',)),
-          'description' : 'click magnifier to select related components from'+\
+          'description' : 'click magnifier to select related components from' + \
                           ' pop-up dialogs. Repeat to select more than one.'
           }),
         ('Sequence Details',
-         {'fields': ('sequence','annotations'),
-          'classes':('collapse',)} ),
+         {'fields': ('sequence', 'annotations'),
+          'classes':('collapse',)}),
         )
 
-    list_display   = ('displayId','name','shortDescription',
-                      'show_optimizedFor','show_translatesTo', 'status',
+    list_display = ('displayId', 'name', 'shortDescription',
+                      'show_optimizedFor', 'show_translatesTo', 'status',
                       'isavailable_cells',
                       'isavailable_dna'
                       )
-    list_filter    = ('users', 'status', 'optimizedFor',
+    list_filter = ('users', 'status', 'optimizedFor',
                       'componentType',
                       )
-    ordering       = ('displayId',)
-    search_fields  = ('displayId','name','shortDescription','description',
-                      'users__username','sequence' )
+    ordering = ('displayId',)
+    search_fields = ('displayId', 'name', 'shortDescription', 'description',
+                      'users__username', 'sequence')
 
 
 
 
-class SampleAdmin(admin.ModelAdmin):
     
-    raw_id_fields = ('dna','cell','vector','protein') 
-    readonly_fields = ('created',)
     
-    fieldsets = (
-        (None, {
-            'fields' : (
-                (),
-                ('displayId','container','vesselType','created')
-            )}),
-        ('Content', {
-            'fields' : (
-                ('dna', 'vector', 'cell', 'protein'),
-                ('concentration', 'concentrationUnit')
-                ),
-            'description' : 'Select sample content by clicking on magnifiers. '
-            }),
-         ('Additional details', {
-             'fields' : (
-                 ('users','comments',)
-             )})
-          )
-
-    list_display   = ('show_Id', 'show_sampleType', 
-                      'show_dna','show_vector','show_cell','show_protein',
-                      'show_concentration', 'created', 'show_comments' )
-    list_filter    = ('vesselType','container','users')
-    ordering       = ('container','displayId',)
-    search_fields  = ('displayId','comments','users__username',
-                      'container__displayId', 
-                      'dna__displayId', 'vector__displayId', 'cell__displayId',
-                      'protein__displayId',
-                      'dna__name', 'vector__name', 'cell__name', 
-                      'protein__name')
-    
-    save_as        = True
-    
-
 
 
 class ContainerAdmin(admin.ModelAdmin):
     ## options for list view in admin interface
     fieldsets = (
-        (None, {
-        'fields' : (('displayId', 'shortDescription'), 
-                    ('containerType','location'),
-                    'description',
-                    )
-        }),
-        ('Permission', {
-        'classes': ('collapse',),
-        'fields' : ((('users_read','users_write'),('group_read','group_write'))
-                    )
-        })
-    )
+                 (None, {
+                         'fields' : (('displayId', 'shortDescription'),
+                                     ('containerType', 'location'),
+                                     'description',
+                                     )
+                         }
+                  ),
+                 ('Permission', {
+                                 'classes': ('collapse',),
+                                 'fields' : ((('owners'), ('group_read', 'group_write'))
+                                             )
+                                 }
+                  )
+                 )
     
-    list_display   = ('displayId', 'shortDescription', 'containerType', 'location_url', 'owner', 'creation_date', 'modification_date')
-    list_filter    = ('containerType', 'location__displayId', 'location__room', 'location__temperature','owner')
+    list_display = ('displayId', 'shortDescription', 'containerType', 'location_url', 'created_by', 'creation_date', 'modification_date')
+    list_filter = ('containerType', 'location__displayId', 'location__room', 'location__temperature', 'created_by')
     
-    ordering       = ('displayId',)
-    search_fields  = ('displayId','shortDescription','description')
-    save_as        = True
+    ordering = ('displayId',)
+    search_fields = ('displayId', 'shortDescription', 'description')
+    save_as = True
     
     
     # Save the owner of the object
     def save_model(self, request, obj, form, change):
-        if getattr(obj, 'owner', None) is None:
-            obj.owner = request.user
+        if getattr(obj, 'created_by', None) is None:
+            obj.created_by = request.user
         obj.save()
         
     def location_url(self, obj):
@@ -139,15 +104,83 @@ class ContainerAdmin(admin.ModelAdmin):
 
 class LocationAdmin(admin.ModelAdmin):
     list_display = ('displayId', 'shortDescription', 'temperature', 'room', 'creation_date', 'modification_date')
-    fields = (('displayId', 'shortDescription'), 'temperature','room')
+    fields = (('displayId', 'shortDescription'), 'temperature', 'room')
     list_filter = ('room', 'temperature')
-    search_fields  = ('displayId', 'shortDescription',)
+    search_fields = ('displayId', 'shortDescription',)
+    save_as = True
+
+
+class SampleAdmin(admin.ModelAdmin):
+    
+    raw_id_fields = ('dna', 'cell', 'vector', 'protein') 
+    
+    
+    fieldsets = (
+                 (None, {
+                         'fields' : ((('displayId', 'shortDescription'),
+                                      ('container', 'preparation_date'),)
+                                     )
+                         }
+                  ),
+                 ('Content', {
+                              'fields' : (
+                                          ('dna', 'vector', 'cell', 'protein'),
+                                          ('concentration', 'concentrationUnit'),
+                                          'description'
+                                          ),
+                              'description' : 'Select sample content by clicking on magnifiers. '
+                              }),
+                 ('Permission', {
+                        'classes': ('collapse',),
+                        'fields' : (
+                                        (('owners'), ('group_read', 'group_write'))
+                                    )
+                                 }
+                  )
+                 )
+          
+
+
+    list_display   = ('location_url', 'container_url', 'displayId', 'shortDescription', 'created_by', 'preparation_date', 'creation_date', 'modification_date')
+    list_filter    = ('container', 'container__location', 'created_by')
+    list_display_links  = ('displayId',)
+    ordering       = ('container', 'displayId')
+    search_fields  = ('displayId', 'shortDescription', 'description', 'container__displayId', 'container__location__displayId', 'container__location__temperature', 'container__location__room')
     save_as        = True
+    
+
+    # Save the owner of the object
+    def save_model(self, request, obj, form, change):
+        if getattr(obj, 'created_by', None) is None:
+            obj.created_by = request.user
+        obj.save()
+        
+    def container_url(self, obj):
+        url = obj.container.get_relative_url()
+        return mark_safe('<a href="%s/%s">%s</a>' % (admin_root, url, obj.container.__unicode__()))
+    container_url.allow_tags = True
+    container_url.short_description = 'Container'
+    
+    def location_url(self, obj):
+        url = obj.container.location.get_relative_url()
+        return mark_safe('<a href="%s/%s">%s</a>' % (admin_root, url, obj.container.location.__unicode__()))
+    location_url.allow_tags = True
+    location_url.short_description = 'Location'
+
+
+class UnitAdmin(admin.ModelAdmin):
+    list_display = ('name', 'type')
+    fields = (('displayId', 'shortDescription'), 'temperature', 'room')
+    list_filter = ('room', 'temperature')
+    search_fields = ('displayId', 'shortDescription',)
+    save_as = True
 
 
 admin.site.register(Container, ContainerAdmin)
 admin.site.register(Location, LocationAdmin)
 admin.site.register(Sample, SampleAdmin) 
+admin.site.register(Unit) 
+
 
 
 #TODO check if needed

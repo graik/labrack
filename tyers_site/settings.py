@@ -111,7 +111,7 @@ TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-    "/home/mathieu/Documents/Aptana Studio 3 Workspace/tyers_site/tyers_site/templates"
+    T.approot() +  "/templates"
 )
 
 INSTALLED_APPS = (

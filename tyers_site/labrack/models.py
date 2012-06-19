@@ -1,10 +1,14 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.auth.models import Group
-
+from datetime import datetime
 
 
 # Create your models here.
+
+
+
+################################################################################################################
 class Location(models.Model):
     """
     A location (fridge, freezer, shelf) where container are stored
@@ -25,6 +29,8 @@ class Location(models.Model):
         return 'location/%i/' % self.id
 
 
+
+################################################################################################################
 class Container( models.Model ):
     """
     A container holding several physical samples of nucleic acids, proteins or other stuff.
@@ -39,14 +45,13 @@ class Container( models.Model ):
     displayId = models.CharField('Container (ID)', max_length=20, unique=True, help_text='Unique identifier. E.g. D001 or C012 (D...DNA, C...Cells)')
     shortDescription = models.CharField('Short description', max_length=200, blank=True, help_text='Brief description for tables and listings')
     containerType = models.CharField('Type of container', max_length=30, choices=STORAGE_CONTAINER_TYPES )
-    location = models.ForeignKey(Location)
+    location = models.ForeignKey(Location, related_name='containers')
 
     #: Permissions
-    owner = models.ForeignKey(User, null=True, blank=True, related_name='owner')
-    users_read = models.ManyToManyField(User, null=True, blank=True, related_name='users_read')
-    users_write = models.ManyToManyField(User, null=True, blank=True, related_name='users_write')
-    group_read = models.ManyToManyField(Group, null=True, blank=True, related_name='groups_read')
-    group_write = models.ManyToManyField(Group, null=True, blank=True, related_name='groups_write')
+    created_by = models.ForeignKey(User, null=True, blank=True, related_name='container_created_by')
+    owners = models.ManyToManyField(User, null=True, blank=True, related_name='container_owners')
+    group_read = models.ManyToManyField(Group, null=True, blank=True, related_name='container_groups_read')
+    group_write = models.ManyToManyField(Group, null=True, blank=True, related_name='container_groups_write')
 
     #: optional long description
     description = models.TextField( 'Detailed description', blank=True)
@@ -94,40 +99,38 @@ class Container( models.Model ):
         """
         return 'container/%i/' % self.id
     
-    
 
 
 
+
+################################################################################################################    
+class Unit(models.Model):
+    """
+    Unit for amount, concentration, volume
+    """
+    name = models.CharField(max_length=10)
+    type = models.CharField(max_length=25)
+    def __unicode__(self):
+        return self.name
+
+
+
+
+################################################################################################################
 class Sample( models.Model ):
     """
     Sample describes a single tube or well holding DNA, cells or protein.
     """
 
-    STORAGE_WELL_TYPES = ( ('tube','tube'), 
-                           ('well','well'), ('other','other') )
     STORAGE_TYPES      = ( ('dna', 'DNA'), ('cells','cells'), ('protein','protein') )
     CONCENTRATION_UNITS= ( ('mg/l', 'mg / l'), ('mol/l','mol / l'), 
                            ('umol/l',u'\u00B5' + u'mol / l') )
 
-    #: actual label on the tube, enforced to be unique in combination with
-    #: container
+    
     displayId = models.CharField('Sample (ID)', max_length=20, help_text='Label or well position. Must be unique within container.' )
+    shortDescription = models.CharField('Short description', max_length=200, blank=True, help_text='Brief description for tables and listings')
+    container = models.ForeignKey( Container, related_name='samples' )  #: link to a single container
 
-    #: link to a single container
-    container = models.ForeignKey( Container, related_name='samples' )
-
-    vesselType = models.CharField('type of well or tube', max_length=30,
-                                  blank=True, null=True,
-                                 choices=STORAGE_WELL_TYPES,
-                                 default=None)
-
-    #: creators or users
-    users = models.ManyToManyField(User, db_index=True)
-
-    #: [optional]
-    comments = models.TextField(blank=True)
-
-    created = models.DateField('created at', auto_now_add=True)
 
     #: [optional] link to the physical DNA contained in this sample
     dna = models.ForeignKey( 'DnaComponent',
@@ -160,6 +163,20 @@ class Sample( models.Model ):
     concentrationUnit = models.CharField( 'unit', max_length=10,
                                            choices=CONCENTRATION_UNITS,
                                            default='mg/l')
+    
+    
+    #: Permissions
+    created_by = models.ForeignKey(User, null=True, blank=True, related_name='sample_created_by')
+    owners = models.ManyToManyField(User, null=True, blank=True, related_name='sample_owners')
+    group_read = models.ManyToManyField(Group, null=True, blank=True, related_name='sample_groups_read')
+    group_write = models.ManyToManyField(Group, null=True, blank=True, related_name='sample_groups_write')
+
+    #: optional long description
+    description = models.TextField( 'Detailed description', blank=True)
+    preparation_date = models.DateTimeField(default=datetime.now())
+    creation_date = models.DateTimeField(auto_now_add=True)
+    modification_date = models.DateTimeField(auto_now=True)
+    
 
     def __unicode__( self ):
         return self.container.displayId + ' / ' + self.displayId
@@ -294,6 +311,8 @@ class Sample( models.Model ):
         ordering = ('container', 'displayId')
 
 
+
+################################################################################################################
 class ComponentType( models.Model ):
     """
     Helper class for classifying parts.
@@ -317,6 +336,12 @@ class ComponentType( models.Model ):
     def __unicode__( self ):
         return self.name
 
+
+
+
+
+
+################################################################################################################
 class Component(models.Model):
     """
     Abstract base class for DNA and protein 'parts' as well as host cells.
@@ -404,6 +429,9 @@ class Component(models.Model):
     
     
 
+
+
+################################################################################################################
 class DnaComponent(Component):
     """
     Description of a stretch of DNA.
@@ -478,6 +506,7 @@ class DnaComponent(Component):
      
 
     
+################################################################################################################
 class SelectiveMarker( models.Model ):
     """
     Describes an Antibiotic or similar resistence marker
@@ -505,7 +534,12 @@ class SelectiveMarker( models.Model ):
     class Meta:
         ordering = ('name',)
     
-    
+
+
+
+
+
+################################################################################################################    
 class VectorDnaComponent(DnaComponent):
     """
     Description of vector backbone. So far identical to DnaComponent.
@@ -530,7 +564,11 @@ class VectorDnaComponent(DnaComponent):
         """
         return self.vector_samples.all()
     
-    
+
+
+
+
+################################################################################################################    
 class ProteinComponent(Component):
     """
     Description of a amino-acid encoded protein 'part'.
@@ -560,6 +598,9 @@ class ProteinComponent(Component):
         return self.protein_samples.all()
 
 
+
+
+################################################################################################################
 class Chassis(Component):
     """
     Description of a host system. Usually this will be a cell type or bacterial
@@ -581,6 +622,9 @@ class Chassis(Component):
         return self.cell_samples.all()
 
 
+
+
+################################################################################################################
 class SequenceAnnotation(models.Model):
     """
     Identify features and sub-components on a DNA or protein sequence.
@@ -609,6 +653,10 @@ class SequenceAnnotation(models.Model):
     ## subComponent = ...
     
 
+
+
+
+################################################################################################################
 class Collection(models.Model):
     """
     Collection of parts
@@ -650,4 +698,12 @@ class Collection(models.Model):
     def __unicode__(self):
         name = self.name if self.name else ''
         return u'%s %s' % (self.displayId, name)
+     
+     
+     
+     
+################################################################################################################
+
+
+     
      

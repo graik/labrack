@@ -26,29 +26,21 @@ class Migration(SchemaMigration):
             ('displayId', self.gf('django.db.models.fields.CharField')(unique=True, max_length=20)),
             ('shortDescription', self.gf('django.db.models.fields.CharField')(max_length=200, blank=True)),
             ('containerType', self.gf('django.db.models.fields.CharField')(max_length=30)),
-            ('location', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['labrack.Location'])),
-            ('owner', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='owner', null=True, to=orm['auth.User'])),
+            ('location', self.gf('django.db.models.fields.related.ForeignKey')(related_name='containers', to=orm['labrack.Location'])),
+            ('created_by', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='container_created_by', null=True, to=orm['auth.User'])),
             ('description', self.gf('django.db.models.fields.TextField')(blank=True)),
             ('creation_date', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
             ('modification_date', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
         ))
         db.send_create_signal('labrack', ['Container'])
 
-        # Adding M2M table for field users_read on 'Container'
-        db.create_table('labrack_container_users_read', (
+        # Adding M2M table for field owners on 'Container'
+        db.create_table('labrack_container_owners', (
             ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
             ('container', models.ForeignKey(orm['labrack.container'], null=False)),
             ('user', models.ForeignKey(orm['auth.user'], null=False))
         ))
-        db.create_unique('labrack_container_users_read', ['container_id', 'user_id'])
-
-        # Adding M2M table for field users_write on 'Container'
-        db.create_table('labrack_container_users_write', (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('container', models.ForeignKey(orm['labrack.container'], null=False)),
-            ('user', models.ForeignKey(orm['auth.user'], null=False))
-        ))
-        db.create_unique('labrack_container_users_write', ['container_id', 'user_id'])
+        db.create_unique('labrack_container_owners', ['container_id', 'user_id'])
 
         # Adding M2M table for field group_read on 'Container'
         db.create_table('labrack_container_group_read', (
@@ -66,33 +58,60 @@ class Migration(SchemaMigration):
         ))
         db.create_unique('labrack_container_group_write', ['container_id', 'group_id'])
 
+        # Adding model 'Unit'
+        db.create_table('labrack_unit', (
+            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('name', self.gf('django.db.models.fields.CharField')(max_length=10)),
+            ('type', self.gf('django.db.models.fields.CharField')(max_length=25)),
+        ))
+        db.send_create_signal('labrack', ['Unit'])
+
         # Adding model 'Sample'
         db.create_table('labrack_sample', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('displayId', self.gf('django.db.models.fields.CharField')(max_length=20)),
             ('container', self.gf('django.db.models.fields.related.ForeignKey')(related_name='samples', to=orm['labrack.Container'])),
             ('vesselType', self.gf('django.db.models.fields.CharField')(default=None, max_length=30, null=True, blank=True)),
-            ('comments', self.gf('django.db.models.fields.TextField')(blank=True)),
-            ('created', self.gf('django.db.models.fields.DateField')(auto_now_add=True, blank=True)),
             ('dna', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='dna_samples', null=True, to=orm['labrack.DnaComponent'])),
             ('vector', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='vector_samples', null=True, to=orm['labrack.VectorDnaComponent'])),
             ('cell', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='chassis_samples', null=True, to=orm['labrack.Chassis'])),
             ('protein', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='protein_samples', null=True, to=orm['labrack.ProteinComponent'])),
             ('concentration', self.gf('django.db.models.fields.DecimalField')(default=50, max_digits=6, decimal_places=2)),
             ('concentrationUnit', self.gf('django.db.models.fields.CharField')(default='mg/l', max_length=10)),
+            ('created_by', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='sample_created_by', null=True, to=orm['auth.User'])),
+            ('description', self.gf('django.db.models.fields.TextField')(blank=True)),
+            ('preparation_date', self.gf('django.db.models.fields.DateTimeField')()),
+            ('creation_date', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
+            ('modification_date', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
         ))
         db.send_create_signal('labrack', ['Sample'])
 
         # Adding unique constraint on 'Sample', fields ['displayId', 'container']
         db.create_unique('labrack_sample', ['displayId', 'container_id'])
 
-        # Adding M2M table for field users on 'Sample'
-        db.create_table('labrack_sample_users', (
+        # Adding M2M table for field owners on 'Sample'
+        db.create_table('labrack_sample_owners', (
             ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
             ('sample', models.ForeignKey(orm['labrack.sample'], null=False)),
             ('user', models.ForeignKey(orm['auth.user'], null=False))
         ))
-        db.create_unique('labrack_sample_users', ['sample_id', 'user_id'])
+        db.create_unique('labrack_sample_owners', ['sample_id', 'user_id'])
+
+        # Adding M2M table for field group_read on 'Sample'
+        db.create_table('labrack_sample_group_read', (
+            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
+            ('sample', models.ForeignKey(orm['labrack.sample'], null=False)),
+            ('group', models.ForeignKey(orm['auth.group'], null=False))
+        ))
+        db.create_unique('labrack_sample_group_read', ['sample_id', 'group_id'])
+
+        # Adding M2M table for field group_write on 'Sample'
+        db.create_table('labrack_sample_group_write', (
+            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
+            ('sample', models.ForeignKey(orm['labrack.sample'], null=False)),
+            ('group', models.ForeignKey(orm['auth.group'], null=False))
+        ))
+        db.create_unique('labrack_sample_group_write', ['sample_id', 'group_id'])
 
         # Adding model 'ComponentType'
         db.create_table('labrack_componenttype', (
@@ -336,11 +355,8 @@ class Migration(SchemaMigration):
         # Deleting model 'Container'
         db.delete_table('labrack_container')
 
-        # Removing M2M table for field users_read on 'Container'
-        db.delete_table('labrack_container_users_read')
-
-        # Removing M2M table for field users_write on 'Container'
-        db.delete_table('labrack_container_users_write')
+        # Removing M2M table for field owners on 'Container'
+        db.delete_table('labrack_container_owners')
 
         # Removing M2M table for field group_read on 'Container'
         db.delete_table('labrack_container_group_read')
@@ -348,11 +364,20 @@ class Migration(SchemaMigration):
         # Removing M2M table for field group_write on 'Container'
         db.delete_table('labrack_container_group_write')
 
+        # Deleting model 'Unit'
+        db.delete_table('labrack_unit')
+
         # Deleting model 'Sample'
         db.delete_table('labrack_sample')
 
-        # Removing M2M table for field users on 'Sample'
-        db.delete_table('labrack_sample_users')
+        # Removing M2M table for field owners on 'Sample'
+        db.delete_table('labrack_sample_owners')
+
+        # Removing M2M table for field group_read on 'Sample'
+        db.delete_table('labrack_sample_group_read')
+
+        # Removing M2M table for field group_write on 'Sample'
+        db.delete_table('labrack_sample_group_write')
 
         # Deleting model 'ComponentType'
         db.delete_table('labrack_componenttype')
@@ -507,18 +532,17 @@ class Migration(SchemaMigration):
         'labrack.container': {
             'Meta': {'ordering': "('displayId',)", 'object_name': 'Container'},
             'containerType': ('django.db.models.fields.CharField', [], {'max_length': '30'}),
+            'created_by': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'container_created_by'", 'null': 'True', 'to': "orm['auth.User']"}),
             'creation_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'description': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
             'displayId': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '20'}),
-            'group_read': ('django.db.models.fields.related.ManyToManyField', [], {'related_name': "'groups_read'", 'symmetrical': 'False', 'to': "orm['auth.Group']"}),
-            'group_write': ('django.db.models.fields.related.ManyToManyField', [], {'related_name': "'groups_write'", 'symmetrical': 'False', 'to': "orm['auth.Group']"}),
+            'group_read': ('django.db.models.fields.related.ManyToManyField', [], {'blank': 'True', 'related_name': "'container_groups_read'", 'null': 'True', 'symmetrical': 'False', 'to': "orm['auth.Group']"}),
+            'group_write': ('django.db.models.fields.related.ManyToManyField', [], {'blank': 'True', 'related_name': "'container_groups_write'", 'null': 'True', 'symmetrical': 'False', 'to': "orm['auth.Group']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'location': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['labrack.Location']"}),
+            'location': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'containers'", 'to': "orm['labrack.Location']"}),
             'modification_date': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'owner': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'owner'", 'null': 'True', 'to': "orm['auth.User']"}),
-            'shortDescription': ('django.db.models.fields.CharField', [], {'max_length': '200', 'blank': 'True'}),
-            'users_read': ('django.db.models.fields.related.ManyToManyField', [], {'related_name': "'users_read'", 'symmetrical': 'False', 'to': "orm['auth.User']"}),
-            'users_write': ('django.db.models.fields.related.ManyToManyField', [], {'related_name': "'users_write'", 'symmetrical': 'False', 'to': "orm['auth.User']"})
+            'owners': ('django.db.models.fields.related.ManyToManyField', [], {'blank': 'True', 'related_name': "'container_owners'", 'null': 'True', 'symmetrical': 'False', 'to': "orm['auth.User']"}),
+            'shortDescription': ('django.db.models.fields.CharField', [], {'max_length': '200', 'blank': 'True'})
         },
         'labrack.dnacomponent': {
             'Meta': {'object_name': 'DnaComponent'},
@@ -567,16 +591,21 @@ class Migration(SchemaMigration):
         'labrack.sample': {
             'Meta': {'ordering': "('container', 'displayId')", 'unique_together': "(('displayId', 'container'),)", 'object_name': 'Sample'},
             'cell': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'chassis_samples'", 'null': 'True', 'to': "orm['labrack.Chassis']"}),
-            'comments': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
             'concentration': ('django.db.models.fields.DecimalField', [], {'default': '50', 'max_digits': '6', 'decimal_places': '2'}),
             'concentrationUnit': ('django.db.models.fields.CharField', [], {'default': "'mg/l'", 'max_length': '10'}),
             'container': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'samples'", 'to': "orm['labrack.Container']"}),
-            'created': ('django.db.models.fields.DateField', [], {'auto_now_add': 'True', 'blank': 'True'}),
+            'created_by': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'sample_created_by'", 'null': 'True', 'to': "orm['auth.User']"}),
+            'creation_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
+            'description': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
             'displayId': ('django.db.models.fields.CharField', [], {'max_length': '20'}),
             'dna': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'dna_samples'", 'null': 'True', 'to': "orm['labrack.DnaComponent']"}),
+            'group_read': ('django.db.models.fields.related.ManyToManyField', [], {'blank': 'True', 'related_name': "'sample_groups_read'", 'null': 'True', 'symmetrical': 'False', 'to': "orm['auth.Group']"}),
+            'group_write': ('django.db.models.fields.related.ManyToManyField', [], {'blank': 'True', 'related_name': "'sample_groups_write'", 'null': 'True', 'symmetrical': 'False', 'to': "orm['auth.Group']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'modification_date': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
+            'owners': ('django.db.models.fields.related.ManyToManyField', [], {'blank': 'True', 'related_name': "'sample_owners'", 'null': 'True', 'symmetrical': 'False', 'to': "orm['auth.User']"}),
+            'preparation_date': ('django.db.models.fields.DateTimeField', [], {}),
             'protein': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'protein_samples'", 'null': 'True', 'to': "orm['labrack.ProteinComponent']"}),
-            'users': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['auth.User']", 'db_index': 'True', 'symmetrical': 'False'}),
             'vector': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'vector_samples'", 'null': 'True', 'to': "orm['labrack.VectorDnaComponent']"}),
             'vesselType': ('django.db.models.fields.CharField', [], {'default': 'None', 'max_length': '30', 'null': 'True', 'blank': 'True'})
         },
@@ -595,6 +624,12 @@ class Migration(SchemaMigration):
             'precedes': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'to': "orm['labrack.SequenceAnnotation']", 'null': 'True', 'blank': 'True'}),
             'strand': ('django.db.models.fields.CharField', [], {'max_length': '1', 'null': 'True', 'blank': 'True'}),
             'uri': ('django.db.models.fields.URLField', [], {'max_length': '200', 'null': 'True', 'blank': 'True'})
+        },
+        'labrack.unit': {
+            'Meta': {'object_name': 'Unit'},
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '10'}),
+            'type': ('django.db.models.fields.CharField', [], {'max_length': '25'})
         },
         'labrack.vectordnacomponent': {
             'Meta': {'object_name': 'VectorDnaComponent', '_ormbases': ['labrack.DnaComponent']},
