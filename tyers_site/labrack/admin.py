@@ -133,9 +133,8 @@ class ContainerAdmin(admin.ModelAdmin):
         url = obj.location.get_relative_url()
         return mark_safe('<a href="%s/%s">%s</a>' % (admin_root, url, obj.location.__unicode__()))
     location_url.allow_tags = True
-    location_url.help_text = "hehe"
-        
-    admin.ModelAdmin.urls
+    location_url.short_description = 'Location'
+
         
 
 class LocationAdmin(admin.ModelAdmin):

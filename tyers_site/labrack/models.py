@@ -111,8 +111,7 @@ class Sample( models.Model ):
 
     #: actual label on the tube, enforced to be unique in combination with
     #: container
-    displayId = models.CharField('ID (label)', max_length=20,
-        help_text='label or well position. Must be unique within container.' )
+    displayId = models.CharField('Sample (ID)', max_length=20, help_text='Label or well position. Must be unique within container.' )
 
     #: link to a single container
     container = models.ForeignKey( Container, related_name='samples' )
