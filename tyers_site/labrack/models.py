@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.auth.models import Group
 from datetime import datetime
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes import generic
 
 
 # Create your models here.
@@ -59,36 +61,9 @@ class Container( models.Model ):
     modification_date = models.DateTimeField(auto_now=True)
 
 
-    ## TODO: Check these functions 
 
     def __unicode__( self ):
         return "%s" % self.displayId
-
-    def next_well( self ):
-        """
-        Try to guess next free well.
-        """
-        r = ''
-
-        if self.container_type == 'box':
-            try:
-                wells = [ int(s.well) for s in self.samples.all() ]
-                wells.sort()
-                r = str( wells[-1] + 1 )
-            except:
-                r = "%02i" % self.samples.count() + 1
-
-        if self.container_type in ['96-well-plate', '384-well-plate']:
-            try:
-                wells = [ s.well for s in self.samples.all() ]
-                wells.sort()
-                row = wells[-1][0]
-                col = wells[-1][1:] + 1
-                r = "%s%02i" % (row, col)
-            except:
-                r = "%02i" % self.samples.count() + 1
-
-        return r
     
     class Meta:
         ordering = ('displayId',)
@@ -98,6 +73,35 @@ class Container( models.Model ):
         Define standard relative URL for object access in templates
         """
         return 'container/%i/' % self.id
+    
+
+#    def next_well( self ):
+#        """
+#        Try to guess next free well.
+#        """
+#        r = ''
+#
+#        if self.container_type == 'box':
+#            try:
+#                wells = [ int(s.well) for s in self.samples.all() ]
+#                wells.sort()
+#                r = str( wells[-1] + 1 )
+#            except:
+#                r = "%02i" % self.samples.count() + 1
+#
+#        if self.container_type in ['96-well-plate', '384-well-plate']:
+#            try:
+#                wells = [ s.well for s in self.samples.all() ]
+#                wells.sort()
+#                row = wells[-1][0]
+#                col = wells[-1][1:] + 1
+#                r = "%s%02i" % (row, col)
+#            except:
+#                r = "%02i" % self.samples.count() + 1
+#
+#        return r
+    
+
     
 
 
@@ -110,6 +114,7 @@ class Unit(models.Model):
     """
     name = models.CharField(max_length=10)
     type = models.CharField(max_length=25)
+    
     def __unicode__(self):
         return self.name
 
@@ -130,52 +135,23 @@ class Sample( models.Model ):
     displayId = models.CharField('Sample (ID)', max_length=20, help_text='Label or well position. Must be unique within container.' )
     shortDescription = models.CharField('Short description', max_length=200, blank=True, help_text='Brief description for tables and listings')
     container = models.ForeignKey( Container, related_name='samples' )  #: link to a single container
+    aliquotnb = models.PositiveIntegerField('Aliquot number', null=True, blank=True)
+    description = models.TextField( 'Detailed description', blank=True)
+    preparation_date = models.DateTimeField(default=datetime.now())
+    creation_date = models.DateTimeField(auto_now_add=True)
+    modification_date = models.DateTimeField(auto_now=True)
 
 
-    #: [optional] link to the physical DNA contained in this sample
-    dna = models.ForeignKey( 'DnaComponent',
-                             verbose_name='DNA',
-                             related_name='dna_samples',
-                             blank=True, null=True)
-
-    #: [optional] link to the vector backbone
-    vector = models.ForeignKey( 'VectorDnaComponent',
-                             verbose_name='in vector',
-                             related_name='vector_samples',
-                             blank=True, null=True)
-
-    #: [optional] link to cell or strain that DNA is stored in, if any
-    cell = models.ForeignKey( 'Chassis',
-                              verbose_name='in cell',
-                              related_name='chassis_samples',
-                              blank=True, null=True)
-
-    #: [optional] link to protein contained in sample
-    protein = models.ForeignKey( 'ProteinComponent',
-                              verbose_name='protein',
-                              related_name='protein_samples',
-                              blank=True, null=True)
-
-    #: concentration in ng / ul (=mg/l)
-    concentration = models.DecimalField( max_digits=6, decimal_places=2,
-                                         default=50 )
-    #: unit of given concentration
-    concentrationUnit = models.CharField( 'unit', max_length=10,
-                                           choices=CONCENTRATION_UNITS,
-                                           default='mg/l')
-    
-    
     #: Permissions
     created_by = models.ForeignKey(User, null=True, blank=True, related_name='sample_created_by')
     owners = models.ManyToManyField(User, null=True, blank=True, related_name='sample_owners')
     group_read = models.ManyToManyField(Group, null=True, blank=True, related_name='sample_groups_read')
     group_write = models.ManyToManyField(Group, null=True, blank=True, related_name='sample_groups_write')
 
-    #: optional long description
-    description = models.TextField( 'Detailed description', blank=True)
-    preparation_date = models.DateTimeField(default=datetime.now())
-    creation_date = models.DateTimeField(auto_now_add=True)
-    modification_date = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ('displayId', 'container')
+        ordering = ('container', 'displayId')
     
 
     def __unicode__( self ):
@@ -205,111 +181,122 @@ class Sample( models.Model ):
 ##        return 'none'
 ##    get_sequencing_evaluation.short_description = 'Sequencing'
 
-    def related_samples( self ):
-        """
-        @return: QuerySet of samples with same DNA content
-        """
-        r = []
-
-        if self.dna:
-            r = Sample.objects.filter( dna=self.dna )
-        elif self.vector:
-            ## only consider vector if there is no insert:
-            r = Sample.objects.filter( vector=self.vector )
-
-        elif self.protein:
-            r = Sample.objects.filter( protein=self.protein )
-
-        elif self.cell:
-            r = Sample.objects.filter( cell=self.cell )
-            
-        if r:
-            return r.exclude( pk=self.pk )
-        return r
-    
-
-    def show_dna(self):
-        """filter '(None)' display in admin table"""
-        if self.dna:
-            return self.dna
-        return u''
-    show_dna.short_description = 'DNA'
-    show_dna.admin_order_field = 'dna'
-
-    def show_vector(self):
-        """filter '(None)' display in admin table"""
-        if self.vector:
-            return self.vector
-        return u''
-    show_vector.short_description = 'in Vector'
-    show_vector.admin_order_field = 'vector'
-
-    def show_cell(self):
-        """filter '(None)' display in admin table"""
-        if self.cell:
-            return self.cell
-        return u''
-    show_cell.short_description = 'in Cell'
-    show_cell.admin_order_field = 'cell'
-    
-    def show_protein(self):
-        """filter '(None)' display in admin table"""
-        if self.protein:
-            return self.protein
-        return u''
-    show_protein.short_description = 'Protein'
-    show_protein.admin_order_field = 'protein'
-    
-    def show_sampleType( self ):
-        """
-        @return: str; either of: , 'cells', 'DNA', 'protein' or 'unknown'
-        """
-        if self.cell:
-            return 'cells'
-        if self.dna or self.vector:
-            return 'DNA'
-        if self.protein:
-            return 'protein'
-        return 'unknown'
-    show_sampleType.short_description = 'Type'
-
-    def show_Id( self ):
-        """
-        @return: str; full ID composed of container-sample.
-        """
-        return u'%s - %s' % (self.container.displayId, self.displayId)
-    show_Id.short_description = 'full ID'
-    show_Id.allow_tags = True  ## don't HTML-escape this string
-    
-    def show_concentration( self ):
-        """
-        @return: str; concentration + unit
-        """
-        return u'%3.2f %s' % (self.concentration, self.concentrationUnit)
-    show_concentration.short_description = 'Concentration'
-    show_concentration.admin_order_field = 'concentration'
-    
-    def show_comments( self ):
-        """
-        @return: str; truncated comment
-        """
-        if not self.comments:
-            return u''
-        if len(self.comments) < 40:
-            return unicode(self.comments)
-        return unicode(self.comments[:38] + '..')
-    show_comments.short_description = 'comments'
-    
+#    def related_samples( self ):
+#        """
+#        @return: QuerySet of samples with same DNA content
+#        """
+#        r = []
+#
+#        if self.dna:
+#            r = Sample.objects.filter( dna=self.dna )
+#        elif self.vector:
+#            ## only consider vector if there is no insert:
+#            r = Sample.objects.filter( vector=self.vector )
+#
+#        elif self.protein:
+#            r = Sample.objects.filter( protein=self.protein )
+#
+#        elif self.cell:
+#            r = Sample.objects.filter( cell=self.cell )
+#            
+#        if r:
+#            return r.exclude( pk=self.pk )
+#        return r
+#    
+#
+#    def show_dna(self):
+#        """filter '(None)' display in admin table"""
+#        if self.dna:
+#            return self.dna
+#        return u''
+#    show_dna.short_description = 'DNA'
+#    show_dna.admin_order_field = 'dna'
+#
+#    def show_vector(self):
+#        """filter '(None)' display in admin table"""
+#        if self.vector:
+#            return self.vector
+#        return u''
+#    show_vector.short_description = 'in Vector'
+#    show_vector.admin_order_field = 'vector'
+#
+#    def show_cell(self):
+#        """filter '(None)' display in admin table"""
+#        if self.cell:
+#            return self.cell
+#        return u''
+#    show_cell.short_description = 'in Cell'
+#    show_cell.admin_order_field = 'cell'
+#    
+#    def show_protein(self):
+#        """filter '(None)' display in admin table"""
+#        if self.protein:
+#            return self.protein
+#        return u''
+#    show_protein.short_description = 'Protein'
+#    show_protein.admin_order_field = 'protein'
+#    
+#    def show_sampleType( self ):
+#        """
+#        @return: str; either of: , 'cells', 'DNA', 'protein' or 'unknown'
+#        """
+#        if self.cell:
+#            return 'cells'
+#        if self.dna or self.vector:
+#            return 'DNA'
+#        if self.protein:
+#            return 'protein'
+#        return 'unknown'
+#    show_sampleType.short_description = 'Type'
+#
+#    def show_Id( self ):
+#        """
+#        @return: str; full ID composed of container-sample.
+#        """
+#        return u'%s - %s' % (self.container.displayId, self.displayId)
+#    show_Id.short_description = 'full ID'
+#    show_Id.allow_tags = True  ## don't HTML-escape this string
+#    
+#    def show_concentration( self ):
+#        """
+#        @return: str; concentration + unit
+#        """
+#        return u'%3.2f %s' % (self.concentration, self.concentrationUnit)
+#    show_concentration.short_description = 'Concentration'
+#    show_concentration.admin_order_field = 'concentration'
+#    
+#    def show_comments( self ):
+#        """
+#        @return: str; truncated comment
+#        """
+#        if not self.comments:
+#            return u''
+#        if len(self.comments) < 40:
+#            return unicode(self.comments)
+#        return unicode(self.comments[:38] + '..')
+#    show_comments.short_description = 'comments'
+#    
 ##    def get_sequence( self, recenter=0 ):
 ##        return self.dna.get_sequence( recenter=recenter )
 ##
 ##    def get_pretty_sequence( self, recenter=0 ):
 ##        return self.dna.get_pretty_sequence( recenter=recenter )
 
-    class Meta:
-        unique_together = ('displayId', 'container')
-        ordering = ('container', 'displayId')
+    
 
+
+################################################################################################################
+
+relation_limits = {'model__in':('dnacomponent', 'proteincomponent')}
+class SampleComponent(models.Model):
+    sample = models.ForeignKey(Sample)
+    content_type = models.ForeignKey(ContentType, limit_choices_to=relation_limits)
+    object_id = models.PositiveIntegerField()
+    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    amount = models.FloatField('Amount/Volume', null=True, blank=True)
+    amount_unit = models.ForeignKey(Unit, related_name='amount_unit', null=True, blank=True)
+    concentration = models.FloatField('Concentration', null=True, blank=True)
+    concentration_unit = models.ForeignKey(Unit, related_name='concentration_unit', null=True, blank=True)
 
 
 ################################################################################################################
@@ -704,6 +691,3 @@ class Collection(models.Model):
      
 ################################################################################################################
 
-
-     
-     

@@ -18,10 +18,15 @@ from tyers_site.labrack.models import *
 from django.contrib import admin
 from django.http import HttpResponse
 from django.utils.safestring import mark_safe
+from genericcollection import GenericCollectionTabularInline
+import tyers_site.settings as settings
+
 
 admin_root = "/admin/labrack"
 
 
+
+################################################################################################################
 class DnaComponentAdmin(admin.ModelAdmin):
 
     raw_id_fields = ('translatesTo', 'variantOf', 'componentType')  
@@ -61,6 +66,7 @@ class DnaComponentAdmin(admin.ModelAdmin):
     
     
 
+################################################################################################################
 
 class ContainerAdmin(admin.ModelAdmin):
     ## options for list view in admin interface
@@ -102,6 +108,8 @@ class ContainerAdmin(admin.ModelAdmin):
 
         
 
+
+################################################################################################################
 class LocationAdmin(admin.ModelAdmin):
     list_display = ('displayId', 'shortDescription', 'temperature', 'room', 'creation_date', 'modification_date')
     fields = (('displayId', 'shortDescription'), 'temperature', 'room')
@@ -110,26 +118,25 @@ class LocationAdmin(admin.ModelAdmin):
     save_as = True
 
 
+
+################################################################################################################
+class SampleComponentsInline(GenericCollectionTabularInline):
+    model = SampleComponent
+
+
+
+################################################################################################################
 class SampleAdmin(admin.ModelAdmin):
     
-    raw_id_fields = ('dna', 'cell', 'vector', 'protein') 
-    
-    
+   
     fieldsets = (
                  (None, {
                          'fields' : ((('displayId', 'shortDescription'),
-                                      ('container', 'preparation_date'),)
+                                      ('container', 'aliquotnb', 'preparation_date'),
+                                      'description')
                                      )
                          }
                   ),
-                 ('Content', {
-                              'fields' : (
-                                          ('dna', 'vector', 'cell', 'protein'),
-                                          ('concentration', 'concentrationUnit'),
-                                          'description'
-                                          ),
-                              'description' : 'Select sample content by clicking on magnifiers. '
-                              }),
                  ('Permission', {
                         'classes': ('collapse',),
                         'fields' : (
@@ -139,6 +146,10 @@ class SampleAdmin(admin.ModelAdmin):
                   )
                  )
           
+
+    inlines = [SampleComponentsInline,]
+    class Media:
+        js = (settings.MEDIA_URL + '/js/genericcollection.js',)
 
 
     list_display   = ('location_url', 'container_url', 'displayId', 'shortDescription', 'created_by', 'preparation_date', 'creation_date', 'modification_date')
@@ -168,12 +179,17 @@ class SampleAdmin(admin.ModelAdmin):
     location_url.short_description = 'Location'
 
 
+
+
+################################################################################################################
 class UnitAdmin(admin.ModelAdmin):
     list_display = ('name', 'type')
     fields = (('displayId', 'shortDescription'), 'temperature', 'room')
     list_filter = ('room', 'temperature')
     search_fields = ('displayId', 'shortDescription',)
     save_as = True
+
+
 
 
 admin.site.register(Container, ContainerAdmin)
@@ -189,4 +205,15 @@ admin.site.register(ProteinComponent)
 admin.site.register(Chassis)
 admin.site.register(ComponentType)
 admin.site.register(Collection)
+
+
+
+
+
+
+
+
+ 
+
+
 
