@@ -27,7 +27,7 @@ admin_root = "/admin/labrack"
 
 
 ################################################################################################################
-class DnaComponentAdmin(admin.ModelAdmin):
+class NucleicAcidComponentAdmin(admin.ModelAdmin):
 
     raw_id_fields = ('translatesTo', 'variantOf', 'componentType')  
     
@@ -109,6 +109,7 @@ class ContainerAdmin(admin.ModelAdmin):
         
 
 
+
 ################################################################################################################
 class LocationAdmin(admin.ModelAdmin):
     list_display = ('displayId', 'shortDescription', 'temperature', 'room', 'creation_date', 'modification_date')
@@ -120,8 +121,8 @@ class LocationAdmin(admin.ModelAdmin):
 
 
 ################################################################################################################
-class SampleComponentsInline(GenericCollectionTabularInline):
-    model = SampleComponent
+class SampleContentInline(GenericCollectionTabularInline):
+    model = SampleContent
 
 
 
@@ -147,17 +148,18 @@ class SampleAdmin(admin.ModelAdmin):
                  )
           
 
-    inlines = [SampleComponentsInline,]
+    inlines = [SampleContentInline,]
     class Media:
         js = (settings.MEDIA_URL + '/js/genericcollection.js',)
 
 
-    list_display   = ('location_url', 'container_url', 'displayId', 'shortDescription', 'created_by', 'preparation_date', 'creation_date', 'modification_date')
+    list_display   = ('displayId', 'shortDescription','location_url', 'container_url', 'created_by', 'preparation_date', 'creation_date', 'modification_date')
     list_filter    = ('container', 'container__location', 'created_by')
     list_display_links  = ('displayId',)
     ordering       = ('container', 'displayId')
     search_fields  = ('displayId', 'shortDescription', 'description', 'container__displayId', 'container__location__displayId', 'container__location__temperature', 'container__location__room')
     save_as        = True
+    date_hierarchy = 'preparation_date'
     
 
     # Save the owner of the object
@@ -184,10 +186,8 @@ class SampleAdmin(admin.ModelAdmin):
 ################################################################################################################
 class UnitAdmin(admin.ModelAdmin):
     list_display = ('name', 'type')
-    fields = (('displayId', 'shortDescription'), 'temperature', 'room')
-    list_filter = ('room', 'temperature')
-    search_fields = ('displayId', 'shortDescription',)
-    save_as = True
+    list_filter  = (('type'),)
+    ordering     = ('type', 'name')
 
 
 
@@ -195,16 +195,29 @@ class UnitAdmin(admin.ModelAdmin):
 admin.site.register(Container, ContainerAdmin)
 admin.site.register(Location, LocationAdmin)
 admin.site.register(Sample, SampleAdmin) 
-admin.site.register(Unit) 
+admin.site.register(Unit, UnitAdmin) 
+
+
+
+################################################################################################################    
+################################################################################################################    
+################################################################################################################    
+##
+## TODO
+## Raik should check what is needed from here
+##
+################################################################################################################    
+################################################################################################################    
+################################################################################################################    
 
 
 
 #TODO check if needed
-admin.site.register(DnaComponent, DnaComponentAdmin)
+admin.site.register(NucleicAcidComponent, NucleicAcidComponentAdmin)
 admin.site.register(ProteinComponent)
-admin.site.register(Chassis)
+#admin.site.register(Chassis)
 admin.site.register(ComponentType)
-admin.site.register(Collection)
+#admin.site.register(Collection)
 
 
 

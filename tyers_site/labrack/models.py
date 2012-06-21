@@ -112,8 +112,11 @@ class Unit(models.Model):
     """
     Unit for amount, concentration, volume
     """
+    
+    UNIT_TYPE = (('amount','amount'), ('concentration','concentration'))
+    
     name = models.CharField(max_length=10)
-    type = models.CharField(max_length=25)
+    type = models.CharField(max_length=25, choices=UNIT_TYPE)
     
     def __unicode__(self):
         return self.name
@@ -126,12 +129,6 @@ class Sample( models.Model ):
     """
     Sample describes a single tube or well holding DNA, cells or protein.
     """
-
-    STORAGE_TYPES      = ( ('dna', 'DNA'), ('cells','cells'), ('protein','protein') )
-    CONCENTRATION_UNITS= ( ('mg/l', 'mg / l'), ('mol/l','mol / l'), 
-                           ('umol/l',u'\u00B5' + u'mol / l') )
-
-    
     displayId = models.CharField('Sample (ID)', max_length=20, help_text='Label or well position. Must be unique within container.' )
     shortDescription = models.CharField('Short description', max_length=200, blank=True, help_text='Brief description for tables and listings')
     container = models.ForeignKey( Container, related_name='samples' )  #: link to a single container
@@ -154,8 +151,8 @@ class Sample( models.Model ):
         ordering = ('container', 'displayId')
     
 
-    def __unicode__( self ):
-        return self.container.displayId + ' / ' + self.displayId
+    def __unicode__(self):
+        return u'%s - %s' % (self.displayId, self.shortDescription)
 
     def get_relative_url(self):
         """
@@ -286,20 +283,27 @@ class Sample( models.Model ):
 
 
 ################################################################################################################
-
-relation_limits = {'model__in':('dnacomponent', 'proteincomponent')}
-class SampleComponent(models.Model):
+component_limits = {'model__in':('nucleicacidcomponent', 'proteincomponent', 'sample')}
+class SampleContent(models.Model):
+    """
+    Define the components that the sample is made of.
+    """
     sample = models.ForeignKey(Sample)
-    content_type = models.ForeignKey(ContentType, limit_choices_to=relation_limits)
+    content_type = models.ForeignKey(ContentType, limit_choices_to=component_limits)
     object_id = models.PositiveIntegerField()
     content_object = generic.GenericForeignKey('content_type', 'object_id')
     amount = models.FloatField('Amount/Volume', null=True, blank=True)
-    amount_unit = models.ForeignKey(Unit, related_name='amount_unit', null=True, blank=True)
+    amount_unit = models.ForeignKey(Unit, related_name='amount_unit', null=True, blank=True, limit_choices_to = {'type': 'amount'})
     concentration = models.FloatField('Concentration', null=True, blank=True)
-    concentration_unit = models.ForeignKey(Unit, related_name='concentration_unit', null=True, blank=True)
+    concentration_unit = models.ForeignKey(Unit, related_name='concentration_unit', null=True, blank=True, limit_choices_to = {'type': 'concentration'})
+
 
 
 ################################################################################################################
+##
+##  Do we need this???
+##
+
 class ComponentType( models.Model ):
     """
     Helper class for classifying parts.
@@ -325,13 +329,10 @@ class ComponentType( models.Model ):
 
 
 
-
-
-
 ################################################################################################################
 class Component(models.Model):
     """
-    Abstract base class for DNA and protein 'parts' as well as host cells.
+    Abstract base class for nucleic acids, proteins, buffers and cells.
     """
     
     STATUS_CHOICES = ( ('available', 'available'),
@@ -400,28 +401,70 @@ class Component(models.Model):
     class Meta:
         abstract = True
  
-    def isavailable(self):
-        return self.samples.count() > 0
-    isavailable.short_description = 'available'
-    isavailable.boolean = True
-    
+#    def isavailable(self):
+#        return self.samples.count() > 0
+#    isavailable.short_description = 'available'
+#    isavailable.boolean = True
+#    
+#    def related_samples( self ):
+#        """
+#        """
+#        from django.db.models import Q
+#        q = Q(dna=self) | Q(cell=self) | Q(vector=self) | Q(protein=self)
+#        
+#        r = Sample.objects.filter( q )
+#        return r
+
+
+
+################################################################################################################    
+class ProteinComponent(Component):
+    """
+    Description of a amino-acid encoded protein 'part'.
+    """
+    #: optional sequence
+    sequence = models.TextField( help_text='amino acid sequence', 
+                                 blank=True, null=True )
+
+    class Meta(Component.Meta):
+        pass
+
+    def get_relative_url(self):
+        """
+        Define standard relative URL for object access in templates
+        """
+        return 'proteincomponent/%i/' % self.id
+
+    def size(self):
+        """@return int; size in aminoacids"""
+        if self.sequence:
+            return len( self.sequence )
+        return 0
+
     def related_samples( self ):
         """
         """
-        from django.db.models import Q
-        q = Q(dna=self) | Q(cell=self) | Q(vector=self) | Q(protein=self)
-        
-        r = Sample.objects.filter( q )
-        return r
-    
-    
+        return self.protein_samples.all()
 
+
+
+
+################################################################################################################    
+################################################################################################################    
+################################################################################################################    
+##
+## TODO
+## Raik should check what is needed from here
+##
+################################################################################################################    
+################################################################################################################    
+################################################################################################################    
 
 
 ################################################################################################################
-class DnaComponent(Component):
+class NucleicAcidComponent(Component):
     """
-    Description of a stretch of DNA.
+    Description of a stretch of DNA or RNA.
     """
     #: optional sequence
     sequence = models.TextField( help_text='nucleotide sequence', 
@@ -442,7 +485,7 @@ class DnaComponent(Component):
         """
         Define standard relative URL for object access in templates
         """
-        return 'dnacomponent/%i/' % self.id
+        return 'nucleicacidcomponent/%i/' % self.id
 
     def size(self):
         """@return int; size in nucleotides"""
@@ -451,7 +494,7 @@ class DnaComponent(Component):
         return 0
 
     def isavailable_dna(self):
-        """True if there is a DNA-only sample containing this DnaComponent"""
+        """True if there is a DNA-only sample containing this NucleicAcidComponent"""
         return self.dna_samples.count() > 0
     isavailable_dna.short_description = 'DNA'
     isavailable_dna.boolean = True
@@ -459,7 +502,7 @@ class DnaComponent(Component):
     def isavailable_cells(self):
         """
         True if there is a cell stock (DNA + cells) sample for this 
-        DnaComponent
+        NucleicAcidComponent
         """
         samples = self.dna_samples.all()
 
@@ -527,62 +570,35 @@ class SelectiveMarker( models.Model ):
 
 
 ################################################################################################################    
-class VectorDnaComponent(DnaComponent):
-    """
-    Description of vector backbone. So far identical to DnaComponent.
-    """
-
-    #: [optional] link to resistence or similar marker
-    marker = models.ManyToManyField( SelectiveMarker,
-                                     verbose_name='selective marker(s)',
-                                     null=True, blank=True)
-
-    class Meta(Component.Meta):
-        pass
+#class VectorDnaComponent(NucleicAcidComponent):
+#    """
+#    Description of vector backbone. So far identical to NucleicAcidComponent.
+#    """
+#
+#    #: [optional] link to resistence or similar marker
+#    marker = models.ManyToManyField(SelectiveMarker,
+#                                     verbose_name='selective marker(s)',
+#                                     null=True, blank=True)
+#
+#    class Meta(Component.Meta):
+#        pass
+#    
+#    def get_relative_url(self):
+#        """
+#        Define standard relative URL for object access in templates
+#        """
+#        return 'vectordnacomponent/%i/' % self.id
+#
+#    def related_samples(self):
+#        """
+#        """
+#        return self.vector_samples.all()
     
-    def get_relative_url(self):
-        """
-        Define standard relative URL for object access in templates
-        """
-        return 'vectordnacomponent/%i/' % self.id
-
-    def related_samples( self ):
-        """
-        """
-        return self.vector_samples.all()
-    
 
 
 
 
-################################################################################################################    
-class ProteinComponent(Component):
-    """
-    Description of a amino-acid encoded protein 'part'.
-    """
-    #: optional sequence
-    sequence = models.TextField( help_text='amino acid sequence', 
-                                 blank=True, null=True )
 
-    class Meta(Component.Meta):
-        pass
-
-    def get_relative_url(self):
-        """
-        Define standard relative URL for object access in templates
-        """
-        return 'proteincomponent/%i/' % self.id
-
-    def size(self):
-        """@return int; size in aminoacids"""
-        if self.sequence:
-            return len( self.sequence )
-        return 0
-
-    def related_samples( self ):
-        """
-        """
-        return self.protein_samples.all()
 
 
 
@@ -670,7 +686,7 @@ class Collection(models.Model):
     description = models.TextField( 'Detailed description', blank=True,
         help_text='Use restructured text markup for links, lists and headlines.')
     
-    dnaComponents = models.ManyToManyField( DnaComponent, null=True, blank=True,
+    dnaComponents = models.ManyToManyField( NucleicAcidComponent, null=True, blank=True,
                                             verbose_name='DNA parts' )
 
     proteinComponents = models.ManyToManyField( ProteinComponent, 
