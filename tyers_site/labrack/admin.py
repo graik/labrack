@@ -27,15 +27,73 @@ admin_root = "/admin/labrack"
 
 
 ################################################################################################################
-class NucleicAcidComponentAdmin(admin.ModelAdmin):
 
-    raw_id_fields = ('translatesTo', 'variantOf', 'componentType')  
+
+class ComponentAdmin(admin.ModelAdmin):
+    fieldsets = (
+                 (None, {
+                         'fields': (('displayId', 'shortDescription','status'),
+                                    ('uri',))
+                                    
+                         }
+                  ),
+                 ('Permission', {
+                                 'classes': ('collapse',),
+                                 'fields' : ((('owners'), ('group_read', 'group_write'))
+                                             )
+                                 }
+                  ),
+                 ('Details', {
+                              'fields' : (('componentType', 'variantOf', 'abstract'),
+                                          ('description',)),
+          
+                                          }
+                  ),
+                 
+                 )
+    raw_id_fields = ('variantOf', 'componentType')  
+    list_display = ('displayId', 'shortDescription','status', 'created_by', 'creation_date', 'modification_date')
+    list_filter = ('status', 'created_by')
+    search_fields = ('displayId', 'shortDescription', 'description')
+    ordering = ('displayId',)
+    
+    
+    # Save the owner of the object
+    def save_model(self, request, obj, form, change):
+        if getattr(obj, 'created_by', None) is None:
+            obj.created_by = request.user
+        obj.save()
+
+
+
+class ProteinComponentAdmin(ComponentAdmin):
+    fieldsets = ComponentAdmin.fieldsets.__add__((('Sequence Details', {
+                                                                        'fields': ('sequence', 'annotations'),
+                                                                        'classes':('collapse',)
+                                                                        }
+                                                   ),))
+    search_fields = ComponentAdmin.search_fields.__add__(('sequence',))    
+
+
+################################################################################################################
+class NucleicAcidComponentAdmin(ComponentAdmin):
+    fieldsets = ComponentAdmin.fieldsets.__add__((('Sequence Details', {
+                                                                        'fields': ('sequence', 'annotations'),
+                                                                        'classes':('collapse',)
+                                                                        }
+                                                   ),))    
+    raw_id_fields = ComponentAdmin.raw_id_fields.__add__(('translatesTo',))
+    list_filter = ComponentAdmin.list_filter.__add__(('optimizedFor',))
+    search_fields = ComponentAdmin.search_fields.__add__(('sequence',))
+
+
+      
     
     fieldsets = (
         (None,
-         {'fields': (('displayId', 'name', 'uri'),
-                     ('shortDescription', 'abstract'),
-                     ('users', 'status'))}),
+         {'fields': (('displayId', 'shortDescription'),
+                     ('uri', 'abstract'),
+                     ('status'))}),
         ('Details',
          {'fields' : (('componentType', 'variantOf'),
                      ('optimizedFor', 'translatesTo'),
@@ -48,18 +106,8 @@ class NucleicAcidComponentAdmin(admin.ModelAdmin):
           'classes':('collapse',)}),
         )
 
-    list_display = ('displayId', 'name', 'shortDescription',
-                      'show_optimizedFor', 'show_translatesTo', 'status',
-                      'isavailable_cells',
-                      'isavailable_dna'
-                      )
-    list_filter = ('users', 'status', 'optimizedFor',
-                      'componentType',
-                      )
-    ordering = ('displayId',)
-    search_fields = ('displayId', 'name', 'shortDescription', 'description',
-                      'users__username', 'sequence')
-
+    list_display = ComponentAdmin.list_display.__add__(('show_optimizedFor', 'show_translatesTo', 'isavailable_cells','isavailable_dna'))
+    
 
 
 
@@ -196,8 +244,8 @@ admin.site.register(Container, ContainerAdmin)
 admin.site.register(Location, LocationAdmin)
 admin.site.register(Sample, SampleAdmin) 
 admin.site.register(Unit, UnitAdmin) 
-
-
+admin.site.register(ProteinComponent, ProteinComponentAdmin)
+admin.site.register(NucleicAcidComponent, NucleicAcidComponentAdmin)
 
 ################################################################################################################    
 ################################################################################################################    
@@ -213,8 +261,7 @@ admin.site.register(Unit, UnitAdmin)
 
 
 #TODO check if needed
-admin.site.register(NucleicAcidComponent, NucleicAcidComponentAdmin)
-admin.site.register(ProteinComponent)
+
 #admin.site.register(Chassis)
 admin.site.register(ComponentType)
 #admin.site.register(Collection)

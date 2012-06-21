@@ -332,7 +332,7 @@ class ComponentType( models.Model ):
 ################################################################################################################
 class Component(models.Model):
     """
-    Abstract base class for nucleic acids, proteins, buffers and cells.
+    Abstract base class for cells, nucleic acids, proteins, and chemicals.
     """
     
     STATUS_CHOICES = ( ('available', 'available'),
@@ -340,62 +340,30 @@ class Component(models.Model):
                        ('under_construction', 'under construction'),
                        ('abandoned', 'abandoned'))
     
-    #: required ID
-    displayId = models.CharField('ID', max_length=20,
-                    help_text='Identification; Unique within collection.', 
-                    unique=True)
-    
-    #: optional short name
-    name = models.CharField('Name', max_length=50, blank=True, null=True,
-                            help_text='descriptive name (e.g. "TEV protease")')
-    
-    #: uri should be constructed from #displayId if left empty
-    uri = models.URLField( blank=True, null=True, unique=False,
-                help_text='Specify external URI or leave blank for local URI')
-    
-    #: required short description -- will be added as first line in SBOL
-    #: exports (where this field doesn't exist)
-    shortDescription = models.CharField( 'short Description', max_length=200,
-        help_text='very short description for listings')
+    displayId = models.CharField('Component (ID)', max_length=20, help_text='Identification', unique=True)
+    shortDescription = models.CharField('Short description', max_length=50, help_text='Descriptive name (e.g. "TEV protease")')
+    description = models.TextField( 'Detailed description', blank=True)
+    uri = models.URLField( blank=True, null=True, unique=False, help_text='Specify external URI or leave blank for local URI') #: uri should be constructed from #displayId if left empty
+    status = models.CharField( max_length=30, choices=STATUS_CHOICES, default='planning')  #: non-SBOL compliant status    
+    componentType = models.ManyToManyField( ComponentType, blank=True, null=True, verbose_name='Type', help_text='Classification of this part.')
+    variantOf = models.ManyToManyField( 'self', symmetrical=False, blank=True, null=True, verbose_name='Variant of', help_text='Specify part(s) this part is derived from, if any.' )
+    abstract = models.BooleanField( 'Abstract Part', default=False, help_text='Entry only serves as container to organize related parts.')
+    annotations = models.ManyToManyField( 'SequenceAnnotation', verbose_name='Annotations', blank=True, null=True )
+    creation_date = models.DateTimeField(auto_now_add=True)
+    modification_date = models.DateTimeField(auto_now=True)
 
-    #: optional long description
-    description = models.TextField( 'Detailed description', blank=True,
-        help_text='Use restructured text markup for links, lists and headlines')
-    
-    #: optional type
-    componentType = models.ManyToManyField( ComponentType, 
-                                     blank=True, null=True,
-                                     verbose_name='Type',
-##                                     related_name='%(class)s',
-                                     help_text='Classification of this part.')
+ 
+    #: Permissions
+    created_by = models.ForeignKey(User, null=True, blank=True, related_name='%(class)s_created_by')
+    owners = models.ManyToManyField(User, null=True, blank=True, related_name='%(class)s_owners')
+    group_read = models.ManyToManyField(Group, null=True, blank=True, related_name='%(class)s_groups_read')
+    group_write = models.ManyToManyField(Group, null=True, blank=True, related_name='%(class)s_groups_write')
 
-    #: optional directional relationship to parent part or parts
-    variantOf = models.ManyToManyField( 'self', symmetrical=False,
-                                        blank=True, null=True,
-                                        verbose_name='Variant of',
-##                                        related_name='%(class)Variants',
-        help_text='Specify part(s) this part is derived from, if any.' )
-    
-    #: optional classification as abstract part with missing information
-    abstract = models.BooleanField( 'Abstract Part', default=False,
-        help_text='Entry only serves as container to organize related parts.')
-    
-    #: creators or users authorized to change
-    users = models.ManyToManyField(User, db_index=True,
-                                   help_text='Primary users of this part.')
-    
-    annotations = models.ManyToManyField( 'SequenceAnnotation',
-                                          verbose_name='Annotations',
-                                          blank=True, null=True )
-    
-    #: non-SBOL compliant status
-    status = models.CharField( max_length=30,
-                               choices=STATUS_CHOICES,
-                               default='planning')
+ 
     
     def __unicode__(self):
-        name = self.name if self.name else ''
-        return u'%s - %s' % (self.displayId, name)
+        shortDescription = self.shortDescription if self.shortDescription else ''
+        return u'%s - %s' % (self.displayId, shortDescription)
     
    
     class Meta:
@@ -425,6 +393,9 @@ class ProteinComponent(Component):
     #: optional sequence
     sequence = models.TextField( help_text='amino acid sequence', 
                                  blank=True, null=True )
+    
+    
+    
 
     class Meta(Component.Meta):
         pass
