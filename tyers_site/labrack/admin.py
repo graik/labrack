@@ -44,14 +44,14 @@ class ComponentAdmin(admin.ModelAdmin):
                                  }
                   ),
                  ('Details', {
-                              'fields' : (('componentType', 'variantOf', 'abstract'),
+                              'fields' : (('componentClassification', 'variantOf', 'abstract'),
                                           ('description',)),
           
                                           }
                   ),
                  
                  )
-    raw_id_fields = ('variantOf', 'componentType')  
+    raw_id_fields = ('variantOf', 'componentClassification')  
     list_display = ('displayId', 'shortDescription','status', 'created_by', 'creation_date', 'modification_date')
     list_filter = ('status', 'created_by')
     search_fields = ('displayId', 'shortDescription', 'description')
@@ -67,7 +67,7 @@ class ComponentAdmin(admin.ModelAdmin):
 
 
 class ProteinComponentAdmin(ComponentAdmin):
-    fieldsets = ComponentAdmin.fieldsets.__add__((('Sequence Details', {
+    fieldsets = ComponentAdmin.fieldsets.__add__((('Protein Details', {
                                                                         'fields': ('sequence', 'annotations'),
                                                                         'classes':('collapse',)
                                                                         }
@@ -75,43 +75,25 @@ class ProteinComponentAdmin(ComponentAdmin):
     search_fields = ComponentAdmin.search_fields.__add__(('sequence',))    
 
 
+class PeptideComponentAdmin(ProteinComponentAdmin):
+    pass
+
 ################################################################################################################
 class NucleicAcidComponentAdmin(ComponentAdmin):
-    fieldsets = ComponentAdmin.fieldsets.__add__((('Sequence Details', {
-                                                                        'fields': ('sequence', 'annotations'),
+    fieldsets = ComponentAdmin.fieldsets.__add__((('Nucleic acid Details', {
+                                                                        'fields': (('sequence', 'annotations'),
+                                                                                    ('optimizedFor', 'translatesTo')
+                                                                                   ),
                                                                         'classes':('collapse',)
                                                                         }
                                                    ),))    
     raw_id_fields = ComponentAdmin.raw_id_fields.__add__(('translatesTo',))
+    list_display = ComponentAdmin.list_display.__add__(('show_optimizedFor', 'show_translatesTo', 'isavailable_cells','isavailable_dna'))
     list_filter = ComponentAdmin.list_filter.__add__(('optimizedFor',))
     search_fields = ComponentAdmin.search_fields.__add__(('sequence',))
 
 
-      
-    
-    fieldsets = (
-        (None,
-         {'fields': (('displayId', 'shortDescription'),
-                     ('uri', 'abstract'),
-                     ('status'))}),
-        ('Details',
-         {'fields' : (('componentType', 'variantOf'),
-                     ('optimizedFor', 'translatesTo'),
-                     ('description',)),
-          'description' : 'click magnifier to select related components from' + \
-                          ' pop-up dialogs. Repeat to select more than one.'
-          }),
-        ('Sequence Details',
-         {'fields': ('sequence', 'annotations'),
-          'classes':('collapse',)}),
-        )
-
-    list_display = ComponentAdmin.list_display.__add__(('show_optimizedFor', 'show_translatesTo', 'isavailable_cells','isavailable_dna'))
-    
-
-
-
-    
+   
     
 
 ################################################################################################################
@@ -239,13 +221,35 @@ class UnitAdmin(admin.ModelAdmin):
 
 
 
+################################################################################################################
+class ComponentClassificationAdmin(admin.ModelAdmin):
+    fieldsets = (
+                 (None, {
+                         'fields' : (('shortDescription','uri'),
+                                      'subTypeOf',
+                                     )
+                         }
+                  ),
+                 )
+
+
+
+################################################################################################################
+
+
+
 
 admin.site.register(Container, ContainerAdmin)
 admin.site.register(Location, LocationAdmin)
 admin.site.register(Sample, SampleAdmin) 
 admin.site.register(Unit, UnitAdmin) 
+admin.site.register(ComponentClassification, ComponentClassificationAdmin)
+admin.site.register(PeptideComponent, PeptideComponentAdmin)
 admin.site.register(ProteinComponent, ProteinComponentAdmin)
+admin.site.register(ChemicalComponent, ComponentAdmin)
 admin.site.register(NucleicAcidComponent, NucleicAcidComponentAdmin)
+
+
 
 ################################################################################################################    
 ################################################################################################################    
@@ -258,12 +262,7 @@ admin.site.register(NucleicAcidComponent, NucleicAcidComponentAdmin)
 ################################################################################################################    
 ################################################################################################################    
 
-
-
-#TODO check if needed
-
 #admin.site.register(Chassis)
-admin.site.register(ComponentType)
 #admin.site.register(Collection)
 
 

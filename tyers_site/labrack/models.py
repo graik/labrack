@@ -283,7 +283,7 @@ class Sample( models.Model ):
 
 
 ################################################################################################################
-component_limits = {'model__in':('nucleicacidcomponent', 'proteincomponent', 'sample')}
+component_limits = {'model__in':('chemicalcomponent', 'nucleicacidcomponent', 'peptidecomponent', 'proteincomponent', 'sample')}
 class SampleContent(models.Model):
     """
     Define the components that the sample is made of.
@@ -300,32 +300,20 @@ class SampleContent(models.Model):
 
 
 ################################################################################################################
-##
-##  Do we need this???
-##
-
-class ComponentType( models.Model ):
+class ComponentClassification( models.Model ):
     """
     Helper class for classifying parts.
     Following SBOL, each type should correspond to a Sequence Ontology term.
     """
     
-    #: required
-    uri = models.URLField( unique=False,
-        help_text='Typically a sequence ontology URI, example: '+\
-        'http://purl.obolibrary.org/obo/SO_0000167' )
-    
-    #: required
-    name = models.CharField( max_length=50,
-                             help_text='(Sequence Ontology) name')
+    uri = models.URLField( unique=False,help_text='Typically a sequence ontology URI, example: http://purl.obolibrary.org/obo/SO_0000167' )
+    shortDescription = models.CharField( max_length=50, help_text='Brief description for tables and listings')
 
     #: required ? directional relationship to parent type or types
-    subTypeOf = models.ManyToManyField('self', symmetrical=False,
-                                       blank=True, null=True,
-                                       related_name='subTypes')
+    subTypeOf = models.ManyToManyField('self', symmetrical=False, blank=True, null=True, related_name='subTypes')
 
     def __unicode__( self ):
-        return self.name
+        return self.shortDescription
 
 
 
@@ -345,12 +333,12 @@ class Component(models.Model):
     description = models.TextField( 'Detailed description', blank=True)
     uri = models.URLField( blank=True, null=True, unique=False, help_text='Specify external URI or leave blank for local URI') #: uri should be constructed from #displayId if left empty
     status = models.CharField( max_length=30, choices=STATUS_CHOICES, default='planning')  #: non-SBOL compliant status    
-    componentType = models.ManyToManyField( ComponentType, blank=True, null=True, verbose_name='Type', help_text='Classification of this part.')
+    componentClassification = models.ManyToManyField( ComponentClassification, blank=True, null=True, verbose_name='Classification', help_text='Classification of this part.')
     variantOf = models.ManyToManyField( 'self', symmetrical=False, blank=True, null=True, verbose_name='Variant of', help_text='Specify part(s) this part is derived from, if any.' )
     abstract = models.BooleanField( 'Abstract Part', default=False, help_text='Entry only serves as container to organize related parts.')
     annotations = models.ManyToManyField( 'SequenceAnnotation', verbose_name='Annotations', blank=True, null=True )
-    creation_date = models.DateTimeField(auto_now_add=True)
-    modification_date = models.DateTimeField(auto_now=True)
+    creation_date = models.DateTimeField(auto_now_add=True, null=True)
+    modification_date = models.DateTimeField(auto_now=True, null=True)
 
  
     #: Permissions
@@ -388,15 +376,12 @@ class Component(models.Model):
 ################################################################################################################    
 class ProteinComponent(Component):
     """
-    Description of a amino-acid encoded protein 'part'.
+    Description of a protein 'part'.
     """
     #: optional sequence
-    sequence = models.TextField( help_text='amino acid sequence', 
-                                 blank=True, null=True )
+    sequence = models.TextField( help_text='amino acid sequence', blank=True, null=True )
     
     
-    
-
     class Meta(Component.Meta):
         pass
 
@@ -406,17 +391,67 @@ class ProteinComponent(Component):
         """
         return 'proteincomponent/%i/' % self.id
 
-    def size(self):
-        """@return int; size in aminoacids"""
-        if self.sequence:
-            return len( self.sequence )
-        return 0
+#    def size(self):
+#        """@return int; size in aminoacids"""
+#        if self.sequence:
+#            return len( self.sequence )
+#        return 0
+#
+#    def related_samples( self ):
+#        """
+#        """
+#        return self.protein_samples.all()
 
-    def related_samples( self ):
-        """
-        """
-        return self.protein_samples.all()
 
+
+################################################################################################################    
+class PeptideComponent(Component):
+    """
+    Description of a peptide 'part'.
+    """
+    #: optional sequence
+    sequence = models.TextField( help_text='amino acid sequence', blank=True, null=True )
+    
+    
+    class Meta(Component.Meta):
+        pass
+
+    def get_relative_url(self):
+        """
+        Define standard relative URL for object access in templates
+        """
+        return 'peptidecomponent/%i/' % self.id
+
+#    def size(self):
+#        """@return int; size in aminoacids"""
+#        if self.sequence:
+#            return len( self.sequence )
+#        return 0
+#
+#    def related_samples( self ):
+#        """
+#        """
+#        return self.protein_samples.all()
+
+
+
+################################################################################################################    
+class ChemicalComponent(Component):
+    """
+    Description of a chemical.
+    """
+    #: To define
+    
+    
+    
+    class Meta(Component.Meta):
+        pass
+
+    def get_relative_url(self):
+        """
+        Define standard relative URL for object access in templates
+        """
+        return 'chemicalcomponent/%i/' % self.id
 
 
 
@@ -438,16 +473,9 @@ class NucleicAcidComponent(Component):
     Description of a stretch of DNA or RNA.
     """
     #: optional sequence
-    sequence = models.TextField( help_text='nucleotide sequence', 
-                                 blank=True, null=True )
-    
-    translatesTo = models.ForeignKey( 'ProteinComponent', 
-                                      blank=True, null=True,
-                                      related_name='encodedBy',
-        help_text='Protein part this sequence translates to' )
-    
-    optimizedFor = models.ForeignKey( 'Chassis',
-                                     blank=True, null=True )
+    sequence = models.TextField( help_text='nucleotide sequence', blank=True, null=True )
+    translatesTo = models.ForeignKey( 'ProteinComponent', blank=True, null=True, related_name='encodedBy', help_text='Protein part this sequence translates to' )
+    optimizedFor = models.ForeignKey( 'Chassis', blank=True, null=True )
 
     class Meta(Component.Meta):
         pass
