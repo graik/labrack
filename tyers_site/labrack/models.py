@@ -132,7 +132,8 @@ class Sample( models.Model ):
     displayId = models.CharField('Sample (ID)', max_length=20, help_text='Label or well position. Must be unique within container.' )
     shortDescription = models.CharField('Short description', max_length=200, blank=True, help_text='Brief description for tables and listings')
     container = models.ForeignKey( Container, related_name='samples' )  #: link to a single container
-    aliquotnb = models.PositiveIntegerField('Aliquot number', null=True, blank=True)
+    aliquotnb = models.PositiveIntegerField('Number of aliquots', null=True, blank=True)
+    empty = models.BooleanField('Empty', default=False)
     description = models.TextField( 'Detailed description', blank=True)
     preparation_date = models.DateTimeField(default=datetime.now())
     creation_date = models.DateTimeField(auto_now_add=True)

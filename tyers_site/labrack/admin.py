@@ -76,7 +76,11 @@ class ProteinComponentAdmin(ComponentAdmin):
 
 
 class PeptideComponentAdmin(ProteinComponentAdmin):
-    pass
+    fieldsets = ComponentAdmin.fieldsets.__add__((('Peptide Details', {
+                                                                        'fields': ('sequence', 'annotations'),
+                                                                        'classes':('collapse',)
+                                                                        }
+                                                   ),))
 
 ################################################################################################################
 class NucleicAcidComponentAdmin(ComponentAdmin):
@@ -162,8 +166,8 @@ class SampleAdmin(admin.ModelAdmin):
    
     fieldsets = (
                  (None, {
-                         'fields' : ((('displayId', 'shortDescription'),
-                                      ('container', 'aliquotnb', 'preparation_date'),
+                         'fields' : ((('displayId', 'shortDescription', 'preparation_date'),
+                                      ('container', 'aliquotnb','empty'),
                                       'description')
                                      )
                          }
