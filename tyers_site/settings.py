@@ -1,6 +1,10 @@
 # Django settings for samplesDB project.
-
+import sys
 import labrack.tools as T
+
+## Path magic to use custom south version
+sys.path = [T.approot()] + sys.path
+
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
