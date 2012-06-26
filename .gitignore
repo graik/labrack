@@ -1,6 +1,7 @@
 # Python compiled files
 *.py[cod]
 
+
 # eclipse
 .project
 .pydevproject
