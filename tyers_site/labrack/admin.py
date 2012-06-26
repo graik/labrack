@@ -187,7 +187,7 @@ class SampleAdmin(admin.ModelAdmin):
         js = (settings.MEDIA_URL + '/js/genericcollection.js',)
 
 
-    list_display   = ('displayId', 'shortDescription','location_url', 'container_url', 'created_by', 'preparation_date', 'creation_date', 'modification_date')
+    list_display   = ('displayId', 'shortDescription','location_url', 'container_url', 'created_by', 'preparation_date', 'creation_date', 'modification_date','qr_code_img')
     list_filter    = ('container', 'container__location', 'created_by')
     list_display_links  = ('displayId',)
     ordering       = ('container', 'displayId')
@@ -213,6 +213,13 @@ class SampleAdmin(admin.ModelAdmin):
         return mark_safe('<a href="%s/%s">%s</a>' % (admin_root, url, obj.container.location.__unicode__()))
     location_url.allow_tags = True
     location_url.short_description = 'Location'
+    
+    def qr_code_img(self, obj):
+        data = obj.qr_code()
+        return mark_safe('<img src="http://chart.apis.google.com/chart?cht=qr&chs=55x55&chl=' + data + '" />')
+        #return mark_safe(data)
+    qr_code_img.allow_tags = True
+    qr_code_img.short_description = 'QR code'
 
 
 

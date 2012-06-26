@@ -4,7 +4,7 @@ from django.contrib.auth.models import Group
 from datetime import datetime
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
-
+import urllib
 
 # Create your models here.
 
@@ -161,6 +161,21 @@ class Sample( models.Model ):
         """
         return 'sample/%i/' % self.id
     
+    def qr_code(self):
+        data = str(self.displayId + '\n' + self.shortDescription + '\n' + self.preparation_date.__str__() + '\n')
+        for x in self.sameplecontent.all():
+            data += x.content_object.__str__()
+            if(str(x.amount) != "None"):
+                data += '[' + str(x.amount) + ' ' + str(x.amount_unit) + ']' 
+            if(str(x.concentration) != "None"):
+                data += '[' + str(x.concentration) + ' ' + str(x.concentration_unit)  + ']'
+            data += '\n'
+        data += '\n' 
+
+
+        return urllib.quote(data)
+        #return data
+    
 ##    def get_absolute_url(self):
 ##        """Define standard URL for object.get_absolute_url access in templates """
 ##        return APP_URL+'/sample/%i/' % self.id
@@ -289,7 +304,7 @@ class SampleContent(models.Model):
     """
     Define the components that the sample is made of.
     """
-    sample = models.ForeignKey(Sample)
+    sample = models.ForeignKey(Sample, related_name='sameplecontent')
     content_type = models.ForeignKey(ContentType, limit_choices_to=component_limits)
     object_id = models.PositiveIntegerField()
     content_object = generic.GenericForeignKey('content_type', 'object_id')
