@@ -15,14 +15,25 @@ class Location(models.Model):
     """
     A location (fridge, freezer, shelf) where container are stored
     """
-    displayId = models.CharField('Location (ID)', max_length=20, unique=True, help_text='Unique identifier')
-    shortDescription = models.CharField('Short description', max_length=200, blank=True, help_text='Brief description of fridge, freezer or shelf')
+    displayId = models.CharField('Location (ID)', max_length=20, unique=True,
+                                  help_text='Unique identifier')
+    
+    shortDescription = models.CharField('Short description', max_length=200,
+                                         blank=True, 
+                                         help_text='Brief description of fridge, freezer or shelf')
+    
     temperature = models.FloatField('Temperature', help_text= unichr(176) + 'C')
+    
     room = models.CharField('Room', max_length=20)
+    
     creation_date = models.DateTimeField(auto_now_add=True)
+    
     modification_date = models.DateTimeField(auto_now=True)
+    
+    
     def __unicode__(self):
-        return self.displayId + " (" + self.temperature.__str__() + unichr(176) + "C)  [Room: " + self.room + "]"
+        return self.displayId + " (" + self.temperature.__str__() + unichr(176)\
+                + "C)  [Room: " + self.room + "]"
 
     def get_relative_url(self):
         """
@@ -44,20 +55,38 @@ class Container( models.Model ):
         ('box', 'Freezer box'),
         ('other', 'other' ) )
     
-    displayId = models.CharField('Container (ID)', max_length=20, unique=True, help_text='Unique identifier. E.g. D001 or C012 (D...DNA, C...Cells)')
-    shortDescription = models.CharField('Short description', max_length=200, blank=True, help_text='Brief description for tables and listings')
-    containerType = models.CharField('Type of container', max_length=30, choices=STORAGE_CONTAINER_TYPES )
+    displayId = models.CharField('Container (ID)', max_length=20, unique=True, 
+                                 help_text='Unique identifier. E.g. D001 or \
+                                 C012 (D...DNA, C...Cells)')
+    
+    shortDescription = models.CharField('Short description', max_length=200,
+                                        blank=True, help_text='Brief description\
+                                         for tables and listings')
+    
+    containerType = models.CharField('Type of container', max_length=30, 
+                                     choices=STORAGE_CONTAINER_TYPES )
+    
     location = models.ForeignKey(Location, related_name='containers')
 
+
     #: Permissions
-    created_by = models.ForeignKey(User, null=True, blank=True, related_name='container_created_by')
-    owners = models.ManyToManyField(User, null=True, blank=True, related_name='container_owners')
-    group_read = models.ManyToManyField(Group, null=True, blank=True, related_name='container_groups_read')
-    group_write = models.ManyToManyField(Group, null=True, blank=True, related_name='container_groups_write')
+    created_by = models.ForeignKey(User, null=True, blank=True, 
+                                   related_name='container_created_by')
+    
+    owners = models.ManyToManyField(User, null=True, blank=True, 
+                                    related_name='container_owners')
+    
+    group_read = models.ManyToManyField(Group, null=True, blank=True, 
+                                        related_name='container_groups_read')
+    
+    group_write = models.ManyToManyField(Group, null=True, blank=True, 
+                                         related_name='container_groups_write')
 
     #: optional long description
     description = models.TextField( 'Detailed description', blank=True)
+    
     creation_date = models.DateTimeField(auto_now_add=True)
+    
     modification_date = models.DateTimeField(auto_now=True)
 
 
@@ -116,6 +145,7 @@ class Unit(models.Model):
     UNIT_TYPE = (('amount','amount'), ('concentration','concentration'))
     
     name = models.CharField(max_length=10)
+    
     type = models.CharField(max_length=25, choices=UNIT_TYPE)
     
     def __unicode__(self):
@@ -129,22 +159,42 @@ class Sample( models.Model ):
     """
     Sample describes a single tube or well holding DNA, cells or protein.
     """
-    displayId = models.CharField('Sample (ID)', max_length=20, help_text='Label or well position. Must be unique within container.' )
-    shortDescription = models.CharField('Short description', max_length=200, blank=True, help_text='Brief description for tables and listings')
-    container = models.ForeignKey( Container, related_name='samples' )  #: link to a single container
-    aliquotnb = models.PositiveIntegerField('Number of aliquots', null=True, blank=True)
+    displayId = models.CharField('Sample (ID)', max_length=20, 
+                                 help_text='Label or well position. Must be \
+                                 unique within container.' )
+    
+    shortDescription = models.CharField('Short description', max_length=200, 
+                                        blank=True, help_text='Brief description\
+                                         for tables and listings')
+    
+    container = models.ForeignKey( Container, related_name='samples' )
+    
+    aliquotnb = models.PositiveIntegerField('Number of aliquots', null=True, 
+                                            blank=True)
+    
     empty = models.BooleanField('Empty', default=False)
+    
     description = models.TextField( 'Detailed description', blank=True)
+    
     preparation_date = models.DateTimeField(default=datetime.now())
+    
     creation_date = models.DateTimeField(auto_now_add=True)
+    
     modification_date = models.DateTimeField(auto_now=True)
 
 
     #: Permissions
-    created_by = models.ForeignKey(User, null=True, blank=True, related_name='sample_created_by')
-    owners = models.ManyToManyField(User, null=True, blank=True, related_name='sample_owners')
-    group_read = models.ManyToManyField(Group, null=True, blank=True, related_name='sample_groups_read')
-    group_write = models.ManyToManyField(Group, null=True, blank=True, related_name='sample_groups_write')
+    created_by = models.ForeignKey(User, null=True, blank=True, 
+                                   related_name='sample_created_by')
+    
+    owners = models.ManyToManyField(User, null=True, blank=True, 
+                                    related_name='sample_owners')
+    
+    group_read = models.ManyToManyField(Group, null=True, blank=True, 
+                                        related_name='sample_groups_read')
+    
+    group_write = models.ManyToManyField(Group, null=True, blank=True, 
+                                         related_name='sample_groups_write')
 
     
     class Meta:
@@ -162,7 +212,9 @@ class Sample( models.Model ):
         return 'sample/%i/' % self.id
     
     def qr_code(self):
-        data = str(self.displayId + '\n' + self.shortDescription + '\n' + self.preparation_date.__str__() + '\n')
+        data = str(self.displayId + '\n' + self.shortDescription + '\n' + 
+                   self.preparation_date.__str__() + '\n')
+        
         for x in self.sameplecontent.all():
             data += x.content_object.__str__()
             if(str(x.amount) != "None"):
@@ -299,19 +351,31 @@ class Sample( models.Model ):
 
 
 ################################################################################################################
-component_limits = {'model__in':('chemicalcomponent', 'nucleicacidcomponent', 'peptidecomponent', 'proteincomponent', 'sample')}
+component_limits = {'model__in':('chemicalcomponent', 'nucleicacidcomponent', 
+                                 'peptidecomponent', 'proteincomponent', 'sample')}
+
 class SampleContent(models.Model):
     """
     Define the components that the sample is made of.
     """
     sample = models.ForeignKey(Sample, related_name='sameplecontent')
+    
     content_type = models.ForeignKey(ContentType, limit_choices_to=component_limits)
+    
     object_id = models.PositiveIntegerField()
+    
     content_object = generic.GenericForeignKey('content_type', 'object_id')
+    
     amount = models.FloatField('Amount/Volume', null=True, blank=True)
-    amount_unit = models.ForeignKey(Unit, related_name='amount_unit', null=True, blank=True, limit_choices_to = {'type': 'amount'})
+    
+    amount_unit = models.ForeignKey(Unit, related_name='amount_unit', null=True, 
+                                    blank=True, limit_choices_to = {'type': 'amount'})
+    
     concentration = models.FloatField('Concentration', null=True, blank=True)
-    concentration_unit = models.ForeignKey(Unit, related_name='concentration_unit', null=True, blank=True, limit_choices_to = {'type': 'concentration'})
+    
+    concentration_unit = models.ForeignKey(Unit, related_name='concentration_unit', 
+                                           null=True, blank=True, 
+                                           limit_choices_to = {'type': 'concentration'})
 
 
 
@@ -322,11 +386,17 @@ class ComponentClassification( models.Model ):
     Following SBOL, each type should correspond to a Sequence Ontology term.
     """
     
-    uri = models.URLField( unique=False,help_text='Typically a sequence ontology URI, example: http://purl.obolibrary.org/obo/SO_0000167' )
-    shortDescription = models.CharField( max_length=50, help_text='Brief description for tables and listings')
+    uri = models.URLField( unique=False,
+                           help_text='Typically a sequence ontology URI, example: \
+                           http://purl.obolibrary.org/obo/SO_0000167' )
+    
+    shortDescription = models.CharField( max_length=50, 
+                                         help_text='Brief description for tables\
+                                          and listings')
 
     #: required ? directional relationship to parent type or types
-    subTypeOf = models.ManyToManyField('self', symmetrical=False, blank=True, null=True, related_name='subTypes')
+    subTypeOf = models.ManyToManyField('self', symmetrical=False, blank=True,
+                                        null=True, related_name='subTypes')
 
     def __unicode__( self ):
         return self.shortDescription
@@ -344,24 +414,58 @@ class Component(models.Model):
                        ('under_construction', 'under construction'),
                        ('abandoned', 'abandoned'))
     
-    displayId = models.CharField('Component (ID)', max_length=20, help_text='Identification', unique=True)
-    shortDescription = models.CharField('Short description', max_length=50, help_text='Descriptive name (e.g. "TEV protease")')
+    displayId = models.CharField('Component (ID)', max_length=20, 
+                                 help_text='Identification', unique=True)
+    
+    shortDescription = models.CharField('Short description', max_length=50, 
+                                        help_text='Descriptive name (e.g. "TEV\
+                                         protease")')
     description = models.TextField( 'Detailed description', blank=True)
-    uri = models.URLField( blank=True, null=True, unique=False, help_text='Specify external URI or leave blank for local URI') #: uri should be constructed from #displayId if left empty
-    status = models.CharField( max_length=30, choices=STATUS_CHOICES, default='planning')  #: non-SBOL compliant status    
-    componentClassification = models.ManyToManyField( ComponentClassification, blank=True, null=True, verbose_name='Classification', help_text='Classification of this part.')
-    variantOf = models.ManyToManyField( 'self', symmetrical=False, blank=True, null=True, verbose_name='Variant of', help_text='Specify part(s) this part is derived from, if any.' )
-    abstract = models.BooleanField( 'Abstract Part', default=False, help_text='Entry only serves as container to organize related parts.')
-    annotations = models.ManyToManyField( 'SequenceAnnotation', verbose_name='Annotations', blank=True, null=True )
+    
+    #: uri should be constructed from #displayId if left empty
+    uri = models.URLField( blank=True, null=True, unique=False, 
+                           help_text='Specify external URI or leave blank for \
+                           local URI')
+    
+    #: non-SBOL compliant status
+    status = models.CharField( max_length=30, choices=STATUS_CHOICES, 
+                               default='planning')
+          
+    componentClassification = models.ManyToManyField( ComponentClassification,
+                                                       blank=True, null=True, 
+                                                       verbose_name='Classification', 
+                                                       help_text='Classification of this part.')
+    
+    variantOf = models.ManyToManyField( 'self', symmetrical=False, blank=True, 
+                                        null=True, verbose_name='Variant of', 
+                                        help_text='Specify part(s) this part is\
+                                         derived from, if any.' )
+    
+    abstract = models.BooleanField( 'Abstract Part', default=False, 
+                                    help_text='Entry only serves as container \
+                                    to organize related parts.')
+    
+    annotations = models.ManyToManyField( 'SequenceAnnotation', 
+                                          verbose_name='Annotations', blank=True,
+                                          null=True )
+    
     creation_date = models.DateTimeField(auto_now_add=True, null=True)
+    
     modification_date = models.DateTimeField(auto_now=True, null=True)
 
  
     #: Permissions
-    created_by = models.ForeignKey(User, null=True, blank=True, related_name='%(class)s_created_by')
-    owners = models.ManyToManyField(User, null=True, blank=True, related_name='%(class)s_owners')
-    group_read = models.ManyToManyField(Group, null=True, blank=True, related_name='%(class)s_groups_read')
-    group_write = models.ManyToManyField(Group, null=True, blank=True, related_name='%(class)s_groups_write')
+    created_by = models.ForeignKey(User, null=True, blank=True,
+                                   related_name='%(class)s_created_by')
+    
+    owners = models.ManyToManyField(User, null=True, blank=True,
+                                    related_name='%(class)s_owners')
+    
+    group_read = models.ManyToManyField(Group, null=True, blank=True,
+                                        related_name='%(class)s_groups_read')
+    
+    group_write = models.ManyToManyField(Group, null=True, blank=True,
+                                         related_name='%(class)s_groups_write')
 
  
     
@@ -395,7 +499,8 @@ class ProteinComponent(Component):
     Description of a protein 'part'.
     """
     #: optional sequence
-    sequence = models.TextField( help_text='amino acid sequence', blank=True, null=True )
+    sequence = models.TextField( help_text='amino acid sequence', blank=True,
+                                 null=True )
     
     
     class Meta(Component.Meta):
@@ -426,7 +531,8 @@ class PeptideComponent(Component):
     Description of a peptide 'part'.
     """
     #: optional sequence
-    sequence = models.TextField( help_text='amino acid sequence', blank=True, null=True )
+    sequence = models.TextField( help_text='amino acid sequence', blank=True,
+                                 null=True )
     
     
     class Meta(Component.Meta):
@@ -489,9 +595,17 @@ class NucleicAcidComponent(Component):
     Description of a stretch of DNA or RNA.
     """
     #: optional sequence
-    sequence = models.TextField( help_text='nucleotide sequence', blank=True, null=True )
-    translatesTo = models.ForeignKey( 'ProteinComponent', blank=True, null=True, related_name='encodedBy', help_text='Protein part this sequence translates to' )
+    sequence = models.TextField( help_text='nucleotide sequence', blank=True,
+                                 null=True )
+    
+    translatesTo = models.ForeignKey( 'ProteinComponent', blank=True, null=True,
+                                      related_name='encodedBy', 
+                                      help_text='Protein part this sequence \
+                                      translates to' )
+    
     optimizedFor = models.ForeignKey( 'Chassis', blank=True, null=True )
+
+
 
     class Meta(Component.Meta):
         pass
@@ -511,8 +625,10 @@ class NucleicAcidComponent(Component):
     def isavailable_dna(self):
         """True if there is a DNA-only sample containing this NucleicAcidComponent"""
         return self.dna_samples.count() > 0
+    
     isavailable_dna.short_description = 'DNA'
     isavailable_dna.boolean = True
+    
     
     def isavailable_cells(self):
         """
