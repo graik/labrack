@@ -31,6 +31,7 @@ class Location(models.Model):
     modification_date = models.DateTimeField(auto_now=True)
     
     
+    
     def __unicode__(self):
         return self.displayId + " (" + self.temperature.__str__() + unichr(176)\
                 + "C)  [Room: " + self.room + "]"
@@ -144,9 +145,11 @@ class Unit(models.Model):
     
     UNIT_TYPE = (('amount','amount'), ('concentration','concentration'))
     
-    name = models.CharField(max_length=10)
+    name = models.CharField(max_length=10, unique=True)
     
     type = models.CharField(max_length=25, choices=UNIT_TYPE)
+    
+    
     
     def __unicode__(self):
         return self.name
@@ -172,7 +175,14 @@ class Sample( models.Model ):
     aliquotnb = models.PositiveIntegerField('Number of aliquots', null=True, 
                                             blank=True)
     
-    empty = models.BooleanField('Empty', default=False)
+    STATUS_CHOICES = (('ok', 'ok'), 
+                      ('preparation', 'in preparation'),
+                      ('empty', 'empty'),
+                      ('bad', 'bad'),
+                     )
+    
+    status = models.CharField( max_length=30, choices=STATUS_CHOICES, 
+                               default='ok')
     
     description = models.TextField( 'Detailed description', blank=True)
     
@@ -352,7 +362,7 @@ class Sample( models.Model ):
 
 ################################################################################################################
 component_limits = {'model__in':('chemicalcomponent', 'nucleicacidcomponent', 
-                                 'peptidecomponent', 'proteincomponent', 'sample')}
+                                 'peptidecomponent', 'proteincomponent')}
 
 class SampleContent(models.Model):
     """
@@ -368,12 +378,35 @@ class SampleContent(models.Model):
     
     amount = models.FloatField('Amount/Volume', null=True, blank=True)
     
-    amount_unit = models.ForeignKey(Unit, related_name='amount_unit', null=True, 
+    amount_unit = models.ForeignKey(Unit, related_name='%(class)s_amount_unit', null=True, 
                                     blank=True, limit_choices_to = {'type': 'amount'})
     
     concentration = models.FloatField('Concentration', null=True, blank=True)
     
-    concentration_unit = models.ForeignKey(Unit, related_name='concentration_unit', 
+    concentration_unit = models.ForeignKey(Unit, related_name='%(class)s_concentration_unit', 
+                                           null=True, blank=True, 
+                                           limit_choices_to = {'type': 'concentration'})
+    
+    
+################################################################################################################
+
+
+class SamplePedigree(models.Model):
+    """
+    Define the components that the sample is made of.
+    """
+    sample = models.ForeignKey(Sample, related_name='sameplepedigree')
+    
+    sample_source = models.ForeignKey(Sample, null=True)
+    
+    amount = models.FloatField('Amount/Volume', null=True, blank=True)
+    
+    amount_unit = models.ForeignKey(Unit, related_name='%(class)s_amount_unit', null=True, 
+                                    blank=True, limit_choices_to = {'type': 'amount'})
+    
+    concentration = models.FloatField('Concentration', null=True, blank=True)
+    
+    concentration_unit = models.ForeignKey(Unit, related_name='%(class)s_concentration_unit', 
                                            null=True, blank=True, 
                                            limit_choices_to = {'type': 'concentration'})
 

@@ -54,8 +54,7 @@ class ComponentAdmin(admin.ModelAdmin):
                  )
     
     
-    list_display = ('displayId', 'shortDescription', 'status', 'created_by',
-                    'creation_date', 'modification_date')
+    list_display = ('displayId', 'shortDescription', 'status', 'created_by')
     
     list_filter = ('status', 'created_by')
     
@@ -146,8 +145,7 @@ class ContainerAdmin(admin.ModelAdmin):
                  )
     
     list_display = ('displayId', 'shortDescription', 'containerType',
-                    'location_url', 'created_by', 'creation_date',
-                    'modification_date')
+                    'location_url', 'created_by')
     
     list_filter = ('containerType', 'location__displayId', 'location__room',
                    'location__temperature', 'created_by')
@@ -184,9 +182,7 @@ class LocationAdmin(admin.ModelAdmin):
     
     fields = (('displayId', 'shortDescription'), 'temperature', 'room')
 
-    list_display = ('displayId', 'shortDescription', 'temperature', 'room',
-                    'creation_date', 'modification_date')
-
+    list_display = ('displayId', 'shortDescription', 'temperature', 'room')
     
     list_filter = ('room', 'temperature')
     
@@ -200,7 +196,22 @@ class LocationAdmin(admin.ModelAdmin):
 
 ################################################################################################################
 class SampleContentInline(GenericCollectionTabularInline):
+    
+    extra = 1
+    
     model = SampleContent
+    
+    
+
+################################################################################################################
+class SamplePedigreeInline(GenericCollectionTabularInline):
+    extra = 1
+    
+    fk_name = 'sample'
+
+    model = SamplePedigree
+
+    raw_id_fields = ('sample_source',)
 
 
 
@@ -213,7 +224,7 @@ class SampleAdmin(admin.ModelAdmin):
                  (None, {
                          'fields' : ((('displayId', 'shortDescription', 
                                        'preparation_date'),
-                                      ('container', 'aliquotnb', 'empty'),
+                                      ('container', 'aliquotnb', 'status'),
                                       'description')
                                      )
                          }
@@ -228,10 +239,10 @@ class SampleAdmin(admin.ModelAdmin):
                  )
           
 
-    inlines = [SampleContentInline, ]
+    inlines = [SampleContentInline, SamplePedigreeInline]
     
     list_display = ('displayId', 'shortDescription', 'location_url', 'container_url',
-                     'created_by', 'preparation_date')
+                     'created_by', 'status', 'preparation_date')
 
     list_display_links = ('displayId',)
 
