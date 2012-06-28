@@ -230,7 +230,6 @@ class ContainerAdmin(admin.ModelAdmin):
         
         
 
-
 ################################################################################################################
 class LocationAdmin(admin.ModelAdmin):
     
@@ -263,7 +262,12 @@ class LocationAdmin(admin.ModelAdmin):
     make_csv.short_description = 'Export as CSV'
     
 
-
+################################################################################################################
+class SampleLinkInline(GenericCollectionTabularInline):
+    
+    extra = 1
+    
+    model = SampleLink
 
 ################################################################################################################
 class SampleContentInline(GenericCollectionTabularInline):
@@ -289,7 +293,7 @@ class SamplePedigreeInline(GenericCollectionTabularInline):
 ################################################################################################################
 class SampleAdmin(admin.ModelAdmin):
    
-    actions = ['make_csv']
+    actions = ['make_csv', 'make_ok', 'make_empty', 'make_bad']
     
     exportFields = OrderedDict( [('Sample (ID)', 'displayId'),
                                ('Short Description', 'shortDescription'),
@@ -300,6 +304,7 @@ class SampleAdmin(admin.ModelAdmin):
                                ('Description', 'description'),
                                ('Sample content', 'sampleContentStr()'),
                                ('Sample pedigree', 'samplePedigreeStr()'),
+                               ('Sample link','sampleLinkStr()'),
                                ('Preparation date', 'preparation_date'),
                                ('DB Entry creation date','creation_date'),
                                ('DB Entry modification date','modification_date'),
@@ -312,7 +317,7 @@ class SampleAdmin(admin.ModelAdmin):
                  (None, {
                          'fields' : ((('displayId', 'shortDescription', 
                                        'preparation_date'),
-                                      ('container', 'aliquotnb', 'status'),
+                                      ('container', 'aliquotnb', 'status', 'attachment'),
                                       'description')
                                      )
                          }
@@ -327,14 +332,14 @@ class SampleAdmin(admin.ModelAdmin):
                  )
           
 
-    inlines = [SampleContentInline, SamplePedigreeInline]
+    inlines = [SampleContentInline, SamplePedigreeInline, SampleLinkInline]
     
     list_display = ('displayId', 'shortDescription', 'location_url', 'container_url',
                      'created_by', 'status', 'preparation_date')
 
     list_display_links = ('displayId',)
 
-    list_filter = ('container', 'container__location', 'created_by')
+    list_filter = ('container', 'container__location', 'created_by', 'status')
 
     ordering = ('container', 'displayId')
     
@@ -356,6 +361,16 @@ class SampleAdmin(admin.ModelAdmin):
     container_url.allow_tags = True
     container_url.short_description = 'Container'
     
+    
+    def file_link(self):
+        if self.file:
+            return "<a href='%s'>download</a>" % (self.attachment.url,)
+        else:
+            return "No attachment"
+
+    file_link.allow_tags = True
+    
+    
     def location_url(self, obj):
         url = obj.container.location.get_relative_url()
         return mark_safe('<a href="%s/%s">%s</a>' % (admin_root, url, obj.container.location.__unicode__()))
@@ -370,6 +385,25 @@ class SampleAdmin(admin.ModelAdmin):
     make_csv.short_description = 'Export as CSV'
     
     
+    def make_bad(self, request, queryset):
+        self.update_status(request, queryset, 'bad')
+        
+    make_bad.short_description = 'Mark selected entries as bad'
+
+    
+    def make_empty(self, request, queryset):
+        self.update_status(request, queryset, 'empty')
+        
+    make_empty.short_description = 'Mark selected entries as empty'
+    
+
+    def make_ok(self, request, queryset):
+        self.update_status(request, queryset, 'ok')
+        
+    make_ok.short_description = 'Mark selected entries as ok'
+    
+    
+    
     def qr_code_img(self, obj):
         data = obj.qr_code()
         return mark_safe('<img src="http://chart.apis.google.com/chart?cht=qr&chs=55x55&chl=' + data + '" />')
@@ -377,11 +411,24 @@ class SampleAdmin(admin.ModelAdmin):
     qr_code_img.allow_tags = True
     qr_code_img.short_description = 'QR code'
 
+
     # Save the owner of the object
     def save_model(self, request, obj, form, change):
         if getattr(obj, 'created_by', None) is None:
             obj.created_by = request.user
         obj.save()
+        
+        
+    def update_status(self, request, queryset, status):
+        
+        i = 0
+        for obj in queryset:
+            obj.status = status
+            obj.save()
+            i += 1
+
+        self.message_user(request, '%i samples were set to %s'  
+                          % (i, status))
 
 
 ################################################################################################################

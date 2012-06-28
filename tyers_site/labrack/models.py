@@ -5,6 +5,7 @@ from datetime import datetime
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 import urllib
+import tyers_site.settings as settings
 
 # Create your models here.
 
@@ -184,6 +185,10 @@ class Sample( models.Model ):
     status = models.CharField( max_length=30, choices=STATUS_CHOICES, 
                                default='ok')
     
+    from django.core.files.storage import FileSystemStorage
+    fs = FileSystemStorage(location=settings.FOLDER_FILES_PATH)
+    attachment = models.FileField(upload_to='sampleFiles', storage=fs, null=True, blank=True)
+    
     description = models.TextField( 'Detailed description', blank=True)
     
     preparation_date = models.DateTimeField(default=datetime.now())
@@ -262,6 +267,13 @@ class Sample( models.Model ):
                 pedigreeString += ' c[' + str(sp.concentration) + ' ' + str(sp.concentration_unit)  + ']'
             pedigreeString += '\n'
         return pedigreeString
+    
+    def sampleLinkStr(self):
+        linkString = ""
+        for sl in self.sameplelink.all():
+            linkString += sl.type + " : " + sl.link + " [" + sl.shortDescription + "]"
+            linkString += '\n'
+        return linkString
     
 ##    def get_absolute_url(self):
 ##        """Define standard URL for object.get_absolute_url access in templates """
@@ -383,6 +395,34 @@ class Sample( models.Model ):
 ##        return self.dna.get_pretty_sequence( recenter=recenter )
 
     
+
+################################################################################################################    
+class SampleLink(models.Model):
+    """
+    Link to file system or url
+    """
+    
+    sample = models.ForeignKey(Sample, related_name='sameplelink')
+    
+    LINK_TYPE = (('filesystem','File System'), ('url','URL'))
+    
+    type = models.CharField(max_length=25, choices=LINK_TYPE)
+    
+    link = models.CharField(max_length=1000, help_text='Link to file system or url')
+    
+    shortDescription = models.CharField( max_length=50, 
+                                         help_text='Brief description for tables\
+                                          and listings', null=True, blank=True)
+    
+    
+    
+    def __unicode__(self):
+        if self.type == 'url':
+            from django.utils.safestring import SafeUnicode
+            return SafeUnicode("<a href='" + self.link + "'>" + self.link + "</a>")
+        return self.link
+    
+
 
 
 ################################################################################################################

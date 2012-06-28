@@ -118,6 +118,10 @@ TEMPLATE_DIRS = (
     T.approot() +  "/templates"
 )
 
+
+FOLDER_FILES_PATH = T.approot() + '/labrack/uploadedFiles'
+
+
 INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
