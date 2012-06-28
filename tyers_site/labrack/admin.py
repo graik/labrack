@@ -19,7 +19,9 @@ from django.contrib import admin
 from django.http import HttpResponse
 from django.utils.safestring import mark_safe
 from genericcollection import GenericCollectionTabularInline
+from collections import OrderedDict
 import tyers_site.settings as settings
+import importexport
 
 
 admin_root = "/admin/labrack"
@@ -30,6 +32,20 @@ admin_root = "/admin/labrack"
 
 
 class ComponentAdmin(admin.ModelAdmin):
+    
+    actions = ['make_csv']
+    
+    exportFields = OrderedDict( [('Component (ID)', 'displayId'),
+                               ('Short Description', 'shortDescription'),
+                               ('URI','uri'),
+                               ('Description','description'),
+                               ('Status','status'),
+                               ('Abstract','abstract'),
+                               ('Created by','created_by'),
+                               ('DB Entry creation date','creation_date'),
+                               ('DB Entry modification date','modification_date'),
+                               ])
+    
     fieldsets = (
                  (None, {
                          'fields': (('displayId', 'shortDescription', 'status'),
@@ -67,6 +83,14 @@ class ComponentAdmin(admin.ModelAdmin):
     
     
     
+    
+    def make_csv(self, request, queryset):
+        return importexport.generate_csv(self, request, queryset, 
+                                         self.exportFields, 'Component')
+
+    make_csv.short_description = 'Export as CSV'
+    
+    
     # Save the owner of the object
     def save_model(self, request, obj, form, change):
         if getattr(obj, 'created_by', None) is None:
@@ -76,6 +100,9 @@ class ComponentAdmin(admin.ModelAdmin):
 
 ################################################################################################################
 class ProteinComponentAdmin(ComponentAdmin):
+    
+    ComponentAdmin.exportFields['Sequence'] = 'sequence'
+    
     fieldsets = ComponentAdmin.fieldsets.__add__(
                 (('Protein Details', {
                                       'fields': ('sequence', 'annotations'),
@@ -90,6 +117,9 @@ class ProteinComponentAdmin(ComponentAdmin):
 
 ################################################################################################################
 class PeptideComponentAdmin(ProteinComponentAdmin):
+    
+    ComponentAdmin.exportFields['Sequence'] = 'sequence'
+    
     fieldsets = ComponentAdmin.fieldsets.__add__(
                 (('Peptide Details', {
                                       'fields': ('sequence', 'annotations'),
@@ -100,6 +130,9 @@ class PeptideComponentAdmin(ProteinComponentAdmin):
 
 ################################################################################################################
 class NucleicAcidComponentAdmin(ComponentAdmin):
+    
+    ComponentAdmin.exportFields['Sequence'] = 'sequence'
+    
     fieldsets = ComponentAdmin.fieldsets.__add__(
                 (('Nucleic acid Details', {
                                            'fields': (('sequence', 'annotations'),
@@ -127,7 +160,19 @@ class NucleicAcidComponentAdmin(ComponentAdmin):
 ################################################################################################################
 
 class ContainerAdmin(admin.ModelAdmin):
-    ## options for list view in admin interface
+    
+    actions = ['make_csv']
+    
+    exportFields = OrderedDict( [('Container (ID)', 'displayId'),
+                               ('Short Description', 'shortDescription'),
+                               ('Container Type','containerType'),
+                               ('Location','location'),
+                               ('Created by','created_by'),
+                               ('Description','description'),
+                               ('DB Entry creation date','creation_date'),
+                               ('DB Entry modification date','modification_date'),
+                               ])
+    
     fieldsets = (
                  (None, {
                          'fields' : (('displayId', 'shortDescription'),
@@ -166,6 +211,15 @@ class ContainerAdmin(admin.ModelAdmin):
     location_url.allow_tags = True
     
     location_url.short_description = 'Location'
+    
+    
+    
+    def make_csv(self, request, queryset):
+        return importexport.generate_csv(self, request, queryset, 
+                                         self.exportFields, 'Container')
+
+    make_csv.short_description = 'Export as CSV'
+    
 
         
     # Save the owner of the object
@@ -180,6 +234,16 @@ class ContainerAdmin(admin.ModelAdmin):
 ################################################################################################################
 class LocationAdmin(admin.ModelAdmin):
     
+    actions = ['make_csv']
+    
+    exportFields = OrderedDict( [('Location (ID)', 'displayId'),
+                               ('Short Description', 'shortDescription'),
+                               ('Temperature','temperature'),
+                               ('Room','room'),
+                               ('DB Entry creation date','creation_date'),
+                               ('DB Entry modification date','modification_date'),
+                               ])
+    
     fields = (('displayId', 'shortDescription'), 'temperature', 'room')
 
     list_display = ('displayId', 'shortDescription', 'temperature', 'room')
@@ -190,6 +254,13 @@ class LocationAdmin(admin.ModelAdmin):
     
     search_fields = ('displayId', 'shortDescription',)
     
+    
+    
+    def make_csv(self, request, queryset):
+        return importexport.generate_csv(self, request, queryset, 
+                                         self.exportFields, 'Location')
+
+    make_csv.short_description = 'Export as CSV'
     
 
 
@@ -217,6 +288,23 @@ class SamplePedigreeInline(GenericCollectionTabularInline):
 
 ################################################################################################################
 class SampleAdmin(admin.ModelAdmin):
+   
+    actions = ['make_csv']
+    
+    exportFields = OrderedDict( [('Sample (ID)', 'displayId'),
+                               ('Short Description', 'shortDescription'),
+                               ('Location', 'container.location'),
+                               ('Container', 'container'),
+                               ('Number of aliquots', 'aliquotnb'),
+                               ('Status', 'status'),
+                               ('Description', 'description'),
+                               ('Sample content', 'sampleContentStr()'),
+                               ('Sample pedigree', 'samplePedigreeStr()'),
+                               ('Preparation date', 'preparation_date'),
+                               ('DB Entry creation date','creation_date'),
+                               ('DB Entry modification date','modification_date'),
+                               ])
+
    
     date_hierarchy = 'preparation_date'
    
@@ -274,6 +362,14 @@ class SampleAdmin(admin.ModelAdmin):
     location_url.allow_tags = True
     location_url.short_description = 'Location'
     
+    
+    def make_csv(self, request, queryset):
+        return importexport.generate_csv(self, request, queryset, 
+                                         self.exportFields, 'Sample')
+
+    make_csv.short_description = 'Export as CSV'
+    
+    
     def qr_code_img(self, obj):
         data = obj.qr_code()
         return mark_safe('<img src="http://chart.apis.google.com/chart?cht=qr&chs=55x55&chl=' + data + '" />')
@@ -291,12 +387,25 @@ class SampleAdmin(admin.ModelAdmin):
 ################################################################################################################
 class UnitAdmin(admin.ModelAdmin):
     
+    actions = ['make_csv']
+    
     list_display = ('name', 'type')
     
     list_filter = (('type'),)
     
     ordering = ('type', 'name')
 
+
+
+    def make_csv(self, request, queryset):
+        
+        fields = OrderedDict( [('Unit name', 'name'),
+                               ('Type', 'type'),
+                               ])
+        
+        return importexport.generate_csv(self, request, queryset, fields, 'Unit')
+
+    make_csv.short_description = 'Export as CSV'
 
 
 ################################################################################################################

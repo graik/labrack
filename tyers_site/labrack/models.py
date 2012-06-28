@@ -221,6 +221,7 @@ class Sample( models.Model ):
         """
         return 'sample/%i/' % self.id
     
+        
     def qr_code(self):
         data = str(self.displayId + '\n' + self.shortDescription + '\n' + 
                    self.preparation_date.__str__() + '\n')
@@ -237,6 +238,30 @@ class Sample( models.Model ):
 
         return urllib.quote(data)
         #return data
+        
+        
+    def sampleContentStr(self):
+        contentString = ""
+        for sc in self.samplecontent.all():
+            contentString += sc.content_object.__str__() + ": "
+            if(str(sc.amount) != "None"):
+                contentString += ' a[' + str(sc.amount) + ' ' + str(sc.amount_unit) + ']' 
+            if(str(sc.concentration) != "None"):
+                contentString += ' c[' + str(sc.concentration) + ' ' + str(sc.concentration_unit)  + ']'
+            contentString += '\n'
+        return contentString
+    
+    
+    def samplePedigreeStr(self):
+        pedigreeString = ""
+        for sp in self.sameplepedigree.all():
+            pedigreeString += sp.sample_source.__str__() + ": "
+            if(str(sp.amount) != "None"):
+                pedigreeString += ' a[' + str(sp.amount) + ' ' + str(sp.amount_unit) + ']' 
+            if(str(sp.concentration) != "None"):
+                pedigreeString += ' c[' + str(sp.concentration) + ' ' + str(sp.concentration_unit)  + ']'
+            pedigreeString += '\n'
+        return pedigreeString
     
 ##    def get_absolute_url(self):
 ##        """Define standard URL for object.get_absolute_url access in templates """
@@ -368,7 +393,7 @@ class SampleContent(models.Model):
     """
     Define the components that the sample is made of.
     """
-    sample = models.ForeignKey(Sample, related_name='sameplecontent')
+    sample = models.ForeignKey(Sample, related_name='samplecontent')
     
     content_type = models.ForeignKey(ContentType, limit_choices_to=component_limits)
     
@@ -478,9 +503,6 @@ class Component(models.Model):
                                     help_text='Entry only serves as container \
                                     to organize related parts.')
     
-    annotations = models.ManyToManyField( 'SequenceAnnotation', 
-                                          verbose_name='Annotations', blank=True,
-                                          null=True )
     
     creation_date = models.DateTimeField(auto_now_add=True, null=True)
     
@@ -534,6 +556,10 @@ class ProteinComponent(Component):
     #: optional sequence
     sequence = models.TextField( help_text='amino acid sequence', blank=True,
                                  null=True )
+
+    annotations = models.ManyToManyField( 'SequenceAnnotation', 
+                                          verbose_name='Annotations', blank=True,
+                                          null=True )
     
     
     class Meta(Component.Meta):
@@ -566,6 +592,10 @@ class PeptideComponent(Component):
     #: optional sequence
     sequence = models.TextField( help_text='amino acid sequence', blank=True,
                                  null=True )
+    
+    annotations = models.ManyToManyField( 'SequenceAnnotation', 
+                                          verbose_name='Annotations', blank=True,
+                                          null=True )
     
     
     class Meta(Component.Meta):
@@ -630,6 +660,10 @@ class NucleicAcidComponent(Component):
     #: optional sequence
     sequence = models.TextField( help_text='nucleotide sequence', blank=True,
                                  null=True )
+    
+    annotations = models.ManyToManyField( 'SequenceAnnotation', 
+                                          verbose_name='Annotations', blank=True,
+                                          null=True )    
     
     translatesTo = models.ForeignKey( 'ProteinComponent', blank=True, null=True,
                                       related_name='encodedBy', 
