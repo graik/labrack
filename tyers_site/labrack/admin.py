@@ -261,6 +261,61 @@ class LocationAdmin(admin.ModelAdmin):
 
     make_csv.short_description = 'Export as CSV'
     
+    
+
+
+
+
+################################################################################################################
+class ProjectAdmin(admin.ModelAdmin):
+    
+    actions = ['make_csv']
+    
+    exportFields = OrderedDict( [('Project Name', 'name'),
+                               ('Short Description', 'shortDescription'),
+                               ('Detailled Description','description'),
+                               ])
+    
+    
+    fieldsets = (
+                 (None, {
+                         'fields' : ((('name', 'shortDescription', 
+                                       'description'),
+                                      )
+                                     )
+                         }
+                  ),
+                 ('Permission', {
+                        'classes': ('collapse',),
+                        'fields' : (
+                                        (('owners'), ('group_read', 'group_write'))
+                                    )
+                                 }
+                  )
+                 )
+
+    list_display = ('name', 'shortDescription', 'created_by', 'creation_date')
+    
+    save_as = True
+    
+    search_fields = ('name', 'shortDescription', 'description')
+    
+    
+    
+    def make_csv(self, request, queryset):
+        return importexport.generate_csv(self, request, queryset, 
+                                         self.exportFields, 'Project')
+
+    make_csv.short_description = 'Export as CSV'
+    
+    
+    # Save the owner of the object
+    def save_model(self, request, obj, form, change):
+        if getattr(obj, 'created_by', None) is None:
+            obj.created_by = request.user
+        obj.save()
+    
+    
 
 ################################################################################################################
 class SampleLinkInline(GenericCollectionTabularInline):
@@ -318,7 +373,8 @@ class SampleAdmin(admin.ModelAdmin):
                          'fields' : ((('displayId', 'shortDescription', 
                                        'preparation_date'),
                                       ('container', 'aliquotnb', 'status', 'attachment'),
-                                      'description')
+                                      'description',
+                                      'project')
                                      )
                          }
                   ),
@@ -339,7 +395,7 @@ class SampleAdmin(admin.ModelAdmin):
 
     list_display_links = ('displayId',)
 
-    list_filter = ('container', 'container__location', 'created_by', 'status')
+    list_filter = ('container', 'container__location', 'created_by', 'status', 'project')
 
     ordering = ('container', 'displayId')
     
@@ -421,11 +477,7 @@ class SampleAdmin(admin.ModelAdmin):
         
     def update_status(self, request, queryset, status):
         
-        i = 0
-        for obj in queryset:
-            obj.status = status
-            obj.save()
-            i += 1
+        i = queryset.update(status=status)
 
         self.message_user(request, '%i samples were set to %s'  
                           % (i, status))
@@ -476,6 +528,7 @@ class ComponentClassificationAdmin(admin.ModelAdmin):
 
 admin.site.register(Container, ContainerAdmin)
 admin.site.register(Location, LocationAdmin)
+admin.site.register(Project, ProjectAdmin)
 admin.site.register(Sample, SampleAdmin) 
 admin.site.register(Unit, UnitAdmin) 
 admin.site.register(ComponentClassification, ComponentClassificationAdmin)

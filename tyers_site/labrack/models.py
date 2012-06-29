@@ -157,6 +157,45 @@ class Unit(models.Model):
 
 
 
+################################################################################################################    
+class Project(models.Model):
+    """
+    Project to group sample together
+    """
+
+    name = models.CharField(max_length=25, unique=True)
+
+    shortDescription = models.CharField('Short description', max_length=200, 
+                                        blank=True, help_text='Brief description\
+                                         for tables and listings')
+    
+    description = models.TextField( 'Detailed description', blank=True)
+    
+    
+    #: Permissions
+    created_by = models.ForeignKey(User, null=True, blank=True, 
+                                   related_name='project_created_by')
+    
+    owners = models.ManyToManyField(User, null=True, blank=True, 
+                                    related_name='project_owners')
+    
+    group_read = models.ManyToManyField(Group, null=True, blank=True, 
+                                        related_name='project_groups_read')
+    
+    group_write = models.ManyToManyField(Group, null=True, blank=True, 
+                                         related_name='project_groups_write')
+
+    creation_date = models.DateTimeField(auto_now_add=True)
+    
+    modification_date = models.DateTimeField(auto_now=True)
+    
+
+    
+
+    def __unicode__(self):
+        return self.name
+    
+    
 
 ################################################################################################################
 class Sample( models.Model ):
@@ -190,6 +229,8 @@ class Sample( models.Model ):
     attachment = models.FileField(upload_to='sampleFiles', storage=fs, null=True, blank=True)
     
     description = models.TextField( 'Detailed description', blank=True)
+    
+    project = models.ManyToManyField(Project, null=True, blank=True)
     
     preparation_date = models.DateTimeField(default=datetime.now())
     
