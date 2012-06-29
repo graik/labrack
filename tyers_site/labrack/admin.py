@@ -22,7 +22,9 @@ from genericcollection import GenericCollectionTabularInline
 from collections import OrderedDict
 import tyers_site.settings as settings
 import importexport
-
+from django.db.models import Q
+from django.http import HttpResponseRedirect
+from django.core.urlresolvers import reverse
 
 admin_root = "/admin/labrack"
 
@@ -202,6 +204,8 @@ class ContainerAdmin(admin.ModelAdmin):
     search_fields = ('displayId', 'shortDescription', 'description')
     
     
+    context = {}
+    context['teste'] = 'fdsfsdffsd'
     
         
     def location_url(self, obj):
@@ -220,13 +224,82 @@ class ContainerAdmin(admin.ModelAdmin):
 
     make_csv.short_description = 'Export as CSV'
     
-
-        
+    
+    
     # Save the owner of the object
     def save_model(self, request, obj, form, change):
+        
+        permission_notok = 1
+        
         if getattr(obj, 'created_by', None) is None:
             obj.created_by = request.user
-        obj.save()
+            obj.save()
+            permission_notok = 0
+        
+        # Superusers can modify
+        if request.user.is_superuser:
+            obj.save()
+            permission_notok = 0
+        
+        # Creator can modify
+        if obj.created_by == request.user:
+            obj.save()
+            permission_notok = 0
+        
+        # Owners can modify
+        for user in obj.owners.all():
+            if user == request.user:
+                obj.save()
+                permission_notok = 0
+                break
+            
+        # Groups with write can modify
+        for group_obj in obj.group_write.all():
+            for group_member in request.user.groups.all():
+                if group_obj == group_member:
+                    obj.save()
+                    permission_notok = 0
+                    break
+        
+        if permission_notok:
+            from django.contrib import messages
+            messages.error(request, '%s is not allowed to modify this record. Ignore message below.'  
+                          % (request.user.username))
+
+            
+        
+    
+    
+
+    # Limit view to current user based on entries permission
+    # Ref: http://stackoverflow.com/questions/6310983/django-admin-specific-user-admin-content
+    
+
+    
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        #if not self.queryset(request).filter(id=object_id).exists():
+        #    return HttpResponseRedirect(reverse('admin:labrack_Containermymodel_changelist'))
+        
+        
+        
+        return super(ContainerAdmin, self).change_view(request, object_id, form_url, extra_context)
+
+    
+    def queryset(self, request):
+        qs = super(ContainerAdmin, self).queryset(request)
+        
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(Q(created_by=request.user) |
+                         Q(owners=request.user) |
+                         Q(group_read=request.user.groups.all()) |
+                         Q(group_write=request.user.groups.all()) 
+                         )
+
+    
+        
+    
         
         
 
