@@ -358,7 +358,7 @@ class ComponentType( models.Model ):
                                        null=True, related_name='subTypes')
 
     def __unicode__( self ):
-        return self.name
+        return unicode(self.name)
 
 
 
@@ -372,7 +372,7 @@ class Component(models.Model):
                        ('under_construction', 'under construction'),
                        ('abandoned', 'abandoned'))
     
-    displayId = models.CharField('Component (ID)', max_length=20, unique=True, 
+    displayId = models.CharField('display ID', max_length=20, unique=True, 
                                  help_text='Unique identification')
 
     name = models.CharField('Name', max_length=200, blank=True, 
@@ -390,7 +390,7 @@ class Component(models.Model):
     
     componentType = models.ManyToManyField( ComponentType, 
                                             blank=True, null=True, 
-                                            verbose_name='Classification', 
+                                            verbose_name='Part type', 
                                     help_text='Classification of this part.')
 
     variantOf = models.ManyToManyField( 'self', symmetrical=False, 

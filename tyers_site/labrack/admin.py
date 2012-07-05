@@ -25,14 +25,10 @@ import tyers_site.settings as settings
 admin_root = "/admin/labrack"
 
 
-
-################################################################################################################
-
-
 class ComponentAdmin(admin.ModelAdmin):
     fieldsets = (
                  (None, {
-                         'fields': (('displayId', 'shortDescription','status'),
+                         'fields': (('displayId', 'name','status'),
                                     ('uri',))
                                     
                          }
@@ -44,17 +40,22 @@ class ComponentAdmin(admin.ModelAdmin):
                                  }
                   ),
                  ('Details', {
-                              'fields' : (('componentClassification', 'variantOf', 'abstract'),
+                              'fields' : (('componentType', 'variantOf', 'abstract'),
                                           ('description',)),
           
                                           }
                   ),
-                 
                  )
-    raw_id_fields = ('variantOf', 'componentClassification')  
-    list_display = ('displayId', 'shortDescription','status', 'created_by', 'creation_date', 'modification_date')
+    
+    raw_id_fields = ('variantOf', 'componentType')  
+
+    list_display = ('displayId', 'name','status', 'created_by', 
+                    'creation_date', 'modification_date')
+
     list_filter = ('status', 'created_by')
-    search_fields = ('displayId', 'shortDescription', 'description')
+
+    search_fields = ('displayId', 'name', 'description')
+
     ordering = ('displayId',)
     
     
@@ -65,35 +66,45 @@ class ComponentAdmin(admin.ModelAdmin):
         obj.save()
 
 
-
 class ProteinComponentAdmin(ComponentAdmin):
-    fieldsets = ComponentAdmin.fieldsets.__add__((('Protein Details', {
-                                                                        'fields': ('sequence', 'annotations'),
-                                                                        'classes':('collapse',)
-                                                                        }
-                                                   ),))
+    
+    fieldsets = ComponentAdmin.fieldsets.__add__(\
+        (('Protein Details', {
+            'fields': ('sequence', 'annotations'),
+            'classes':('collapse',)
+        }
+          ),)
+    )
+    
     search_fields = ComponentAdmin.search_fields.__add__(('sequence',))    
 
 
 class PeptideComponentAdmin(ProteinComponentAdmin):
-    fieldsets = ComponentAdmin.fieldsets.__add__((('Peptide Details', {
-                                                                        'fields': ('sequence', 'annotations'),
-                                                                        'classes':('collapse',)
-                                                                        }
-                                                   ),))
+    pass
 
-################################################################################################################
-class NucleicAcidComponentAdmin(ComponentAdmin):
-    fieldsets = ComponentAdmin.fieldsets.__add__((('Nucleic acid Details', {
-                                                                        'fields': (('sequence', 'annotations'),
-                                                                                    ('optimizedFor', 'translatesTo')
-                                                                                   ),
-                                                                        'classes':('collapse',)
-                                                                        }
-                                                   ),))    
+
+class DnaComponentAdmin(ComponentAdmin):
+    
+    fieldsets = ComponentAdmin.fieldsets.__add__(\
+        (('DNA Details', {
+            'fields': (('sequence', 'annotations'),
+                       ('optimizedFor', 'translatesTo')
+                       ),
+            'classes':('collapse',)
+        }
+          ),)
+    )
+    
     raw_id_fields = ComponentAdmin.raw_id_fields.__add__(('translatesTo',))
-    list_display = ComponentAdmin.list_display.__add__(('show_optimizedFor', 'show_translatesTo', 'isavailable_cells','isavailable_dna'))
+    
+    list_display = ComponentAdmin.list_display.__add__(('show_optimizedFor', 
+                                                        'show_translatesTo', 
+##                                                        'isavailable_cells',
+##                                                        'isavailable_dna',
+                                                        ))
+    
     list_filter = ComponentAdmin.list_filter.__add__(('optimizedFor',))
+    
     search_fields = ComponentAdmin.search_fields.__add__(('sequence',))
 
 
@@ -106,7 +117,7 @@ class ContainerAdmin(admin.ModelAdmin):
     ## options for list view in admin interface
     fieldsets = (
                  (None, {
-                         'fields' : (('displayId', 'shortDescription'),
+                         'fields' : (('displayId', 'name'),
                                      ('containerType', 'location'),
                                      'description',
                                      )
@@ -120,13 +131,16 @@ class ContainerAdmin(admin.ModelAdmin):
                   )
                  )
     
-    list_display = ('displayId', 'shortDescription', 'containerType', 'location_url', 'created_by', 'creation_date', 'modification_date')
-    list_filter = ('containerType', 'location__displayId', 'location__room', 'location__temperature', 'created_by')
+    list_display = ('displayId', 'name', 'containerType', 'location_url', 
+                    'created_by', 'creation_date', 'modification_date')
+    
+    list_filter = ('containerType', 'location__displayId', 'location__room', 
+                   'location__temperature', 'created_by')
     
     ordering = ('displayId',)
-    search_fields = ('displayId', 'shortDescription', 'description')
-    save_as = True
     
+    search_fields = ('displayId', 'name', 'description')
+    save_as = True
     
     # Save the owner of the object
     def save_model(self, request, obj, form, change):
@@ -140,34 +154,32 @@ class ContainerAdmin(admin.ModelAdmin):
     location_url.allow_tags = True
     location_url.short_description = 'Location'
 
-        
 
-
-
-################################################################################################################
 class LocationAdmin(admin.ModelAdmin):
-    list_display = ('displayId', 'shortDescription', 'temperature', 'room', 'creation_date', 'modification_date')
-    fields = (('displayId', 'shortDescription'), 'temperature', 'room')
+    
+    list_display = ('displayId', 'name', 'temperature', 'room', 'creation_date', 
+                    'modification_date')
+    
+    fields = (('displayId', 'name'), 'temperature', 'room')
+    
     list_filter = ('room', 'temperature')
-    search_fields = ('displayId', 'shortDescription',)
+    
+    search_fields = ('displayId', 'name',)
     save_as = True
 
 
 
-################################################################################################################
 class SampleContentInline(GenericCollectionTabularInline):
     model = SampleContent
 
 
-
-################################################################################################################
 class SampleAdmin(admin.ModelAdmin):
     
    
     fieldsets = (
                  (None, {
-                         'fields' : ((('displayId', 'shortDescription', 'preparation_date'),
-                                      ('container', 'aliquotnb','empty'),
+                         'fields' : ((('displayId', 'name', 'preparation_date'),
+                                      ('container', 'aliquotNr','empty'),
                                       'description')
                                      )
                          }
@@ -183,16 +195,27 @@ class SampleAdmin(admin.ModelAdmin):
           
 
     inlines = [SampleContentInline,]
+    
     class Media:
         js = (settings.MEDIA_URL + '/js/genericcollection.js',)
 
 
-    list_display   = ('displayId', 'shortDescription','location_url', 'container_url', 'created_by', 'preparation_date', 'creation_date', 'modification_date','qr_code_img')
+    list_display   = ('displayId', 'name','location_url', 'container_url', 
+                      'created_by', 'preparation_date', 'creation_date', 
+                      'modification_date','qr_code_img')
+    
     list_filter    = ('container', 'container__location', 'created_by')
     list_display_links  = ('displayId',)
+    
     ordering       = ('container', 'displayId')
-    search_fields  = ('displayId', 'shortDescription', 'description', 'container__displayId', 'container__location__displayId', 'container__location__temperature', 'container__location__room')
+    
+    search_fields  = ('displayId', 'name', 'description', 
+                      'container__displayId', 'container__location__displayId', 
+                      'container__location__temperature', 
+                      'container__location__room')
+    
     save_as        = True
+    
     date_hierarchy = 'preparation_date'
     
 
@@ -224,56 +247,37 @@ class SampleAdmin(admin.ModelAdmin):
 
 
 
-################################################################################################################
 class UnitAdmin(admin.ModelAdmin):
-    list_display = ('name', 'type')
-    list_filter  = (('type'),)
-    ordering     = ('type', 'name')
+    
+    list_display = ('name', 'unitType')
+    list_filter  = (('unitType'),)
+    ordering     = ('unitType', 'name')
 
 
-
-################################################################################################################
-class ComponentClassificationAdmin(admin.ModelAdmin):
+class ComponentTypeAdmin(admin.ModelAdmin):
     fieldsets = (
                  (None, {
-                         'fields' : (('shortDescription','uri'),
+                         'fields' : (('name','uri'),
                                       'subTypeOf',
                                      )
                          }
                   ),
                  )
-
-
-
-################################################################################################################
-
-
+    
+    ordering = ('name',)
 
 
 admin.site.register(Container, ContainerAdmin)
 admin.site.register(Location, LocationAdmin)
 admin.site.register(Sample, SampleAdmin) 
 admin.site.register(Unit, UnitAdmin) 
-admin.site.register(ComponentClassification, ComponentClassificationAdmin)
+admin.site.register(ComponentType, ComponentTypeAdmin)
 admin.site.register(PeptideComponent, PeptideComponentAdmin)
 admin.site.register(ProteinComponent, ProteinComponentAdmin)
+admin.site.register(DnaComponent, DnaComponentAdmin)
 admin.site.register(ChemicalComponent, ComponentAdmin)
-admin.site.register(NucleicAcidComponent, NucleicAcidComponentAdmin)
+admin.site.register(Chassis)
 
-
-
-################################################################################################################    
-################################################################################################################    
-################################################################################################################    
-##
-## TODO
-## Raik should check what is needed from here
-##
-################################################################################################################    
-################################################################################################################    
-################################################################################################################    
-
-#admin.site.register(Chassis)
 #admin.site.register(Collection)
 
 
