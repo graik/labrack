@@ -11,7 +11,7 @@
 tyers_site/tyers_site.db
 
 # custom south installation
-tyers_site/south
+# tyers_site/south
 
 # wingide
 *.wpr
