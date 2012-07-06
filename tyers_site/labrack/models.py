@@ -160,6 +160,7 @@ class Sample( models.Model ):
     
     description = models.TextField('Description / Comments', blank=True)
     
+    #: date AND time is perhaps a bit overdoing it --Raik
     preparation_date = models.DateTimeField(default=datetime.now())
     
     creation_date = models.DateTimeField(auto_now_add=True)
@@ -307,17 +308,20 @@ class Sample( models.Model ):
 ##        return self.dna.get_pretty_sequence( recenter=recenter )
 
 
+from django.db.models import Q
+
 class SampleContent(models.Model):
     """
     Helper class to define the content that the sample is made of.
     """
     COMPONENT_LIMITS = {'model__in':('chemicalcomponent', 
-                                     'nucleicacidcomponent', 
+                                     'dnacomponent', 
                                      'peptidecomponent', 
-                                     'proteincomponent', 
-                                     'sample')}
+                                     'proteincomponent',
+    ## I think samples within samples would really complicate our life...--Raik
+                                     'sample')}   
 
-    sample = models.ForeignKey(Sample, related_name='sameplecontent')
+    sample = models.ForeignKey(Sample, related_name='samepleContent')
 
     content_type = models.ForeignKey(ContentType, 
                                      limit_choices_to=COMPONENT_LIMITS)
@@ -326,18 +330,21 @@ class SampleContent(models.Model):
 
     content_object = generic.GenericForeignKey('content_type', 'object_id')
 
-    amount = models.FloatField('Mass/Volume', null=True, blank=True)
+    amount = models.FloatField('Amount', null=True, blank=True)
 
-    amount_unit = models.ForeignKey(Unit, related_name='mass_unit', 
-                                    null=True, blank=True, 
-                                    limit_choices_to = {'type': 'mass'})
+    amountUnit = models.ForeignKey(Unit, related_name='amountUnit', 
+                    null=True, blank=True, 
+                    limit_choices_to=\
+                        Q(unitType='volume') | Q(unitType='mass') | \
+                        Q(unitType='number')
+                            )
 
     concentration = models.FloatField('Concentration', null=True, blank=True)
 
-    concentration_unit = models.ForeignKey(Unit, 
-                         related_name='concentration_unit', 
+    concentrationUnit = models.ForeignKey(Unit, 
+                         related_name='concentrationUnit', 
                          null=True, blank=True, 
-                         limit_choices_to = {'type': 'concentration'})
+                         limit_choices_to = {'unitType': 'concentration'})
 
 
 
