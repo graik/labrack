@@ -255,6 +255,7 @@ class UnitAdmin(admin.ModelAdmin):
 
 
 class ComponentTypeAdmin(admin.ModelAdmin):
+
     fieldsets = (
                  (None, {
                          'fields' : (('name','uri'),
@@ -265,6 +266,8 @@ class ComponentTypeAdmin(admin.ModelAdmin):
                  )
     
     ordering = ('name',)
+    list_display   = ('name', 'uri')
+    search_fields = ('name',)
 
 
 admin.site.register(Container, ContainerAdmin)

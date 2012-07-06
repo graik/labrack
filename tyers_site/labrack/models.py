@@ -388,7 +388,7 @@ class Component(models.Model):
     status = models.CharField( max_length=30, choices=STATUS_CHOICES, 
                                default='planning')
     
-    componentType = models.ManyToManyField( ComponentType, 
+    componentType = models.ManyToManyField(ComponentType, 
                                             blank=True, null=True, 
                                             verbose_name='Part type', 
                                     help_text='Classification of this part.')
