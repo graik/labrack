@@ -5,6 +5,7 @@ from datetime import datetime
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 import urllib
+import tyers_site.settings as settings
 
 class Location(models.Model):
     """
@@ -58,6 +59,7 @@ class Container( models.Model ):
                                      choices=STORAGE_CONTAINER_TYPES )
     
     location = models.ForeignKey(Location, related_name='containers')
+
 
     #: Permissions
     created_by = models.ForeignKey(User, null=True, blank=True, 
@@ -135,6 +137,8 @@ class Unit(models.Model):
     
     unitType = models.CharField(max_length=25, choices=UNIT_TYPE)
     
+    
+    
     def __unicode__(self):
         return self.name
 
@@ -193,6 +197,7 @@ class Sample( models.Model ):
         """
         return 'sample/%i/' % self.id
     
+        
     def qr_code(self):
         """?"""
         data = str(self.displayId + '\n' + self.shortDescription + '\n' \
@@ -213,6 +218,37 @@ class Sample( models.Model ):
         data += '\n' 
         return urllib.quote(data)
         #return data
+        
+        
+    def sampleContentStr(self):
+        contentString = ""
+        for sc in self.samplecontent.all():
+            contentString += sc.content_object.__str__() + ": "
+            if(str(sc.amount) != "None"):
+                contentString += ' a[' + str(sc.amount) + ' ' + str(sc.amount_unit) + ']' 
+            if(str(sc.concentration) != "None"):
+                contentString += ' c[' + str(sc.concentration) + ' ' + str(sc.concentration_unit)  + ']'
+            contentString += '\n'
+        return contentString
+    
+    
+    def samplePedigreeStr(self):
+        pedigreeString = ""
+        for sp in self.sameplepedigree.all():
+            pedigreeString += sp.sample_source.__str__() + ": "
+            if(str(sp.amount) != "None"):
+                pedigreeString += ' a[' + str(sp.amount) + ' ' + str(sp.amount_unit) + ']' 
+            if(str(sp.concentration) != "None"):
+                pedigreeString += ' c[' + str(sp.concentration) + ' ' + str(sp.concentration_unit)  + ']'
+            pedigreeString += '\n'
+        return pedigreeString
+    
+    def sampleLinkStr(self):
+        linkString = ""
+        for sl in self.sameplelink.all():
+            linkString += sl.type + " : " + sl.link + " [" + sl.shortDescription + "]"
+            linkString += '\n'
+        return linkString
     
 #    def related_samples( self ):
 #        """
