@@ -200,7 +200,7 @@ class Sample( models.Model ):
         
     def qr_code(self):
         """?"""
-        data = str(self.displayId + '\n' + self.shortDescription + '\n' \
+        data = str(self.displayId + '\n' + self.name + '\n' \
                    + self.preparation_date.__str__() + '\n')
         
         for x in self.sameplecontent.all():
@@ -246,7 +246,7 @@ class Sample( models.Model ):
     def sampleLinkStr(self):
         linkString = ""
         for sl in self.sameplelink.all():
-            linkString += sl.type + " : " + sl.link + " [" + sl.shortDescription + "]"
+            linkString += sl.type + " : " + sl.link + " [" + sl.name + "]"
             linkString += '\n'
         return linkString
     
@@ -343,6 +343,67 @@ class Sample( models.Model ):
 ##    def get_pretty_sequence( self, recenter=0 ):
 ##        return self.dna.get_pretty_sequence( recenter=recenter )
 
+class Project(models.Model):
+    """
+    Project to group sample together
+    """
+    
+    name = models.CharField(max_length=25, unique=True)
+
+    shortDescription = models.CharField('Short description', max_length=200,
+                                        blank=True, help_text='Brief description\
+                                        for tables and listings')
+    
+    description = models.TextField( 'Detailed description', blank=True)
+    
+    
+    #: Permissions
+    created_by = models.ForeignKey(User, null=True, blank=True,
+                                   related_name='project_created_by')
+    
+    owners = models.ManyToManyField(User, null=True, blank=True,
+                                    related_name='project_owners')
+    
+    group_read = models.ManyToManyField(Group, null=True, blank=True,
+                                        related_name='project_groups_read')
+    
+    group_write = models.ManyToManyField(Group, null=True, blank=True,
+                                         related_name='project_groups_write')
+
+    creation_date = models.DateTimeField(auto_now_add=True)
+    
+    modification_date = models.DateTimeField(auto_now=True)
+    
+
+    def __unicode__(self):
+        return self.name
+
+
+class SampleLink(models.Model):
+    """
+    Link to file system or url
+    """
+    
+    sample = models.ForeignKey(Sample, related_name='sameplelink')
+    
+    LINK_TYPE = (('filesystem','File System'), ('url','URL'))
+    
+    type = models.CharField(max_length=25, choices=LINK_TYPE)
+    
+    link = models.CharField(max_length=1000, help_text='Link to file system or url')
+    
+    shortDescription = models.CharField( max_length=50,
+                                         help_text='Brief description for tables\
+                                         and listings', null=True, blank=True)
+    
+    
+    
+    def __unicode__(self):
+        if self.type == 'url':
+            from django.utils.safestring import SafeUnicode
+            return SafeUnicode("<a href='" + self.link + "'>" + self.link + "</a>")
+        return self.link
+
 
 from django.db.models import Q
 
@@ -381,6 +442,27 @@ class SampleContent(models.Model):
                          related_name='concentrationUnit', 
                          null=True, blank=True, 
                          limit_choices_to = {'unitType': 'concentration'})
+
+
+class SamplePedigree(models.Model):
+    """
+    Define the components that the sample is made of.
+    """
+    sample = models.ForeignKey(Sample, related_name='sameplepedigree')
+    
+    sample_source = models.ForeignKey(Sample, null=True)
+    
+    amount = models.FloatField('Amount/Volume', null=True, blank=True)
+    
+    amount_unit = models.ForeignKey(Unit, related_name='%(class)s_amount_unit', null=True,
+                                    blank=True, limit_choices_to = {'type': 'amount'})
+    
+    concentration = models.FloatField('Concentration', null=True, blank=True)
+    
+    concentration_unit = models.ForeignKey(Unit, related_name='%(class)s_concentration_unit',
+                                           null=True, blank=True,
+                                           limit_choices_to = {'type': 'concentration'})
+
 
 
 
@@ -613,7 +695,7 @@ class PeptideComponent(ProteinComponent):
     Description of a peptide 'part'.
     """
     
-    class Meta(Component.Meta):
+    class Meta(ProteinComponent.Meta):
         pass
 
     def get_relative_url(self):

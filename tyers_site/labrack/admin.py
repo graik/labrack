@@ -34,7 +34,7 @@ class ComponentAdmin(admin.ModelAdmin):
     actions = ['make_csv']
     
     exportFields = OrderedDict( [('Component (ID)', 'displayId'),
-                               ('Short Description', 'shortDescription'),
+                               ('Name', 'name'),
                                ('URI','uri'),
                                ('Description','description'),
                                ('Status','status'),
@@ -72,17 +72,10 @@ class ComponentAdmin(admin.ModelAdmin):
 
     list_filter = ('status', 'created_by')
 
-    search_fields = ('displayId', 'name', 'description')
-
     ordering = ('displayId',)
     
-    search_fields = ('displayId', 'shortDescription', 'description')
-    
-    raw_id_fields = ('variantOf', 'componentClassification')
-    
-    
-    
-    
+    search_fields = ('displayId', 'name', 'description')
+        
     
     def make_csv(self, request, queryset):
         return importexport.generate_csv(self, request, queryset, 
@@ -154,7 +147,7 @@ class ContainerAdmin(admin.ModelAdmin):
     actions = ['make_csv']
     
     exportFields = OrderedDict( [('Container (ID)', 'displayId'),
-                               ('Short Description', 'shortDescription'),
+                               ('Name', 'name'),
                                ('Container Type','containerType'),
                                ('Location','location'),
                                ('Created by','created_by'),
@@ -215,10 +208,8 @@ class LocationAdmin(admin.ModelAdmin):
     
     list_filter = ('room', 'temperature')
     
-    search_fields = ('displayId', 'name',)
+    search_fields = ('displayId', 'name', 'description')
     save_as = True
-    
-    search_fields = ('name', 'shortDescription', 'description')
     
     
     
@@ -268,10 +259,10 @@ class SampleAdmin(admin.ModelAdmin):
     actions = ['make_csv', 'make_ok', 'make_empty', 'make_bad']
     
     exportFields = OrderedDict( [('Sample (ID)', 'displayId'),
-                               ('Short Description', 'shortDescription'),
+                               ('Name', 'name'),
                                ('Location', 'container.location'),
                                ('Container', 'container'),
-                               ('Number of aliquots', 'aliquotnb'),
+                               ('Number of aliquots', 'aliquotNr'),
                                ('Status', 'status'),
                                ('Description', 'description'),
                                ('Sample content', 'sampleContentStr()'),
@@ -422,6 +413,57 @@ class ComponentTypeAdmin(admin.ModelAdmin):
     ordering = ('name',)
     list_display   = ('name', 'uri')
     search_fields = ('name',)
+
+
+class ProjectAdmin(admin.ModelAdmin):
+    
+    actions = ['make_csv']
+    
+    exportFields = OrderedDict( [('Project Name', 'name'),
+                               ('Short Description', 'shortDescription'),
+                               ('Detailled Description','description'),
+                               ])
+    
+    
+    fieldsets = (
+                 (None, {
+                         'fields' : ((('name', 'shortDescription', 
+                                       'description'),
+                                      )
+                                     )
+                         }
+                  ),
+                 ('Permission', {
+                        'classes': ('collapse',),
+                        'fields' : (
+                                        (('owners'), ('group_read', 'group_write'))
+                                    )
+                                 }
+                  )
+                 )
+
+    list_display = ('name', 'shortDescription', 'created_by', 'creation_date')
+    
+    save_as = True
+    
+    search_fields = ('name', 'shortDescription', 'description')
+    
+    
+    
+    def make_csv(self, request, queryset):
+        return importexport.generate_csv(self, request, queryset, 
+                                         self.exportFields, 'Project')
+
+    make_csv.short_description = 'Export as CSV'
+    
+    
+    # Save the owner of the object
+    def save_model(self, request, obj, form, change):
+        if getattr(obj, 'created_by', None) is None:
+            obj.created_by = request.user
+        obj.save()
+    
+    
 
 
 admin.site.register(Container, ContainerAdmin)
