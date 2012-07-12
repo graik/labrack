@@ -105,9 +105,9 @@ class ProteinComponentAdmin(ComponentAdmin):
 
 
 
-################################################################################################################
 class PeptideComponentAdmin(ProteinComponentAdmin):
     pass
+
 
 
 class DnaComponentAdmin(ComponentAdmin):
@@ -138,9 +138,7 @@ class DnaComponentAdmin(ComponentAdmin):
 
     raw_id_fields = ComponentAdmin.raw_id_fields.__add__(('translatesTo',))
    
-    
 
-################################################################################################################
 
 class ContainerAdmin(admin.ModelAdmin):
     
@@ -199,6 +197,7 @@ class ContainerAdmin(admin.ModelAdmin):
                                          self.exportFields, 'Container')
 
 
+################################################################################
 class LocationAdmin(admin.ModelAdmin):
     
     list_display = ('displayId', 'name', 'temperature', 'room', 'creation_date', 
@@ -228,7 +227,6 @@ class LocationAdmin(admin.ModelAdmin):
     
     
 
-################################################################################################################
 class SampleLinkInline(GenericCollectionTabularInline):
     
     extra = 1
@@ -243,7 +241,6 @@ class SampleContentInline(GenericCollectionTabularInline):
     
     
 
-################################################################################################################
 class SamplePedigreeInline(GenericCollectionTabularInline):
     extra = 1
     
@@ -399,6 +396,7 @@ class UnitAdmin(admin.ModelAdmin):
     ordering     = ('unitType', 'name')
 
 
+
 class ComponentTypeAdmin(admin.ModelAdmin):
 
     fieldsets = (
@@ -413,6 +411,7 @@ class ComponentTypeAdmin(admin.ModelAdmin):
     ordering = ('name',)
     list_display   = ('name', 'uri')
     search_fields = ('name',)
+
 
 
 class ProjectAdmin(admin.ModelAdmin):
