@@ -469,14 +469,14 @@ class SamplePedigree(models.Model):
 class ComponentType( models.Model ):
     """
     Helper class for classifying parts.
-    Following SBOL, each type should correspond to a Sequence Ontology term.
+    Following SBOL, each type should in theory correspond to a Sequence Ontology term.
     """
     
-    uri = models.URLField( unique=False,
+    uri = models.URLField( unique=False, blank=True, null=True,
                            help_text='Typically a sequence ontology URI, example: http://purl.obolibrary.org/obo/SO_0000167' )
 
-    name = models.CharField('Name', max_length=200, blank=True, 
-                        help_text='Informative name for tables and listings')
+    name = models.CharField('Name', max_length=200, 
+                        help_text='Informative name')
     
     #: required ? directional relationship to parent type or types
     subTypeOf = models.ManyToManyField('self', symmetrical=False, blank=True, 
