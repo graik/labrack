@@ -215,6 +215,13 @@ class ContainerAdmin(admin.ModelAdmin):
         
         permission_notok = 1
         
+        
+#        if getattr(obj, 'pk', None) is None:
+#            obj.save()
+#            obj.owners.add(request.user)
+#            obj.save()
+#            permission_notok = 0
+        
         if getattr(obj, 'created_by', None) is None:
             obj.created_by = request.user
             obj.save()

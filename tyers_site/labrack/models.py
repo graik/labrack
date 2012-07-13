@@ -264,7 +264,7 @@ class Sample( models.Model ):
         data = str(self.displayId + '\n' + self.name + '\n' \
                    + self.preparation_date.__str__() + '\n')
         
-        for x in self.sameplecontent.all():
+        for x in self.samplecontent.all():
             data += x.content_object.__str__()
             
             if(str(x.amount) != "None"):
@@ -295,7 +295,7 @@ class Sample( models.Model ):
     
     def samplePedigreeStr(self):
         pedigreeString = ""
-        for sp in self.sameplepedigree.all():
+        for sp in self.samplepedigree.all():
             pedigreeString += sp.sample_source.__str__() + ": "
             if(str(sp.amount) != "None"):
                 pedigreeString += ' a[' + str(sp.amount) + ' ' + str(sp.amount_unit) + ']' 
@@ -306,8 +306,8 @@ class Sample( models.Model ):
     
     def sampleLinkStr(self):
         linkString = ""
-        for sl in self.sameplelink.all():
-            linkString += sl.type + " : " + sl.link + " [" + sl.name + "]"
+        for sl in self.samplelink.all():
+            linkString += sl.linkType + " : " + sl.link + " [" + sl.name + "]"
             linkString += '\n'
         return linkString
     
@@ -413,7 +413,7 @@ class SampleLink(models.Model):
     Link to file system or url
     """
     
-    sample = models.ForeignKey(Sample, related_name='sameplelink')
+    sample = models.ForeignKey(Sample, related_name='samplelink')
     
     LINK_TYPE = (('filesystem','File System'), ('url','URL'))
     
@@ -428,7 +428,7 @@ class SampleLink(models.Model):
     
     
     def __unicode__(self):
-        if self.type == 'url':
+        if self.linkType == 'url':
             from django.utils.safestring import SafeUnicode
             return SafeUnicode("<a href='" + self.link + "'>" + self.link + "</a>")
         return self.link
@@ -448,7 +448,7 @@ class SampleContent(models.Model):
                                      )
                         }   
 
-    sample = models.ForeignKey(Sample, related_name='samepleContent')
+    sample = models.ForeignKey(Sample, related_name='sampleContent')
 
     content_type = models.ForeignKey(ContentType, 
                                      limit_choices_to=COMPONENT_LIMITS)
@@ -481,9 +481,9 @@ class SamplePedigree(models.Model):
     """
     Define the components that the sample is made of.
     """
-    sample = models.ForeignKey(Sample, related_name='sameplepedigree')
+    sample = models.ForeignKey(Sample, related_name='samplepedigree')
     
-    sample_source = models.ForeignKey(Sample, null=True)
+    sample_source = models.ForeignKey(Sample, null=True, related_name='samplesource')
     
     amount = models.FloatField('Amount/Volume', null=True, blank=True)
     
