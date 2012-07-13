@@ -552,7 +552,7 @@ class Component(models.Model):
     
    
     class Meta:
-        abstract = True
+        abstract = False
  
 #    def isavailable(self):
 #        return self.samples.count() > 0
@@ -583,9 +583,6 @@ class DnaComponent(Component):
 
     optimizedFor = models.ForeignKey( 'Chassis', blank=True, null=True )
 
-    class Meta(Component.Meta):
-        pass
-    
     def get_relative_url(self):
         """
         Define standard relative URL for object access in templates
@@ -646,9 +643,6 @@ class Chassis(Component):
     strain.
     """
 
-    class Meta(Component.Meta):
-        pass
-
     def get_relative_url(self):
         """
         Define standard relative URL for object access in templates
@@ -669,9 +663,6 @@ class ProteinComponent(Component):
     sequence = models.TextField( help_text='amino acid sequence', 
                                  blank=True, null=True )
     
-    class Meta(Component.Meta):
-        pass
-
     def get_relative_url(self):
         """
         Define standard relative URL for object access in templates
@@ -695,9 +686,6 @@ class PeptideComponent(ProteinComponent):
     Description of a peptide 'part'.
     """
     
-    class Meta(ProteinComponent.Meta):
-        pass
-
     def get_relative_url(self):
         """
         Define standard relative URL for object access in templates
@@ -717,9 +705,6 @@ class ChemicalComponent(Component):
     """
     #: To define
     
-    class Meta(Component.Meta):
-        pass
-
     def get_relative_url(self):
         """
         Define standard relative URL for object access in templates
@@ -811,8 +796,8 @@ class Collection(models.Model):
     name = models.CharField('Name', max_length=50, blank=True, null=True,
                             help_text='Descriptive name.')
     
-    #: required short description -- will be added as first line in SBOL
-    #: exports (where this field doesn't exist)
+    #: required short description -- will be added as first line of description
+    #: in SBOL exports (where this field doesn't exist)
     shortDescription = models.CharField( 'short Description', max_length=200,
         help_text='Very short description for listings')
 
@@ -824,17 +809,9 @@ class Collection(models.Model):
     description = models.TextField( 'Detailed description', blank=True,
         help_text='Use restructured text markup for links, lists and headlines.')
     
-    dnaComponents = models.ManyToManyField( DnaComponent, null=True, blank=True,
-                                            verbose_name='DNA parts' )
+    components = models.ManyToManyField( Component, null=True, blank=True,
+                                         verbose_name='parts' )
 
-    proteinComponents = models.ManyToManyField( ProteinComponent, 
-                                                null=True, blank=True,
-                                                verbose_name='Protein parts' )
-
-    chassis = models.ManyToManyField( Chassis, 
-                                      null=True, blank=True,
-                                      verbose_name="Cell types / Chassis")
-    
     
     def __unicode__(self):
         name = self.name if self.name else ''
