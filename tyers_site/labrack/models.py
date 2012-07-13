@@ -4,8 +4,11 @@ from django.contrib.auth.models import Group
 from datetime import datetime
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
+from django.core.files.storage import FileSystemStorage
 import urllib
 import tyers_site.settings as settings
+from django.db.models import Q
+
 
 class Location(models.Model):
     """
@@ -37,6 +40,8 @@ class Location(models.Model):
 
 
 
+
+
 class Container( models.Model ):
     """
     A container holding several physical samples of nucleic acids, proteins 
@@ -50,10 +55,10 @@ class Container( models.Model ):
         ('other', 'other' ) )
     
     displayId = models.CharField(max_length=20, unique=True, 
-        help_text='Unique identifier. E.g. D001 or C012 (D...DNA, C...Cells)')
+                                 help_text='Unique identifier. E.g. D001 or C012 (D...DNA, C...Cells)')
     
     name = models.CharField('Name', max_length=200, blank=True, 
-                        help_text='Informative name for tables and listings')
+                            help_text='Informative name for tables and listings')
     
     containerType = models.CharField('Type of container', max_length=30, 
                                      choices=STORAGE_CONTAINER_TYPES )
@@ -119,6 +124,9 @@ class Container( models.Model ):
         return 'container/%i/' % self.id
     
 
+
+
+
 class Unit(models.Model):
     """
     Unit for amount, concentration, volume
@@ -133,7 +141,7 @@ class Unit(models.Model):
     name = models.CharField(max_length=10)
     
     conversion = models.FloatField('Conversion Factor', blank=True, null=True,
-                            help_text='Factor for conversion to SI unit')
+                                   help_text='Factor for conversion to SI unit')
     
     unitType = models.CharField(max_length=25, choices=UNIT_TYPE)
     
@@ -143,16 +151,58 @@ class Unit(models.Model):
         return self.name
 
 
+
+
+
+class Project(models.Model):
+    """
+    Project to group sample together
+    """
+    
+    name = models.CharField(max_length=25, unique=True)
+
+    shortDescription = models.CharField('Short description', max_length=200,
+                                        blank=True, help_text='Brief description\
+                                        for tables and listings')
+    
+    description = models.TextField( 'Detailed description', blank=True)
+    
+    
+    #: Permissions
+    created_by = models.ForeignKey(User, null=True, blank=True,
+                                   related_name='project_created_by')
+    
+    owners = models.ManyToManyField(User, null=True, blank=True,
+                                    related_name='project_owners')
+    
+    group_read = models.ManyToManyField(Group, null=True, blank=True,
+                                        related_name='project_groups_read')
+    
+    group_write = models.ManyToManyField(Group, null=True, blank=True,
+                                         related_name='project_groups_write')
+
+    creation_date = models.DateTimeField(auto_now_add=True)
+    
+    modification_date = models.DateTimeField(auto_now=True)
+    
+
+    def __unicode__(self):
+        return self.name
+
+
+
+
+
 class Sample( models.Model ):
     """
     Sample describes a single tube or well holding DNA, cells or protein.
     """
     
     displayId = models.CharField(max_length=20, 
-        help_text='Label or well position. Must be unique within container.')
+                                 help_text='Label or well position. Must be unique within container.')
 
     name = models.CharField('Name', max_length=200, blank=True, 
-                        help_text='Informative name for tables and listings')
+                            help_text='Informative name for tables and listings')
     
     #: link to a single container
     container = models.ForeignKey( Container, related_name='samples' )
@@ -160,12 +210,23 @@ class Sample( models.Model ):
     aliquotNr = models.PositiveIntegerField('Number of aliquots', 
                                             null=True, blank=True)
 
-    empty = models.BooleanField('Empty', default=False)
+    STATUS_CHOICES = (('ok', 'ok'), 
+                      ('preparation', 'in preparation'),
+                      ('empty', 'empty'),
+                      ('bad', 'bad'),
+                     )
+    
+    status = models.CharField( max_length=30, choices=STATUS_CHOICES, 
+                               default='ok')
+    
+    fs = FileSystemStorage(location=settings.FOLDER_FILES_PATH)
+    attachment = models.FileField(upload_to='sampleFiles', storage=fs, null=True, blank=True)
     
     description = models.TextField('Description / Comments', blank=True)
     
-    #: date AND time is perhaps a bit overdoing it --Raik
-    preparation_date = models.DateTimeField(default=datetime.now())
+    project = models.ManyToManyField(Project, null=True, blank=True)
+    
+    preparation_date = models.DateField(default=datetime.now())
     
     creation_date = models.DateTimeField(auto_now_add=True)
     
@@ -343,40 +404,8 @@ class Sample( models.Model ):
 ##    def get_pretty_sequence( self, recenter=0 ):
 ##        return self.dna.get_pretty_sequence( recenter=recenter )
 
-class Project(models.Model):
-    """
-    Project to group sample together
-    """
-    
-    name = models.CharField(max_length=25, unique=True)
 
-    shortDescription = models.CharField('Short description', max_length=200,
-                                        blank=True, help_text='Brief description\
-                                        for tables and listings')
-    
-    description = models.TextField( 'Detailed description', blank=True)
-    
-    
-    #: Permissions
-    created_by = models.ForeignKey(User, null=True, blank=True,
-                                   related_name='project_created_by')
-    
-    owners = models.ManyToManyField(User, null=True, blank=True,
-                                    related_name='project_owners')
-    
-    group_read = models.ManyToManyField(Group, null=True, blank=True,
-                                        related_name='project_groups_read')
-    
-    group_write = models.ManyToManyField(Group, null=True, blank=True,
-                                         related_name='project_groups_write')
 
-    creation_date = models.DateTimeField(auto_now_add=True)
-    
-    modification_date = models.DateTimeField(auto_now=True)
-    
-
-    def __unicode__(self):
-        return self.name
 
 
 class SampleLink(models.Model):
@@ -388,7 +417,7 @@ class SampleLink(models.Model):
     
     LINK_TYPE = (('filesystem','File System'), ('url','URL'))
     
-    type = models.CharField(max_length=25, choices=LINK_TYPE)
+    linkType = models.CharField(max_length=25, choices=LINK_TYPE)
     
     link = models.CharField(max_length=1000, help_text='Link to file system or url')
     
@@ -405,7 +434,8 @@ class SampleLink(models.Model):
         return self.link
 
 
-from django.db.models import Q
+
+
 
 class SampleContent(models.Model):
     """
@@ -415,8 +445,8 @@ class SampleContent(models.Model):
                                      'dnacomponent', 
                                      'peptidecomponent', 
                                      'proteincomponent',
-    ## I think samples within samples would really complicate our life...--Raik
-                                     'sample')}   
+                                     )
+                        }   
 
     sample = models.ForeignKey(Sample, related_name='samepleContent')
 
@@ -430,18 +460,21 @@ class SampleContent(models.Model):
     amount = models.FloatField('Amount', null=True, blank=True)
 
     amountUnit = models.ForeignKey(Unit, related_name='amountUnit', 
-                    null=True, blank=True, 
-                    limit_choices_to=\
-                        Q(unitType='volume') | Q(unitType='mass') | \
-                        Q(unitType='number')
-                            )
+                                   null=True, blank=True, 
+                                   limit_choices_to=\
+                                   Q(unitType='volume') | Q(unitType='mass') | \
+                                   Q(unitType='number')
+                                   )
 
     concentration = models.FloatField('Concentration', null=True, blank=True)
 
     concentrationUnit = models.ForeignKey(Unit, 
-                         related_name='concentrationUnit', 
-                         null=True, blank=True, 
-                         limit_choices_to = {'unitType': 'concentration'})
+                                          related_name='concentrationUnit', 
+                                          null=True, blank=True, 
+                                          limit_choices_to = {'unitType': 'concentration'})
+
+
+
 
 
 class SamplePedigree(models.Model):
@@ -454,14 +487,17 @@ class SamplePedigree(models.Model):
     
     amount = models.FloatField('Amount/Volume', null=True, blank=True)
     
-    amount_unit = models.ForeignKey(Unit, related_name='%(class)s_amount_unit', null=True,
-                                    blank=True, limit_choices_to = {'type': 'amount'})
+    amountUnit = models.ForeignKey(Unit, related_name='%(class)s_amount_unit', null=True,
+                                    blank=True, limit_choices_to=\
+                                    Q(unitType='volume') | Q(unitType='mass') | \
+                                    Q(unitType='number'))
     
     concentration = models.FloatField('Concentration', null=True, blank=True)
     
-    concentration_unit = models.ForeignKey(Unit, related_name='%(class)s_concentration_unit',
+    concentrationUnit = models.ForeignKey(Unit, related_name='%(class)s_concentration_unit',
                                            null=True, blank=True,
-                                           limit_choices_to = {'type': 'concentration'})
+                                           limit_choices_to = {'unitType': 'concentration'})
+
 
 
 
@@ -484,6 +520,8 @@ class ComponentType( models.Model ):
 
     def __unicode__( self ):
         return unicode(self.name)
+
+
 
 
 
@@ -569,6 +607,9 @@ class Component(models.Model):
 #        return r
 
 
+
+
+
 class DnaComponent(Component):
     """
     Description of a stretch of DNA or RNA.
@@ -637,6 +678,9 @@ class DnaComponent(Component):
     show_optimizedFor.admin_order_field = 'optimizedFor'
 
 
+
+
+
 class Chassis(Component):
     """
     Description of a host system. Usually this will be a cell type or bacterial
@@ -653,6 +697,9 @@ class Chassis(Component):
         """
         """
         return self.cell_samples.all()
+
+
+
 
 
 class ProteinComponent(Component):
@@ -681,10 +728,15 @@ class ProteinComponent(Component):
 #        return self.protein_samples.all()
 
 
-class PeptideComponent(ProteinComponent):
+
+
+
+class PeptideComponent(Component):
     """
     Description of a peptide 'part'.
     """
+    sequence = models.TextField( help_text='amino acid sequence', 
+                                 blank=True, null=True )
     
     def get_relative_url(self):
         """
@@ -692,10 +744,18 @@ class PeptideComponent(ProteinComponent):
         """
         return 'peptidecomponent/%i/' % self.id
 
+    def size(self):
+        """@return int; size in aminoacids"""
+        if self.sequence:
+            return len( self.sequence )
+        return 0
+    
 #    def related_samples( self ):
 #        """
 #        """
 #        return self.protein_samples.all()
+
+
 
 
 
@@ -710,6 +770,8 @@ class ChemicalComponent(Component):
         Define standard relative URL for object access in templates
         """
         return 'chemicalcomponent/%i/' % self.id
+
+
 
 
    
@@ -735,6 +797,9 @@ class SelectiveMarker( models.Model ):
 
     class Meta:
         ordering = ('name',)
+
+
+
     
 
 #class VectorDnaComponent(NucleicAcidComponent):
@@ -760,6 +825,10 @@ class SelectiveMarker( models.Model ):
 #        """
 #        """
 #        return self.vector_samples.all()
+
+
+
+
     
 class SequenceAnnotation(models.Model):
     """
@@ -782,6 +851,10 @@ class SequenceAnnotation(models.Model):
     
     precedes = models.ManyToManyField( 'self', symmetrical=False,
                                        null=True, blank=True )
+
+
+
+
     
 class Collection(models.Model):
     """

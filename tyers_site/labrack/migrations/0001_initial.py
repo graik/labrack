@@ -74,9 +74,10 @@ class Migration(SchemaMigration):
             ('name', self.gf('django.db.models.fields.CharField')(max_length=200, blank=True)),
             ('container', self.gf('django.db.models.fields.related.ForeignKey')(related_name='samples', to=orm['labrack.Container'])),
             ('aliquotNr', self.gf('django.db.models.fields.PositiveIntegerField')(null=True, blank=True)),
-            ('empty', self.gf('django.db.models.fields.BooleanField')(default=False)),
+            ('status', self.gf('django.db.models.fields.CharField')(default='ok', max_length=30)),
+            ('attachment', self.gf('django.db.models.fields.files.FileField')(max_length=100, null=True, blank=True)),
             ('description', self.gf('django.db.models.fields.TextField')(blank=True)),
-            ('preparation_date', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime(2012, 7, 12, 0, 0))),
+            ('preparation_date', self.gf('django.db.models.fields.DateField')(default=datetime.datetime(2012, 7, 13, 0, 0))),
             ('creation_date', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
             ('modification_date', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
             ('created_by', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='sample_created_by', null=True, to=orm['auth.User'])),
@@ -150,7 +151,7 @@ class Migration(SchemaMigration):
         db.create_table('labrack_samplelink', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('sample', self.gf('django.db.models.fields.related.ForeignKey')(related_name='sameplelink', to=orm['labrack.Sample'])),
-            ('type', self.gf('django.db.models.fields.CharField')(max_length=25)),
+            ('linkType', self.gf('django.db.models.fields.CharField')(max_length=25)),
             ('link', self.gf('django.db.models.fields.CharField')(max_length=1000)),
             ('shortDescription', self.gf('django.db.models.fields.CharField')(max_length=50, null=True, blank=True)),
         ))
@@ -175,9 +176,9 @@ class Migration(SchemaMigration):
             ('sample', self.gf('django.db.models.fields.related.ForeignKey')(related_name='sameplepedigree', to=orm['labrack.Sample'])),
             ('sample_source', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['labrack.Sample'], null=True)),
             ('amount', self.gf('django.db.models.fields.FloatField')(null=True, blank=True)),
-            ('amount_unit', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='samplepedigree_amount_unit', null=True, to=orm['labrack.Unit'])),
+            ('amountUnit', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='samplepedigree_amount_unit', null=True, to=orm['labrack.Unit'])),
             ('concentration', self.gf('django.db.models.fields.FloatField')(null=True, blank=True)),
-            ('concentration_unit', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='samplepedigree_concentration_unit', null=True, to=orm['labrack.Unit'])),
+            ('concentrationUnit', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='samplepedigree_concentration_unit', null=True, to=orm['labrack.Unit'])),
         ))
         db.send_create_signal('labrack', ['SamplePedigree'])
 
@@ -284,7 +285,8 @@ class Migration(SchemaMigration):
 
         # Adding model 'PeptideComponent'
         db.create_table('labrack_peptidecomponent', (
-            ('proteincomponent_ptr', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['labrack.ProteinComponent'], unique=True, primary_key=True)),
+            ('component_ptr', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['labrack.Component'], unique=True, primary_key=True)),
+            ('sequence', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
         ))
         db.send_create_signal('labrack', ['PeptideComponent'])
 
@@ -568,8 +570,9 @@ class Migration(SchemaMigration):
             'temperature': ('django.db.models.fields.FloatField', [], {})
         },
         'labrack.peptidecomponent': {
-            'Meta': {'object_name': 'PeptideComponent', '_ormbases': ['labrack.ProteinComponent']},
-            'proteincomponent_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': "orm['labrack.ProteinComponent']", 'unique': 'True', 'primary_key': 'True'})
+            'Meta': {'object_name': 'PeptideComponent', '_ormbases': ['labrack.Component']},
+            'component_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': "orm['labrack.Component']", 'unique': 'True', 'primary_key': 'True'}),
+            'sequence': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'})
         },
         'labrack.project': {
             'Meta': {'object_name': 'Project'},
@@ -592,19 +595,20 @@ class Migration(SchemaMigration):
         'labrack.sample': {
             'Meta': {'ordering': "('container', 'displayId')", 'unique_together': "(('displayId', 'container'),)", 'object_name': 'Sample'},
             'aliquotNr': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True', 'blank': 'True'}),
+            'attachment': ('django.db.models.fields.files.FileField', [], {'max_length': '100', 'null': 'True', 'blank': 'True'}),
             'container': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'samples'", 'to': "orm['labrack.Container']"}),
             'created_by': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'sample_created_by'", 'null': 'True', 'to': "orm['auth.User']"}),
             'creation_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'description': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
             'displayId': ('django.db.models.fields.CharField', [], {'max_length': '20'}),
-            'empty': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'group_read': ('django.db.models.fields.related.ManyToManyField', [], {'blank': 'True', 'related_name': "'sample_groups_read'", 'null': 'True', 'symmetrical': 'False', 'to': "orm['auth.Group']"}),
             'group_write': ('django.db.models.fields.related.ManyToManyField', [], {'blank': 'True', 'related_name': "'sample_groups_write'", 'null': 'True', 'symmetrical': 'False', 'to': "orm['auth.Group']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'modification_date': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '200', 'blank': 'True'}),
             'owners': ('django.db.models.fields.related.ManyToManyField', [], {'blank': 'True', 'related_name': "'sample_owners'", 'null': 'True', 'symmetrical': 'False', 'to': "orm['auth.User']"}),
-            'preparation_date': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime(2012, 7, 12, 0, 0)'})
+            'preparation_date': ('django.db.models.fields.DateField', [], {'default': 'datetime.datetime(2012, 7, 13, 0, 0)'}),
+            'status': ('django.db.models.fields.CharField', [], {'default': "'ok'", 'max_length': '30'})
         },
         'labrack.samplecontent': {
             'Meta': {'object_name': 'SampleContent'},
@@ -621,16 +625,16 @@ class Migration(SchemaMigration):
             'Meta': {'object_name': 'SampleLink'},
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'link': ('django.db.models.fields.CharField', [], {'max_length': '1000'}),
+            'linkType': ('django.db.models.fields.CharField', [], {'max_length': '25'}),
             'sample': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'sameplelink'", 'to': "orm['labrack.Sample']"}),
-            'shortDescription': ('django.db.models.fields.CharField', [], {'max_length': '50', 'null': 'True', 'blank': 'True'}),
-            'type': ('django.db.models.fields.CharField', [], {'max_length': '25'})
+            'shortDescription': ('django.db.models.fields.CharField', [], {'max_length': '50', 'null': 'True', 'blank': 'True'})
         },
         'labrack.samplepedigree': {
             'Meta': {'object_name': 'SamplePedigree'},
             'amount': ('django.db.models.fields.FloatField', [], {'null': 'True', 'blank': 'True'}),
-            'amount_unit': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'samplepedigree_amount_unit'", 'null': 'True', 'to': "orm['labrack.Unit']"}),
+            'amountUnit': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'samplepedigree_amount_unit'", 'null': 'True', 'to': "orm['labrack.Unit']"}),
             'concentration': ('django.db.models.fields.FloatField', [], {'null': 'True', 'blank': 'True'}),
-            'concentration_unit': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'samplepedigree_concentration_unit'", 'null': 'True', 'to': "orm['labrack.Unit']"}),
+            'concentrationUnit': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'samplepedigree_concentration_unit'", 'null': 'True', 'to': "orm['labrack.Unit']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'sample': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'sameplepedigree'", 'to': "orm['labrack.Sample']"}),
             'sample_source': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['labrack.Sample']", 'null': 'True'})

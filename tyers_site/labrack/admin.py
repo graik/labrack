@@ -29,11 +29,14 @@ from django.core.urlresolvers import reverse
 admin_root = "/admin/labrack"
 
 
+
+
+
 class ComponentAdmin(admin.ModelAdmin):
     
     actions = ['make_csv']
     
-    exportFields = OrderedDict( [('Component (ID)', 'displayId'),
+    exportFields = OrderedDict( [('Display ID', 'displayId'),
                                ('Name', 'name'),
                                ('URI','uri'),
                                ('Description','description'),
@@ -65,21 +68,24 @@ class ComponentAdmin(admin.ModelAdmin):
                   ),
                  )
     
-    raw_id_fields = ('variantOf', 'componentType')  
+      
 
-    list_display = ('displayId', 'name','status', 'created_by', 
-                    'creation_date', 'modification_date')
+    list_display = ('displayId', 'name','status', 'created_by')
 
     list_filter = ('status', 'created_by')
 
     ordering = ('displayId',)
     
     search_fields = ('displayId', 'name', 'description')
+    
+    raw_id_fields = ('variantOf', 'componentType')
         
+    
     
     def make_csv(self, request, queryset):
         return importexport.generate_csv(self, request, queryset, 
                                          self.exportFields, 'Component')
+
 
     make_csv.short_description = 'Export as CSV'
     
@@ -89,6 +95,9 @@ class ComponentAdmin(admin.ModelAdmin):
         if getattr(obj, 'created_by', None) is None:
             obj.created_by = request.user
         obj.save()
+
+
+
 
 
 class ProteinComponentAdmin(ComponentAdmin):
@@ -105,8 +114,12 @@ class ProteinComponentAdmin(ComponentAdmin):
 
 
 
+
+
 class PeptideComponentAdmin(ProteinComponentAdmin):
     pass
+
+
 
 
 
@@ -121,8 +134,6 @@ class DnaComponentAdmin(ComponentAdmin):
         }
           ),)
     )
-    
-    raw_id_fields = ComponentAdmin.raw_id_fields.__add__(('translatesTo',))
     
     list_display = ComponentAdmin.list_display.__add__(('show_optimizedFor', 
                                                         'show_translatesTo', 
@@ -140,11 +151,13 @@ class DnaComponentAdmin(ComponentAdmin):
    
 
 
+
+
 class ContainerAdmin(admin.ModelAdmin):
     
     actions = ['make_csv']
     
-    exportFields = OrderedDict( [('Container (ID)', 'displayId'),
+    exportFields = OrderedDict( [('Display ID', 'displayId'),
                                ('Name', 'name'),
                                ('Container Type','containerType'),
                                ('Location','location'),
@@ -171,7 +184,7 @@ class ContainerAdmin(admin.ModelAdmin):
                  )
     
     list_display = ('displayId', 'name', 'containerType', 'location_url', 
-                    'created_by', 'creation_date', 'modification_date')
+                    'created_by')
     
     list_filter = ('containerType', 'location__displayId', 'location__room', 
                    'location__temperature', 'created_by')
@@ -179,6 +192,7 @@ class ContainerAdmin(admin.ModelAdmin):
     ordering = ('displayId',)
     
     search_fields = ('displayId', 'name', 'description')
+ 
     save_as = True
     
         
@@ -268,41 +282,52 @@ class ContainerAdmin(admin.ModelAdmin):
                          )
 
 
-################################################################################
+
+
+
 class LocationAdmin(admin.ModelAdmin):
     
-    list_display = ('displayId', 'name', 'temperature', 'room', 'creation_date', 
-                    'modification_date')
+    actions = ['make_csv']
+    
+    exportFields = OrderedDict( [('Display ID', 'displayId'),
+                               ('Name', 'name'),
+                               ('Temperature','temperature'),
+                               ('Room','room'),
+                               ('DB Entry creation date','creation_date'),
+                               ('DB Entry modification date','modification_date'),
+                               ])
     
     fields = (('displayId', 'name'), 'temperature', 'room')
+
+    list_display = ('displayId', 'name', 'temperature', 'room')
     
     list_filter = ('room', 'temperature')
     
-    search_fields = ('displayId', 'name', 'description')
     save_as = True
+    
+    search_fields = ('displayId', 'name',)
     
     
     
     def make_csv(self, request, queryset):
         return importexport.generate_csv(self, request, queryset, 
-                                         self.exportFields, 'Project')
+                                         self.exportFields, 'Location')
 
     make_csv.short_description = 'Export as CSV'
     
     
-    # Save the owner of the object
-    def save_model(self, request, obj, form, change):
-        if getattr(obj, 'created_by', None) is None:
-            obj.created_by = request.user
-        obj.save()
-    
-    
+
+
 
 class SampleLinkInline(GenericCollectionTabularInline):
     
     extra = 1
     
     model = SampleLink
+
+
+
+
 
 class SampleContentInline(GenericCollectionTabularInline):
     
@@ -311,6 +336,8 @@ class SampleContentInline(GenericCollectionTabularInline):
     model = SampleContent
     
     
+
+
 
 class SamplePedigreeInline(GenericCollectionTabularInline):
     extra = 1
@@ -322,11 +349,16 @@ class SamplePedigreeInline(GenericCollectionTabularInline):
     raw_id_fields = ('sample_source',)
 
 
+
+
+
 class SampleAdmin(admin.ModelAdmin):
    
     actions = ['make_csv', 'make_ok', 'make_empty', 'make_bad']
     
-    exportFields = OrderedDict( [('Sample (ID)', 'displayId'),
+    date_hierarchy = 'preparation_date'
+    
+    exportFields = OrderedDict( [('Display ID', 'displayId'),
                                ('Name', 'name'),
                                ('Location', 'container.location'),
                                ('Container', 'container'),
@@ -342,13 +374,12 @@ class SampleAdmin(admin.ModelAdmin):
                                ])
 
    
-    date_hierarchy = 'preparation_date'
-   
     fieldsets = (
                  (None, {
                          'fields' : ((('displayId', 'name', 'preparation_date'),
-                                      ('container', 'aliquotNr','empty'),
-                                      'description')
+                                      ('container', 'aliquotNr','status', 'attachment'),
+                                      'description',
+                                      'project')
                                      )
                          }
                   ),
@@ -362,31 +393,30 @@ class SampleAdmin(admin.ModelAdmin):
                  )
           
 
-    inlines = [SampleContentInline,]
+    inlines = [SampleContentInline, SamplePedigreeInline, SampleLinkInline]
     
-    class Media:
-        js = (settings.MEDIA_URL + '/js/genericcollection.js',)
+    list_display   = ('displayId', 'name','location_url', 'container_url', 
+                      'created_by', 'status', 'preparation_date')
 
     list_display_links = ('displayId',)
-
-    list_display   = ('displayId', 'name','location_url', 'container_url', 
-                      'created_by', 'preparation_date', 'creation_date', 
-                      'modification_date','qr_code_img')
     
-    list_filter    = ('container', 'container__location', 'created_by')
-    list_display_links  = ('displayId',)
+    list_filter = ('container', 'container__location', 'created_by', 'status', 'project')
     
     ordering       = ('container', 'displayId')
+    
+    save_as        = True
     
     search_fields  = ('displayId', 'name', 'description', 
                       'container__displayId', 'container__location__displayId', 
                       'container__location__temperature', 
                       'container__location__room')
     
-    save_as        = True
     
-    date_hierarchy = 'preparation_date'
     
+    
+
+    class Media:
+        js = (settings.MEDIA_URL + '/js/genericcollection.js',)
 
     def container_url(self, obj):
         url = obj.container.get_relative_url()
@@ -460,11 +490,32 @@ class SampleAdmin(admin.ModelAdmin):
                           % (i, status))
 
 
+
+
+
 class UnitAdmin(admin.ModelAdmin):
     
+    actions = ['make_csv']
+    
     list_display = ('name', 'unitType')
-    list_filter  = (('unitType'),)
-    ordering     = ('unitType', 'name')
+    
+    list_filter = (('unitType'),)
+    
+    ordering = ('unitType', 'name')
+
+
+
+    def make_csv(self, request, queryset):
+        
+        fields = OrderedDict( [('Unit name', 'name'),
+                               ('Unit Type', 'unitType'),
+                               ])
+        
+        return importexport.generate_csv(self, request, queryset, fields, 'Unit')
+
+    make_csv.short_description = 'Export as CSV'
+
+
 
 
 
@@ -479,9 +530,13 @@ class ComponentTypeAdmin(admin.ModelAdmin):
                   ),
                  )
     
-    ordering = ('name',)
     list_display   = ('name', 'uri')
+    
+    ordering = ('name',)
+    
     search_fields = ('name',)
+
+
 
 
 
