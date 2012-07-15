@@ -7,6 +7,10 @@ from django.contrib.contenttypes import generic
 import urllib
 import tyers_site.settings as settings
 
+from django.db.models import Q
+
+
+
 class Location(models.Model):
     """
     A location (fridge, freezer, shelf) where containers are stored
@@ -404,8 +408,6 @@ class SampleLink(models.Model):
             return SafeUnicode("<a href='" + self.link + "'>" + self.link + "</a>")
         return self.link
 
-
-from django.db.models import Q
 
 class SampleContent(models.Model):
     """
