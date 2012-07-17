@@ -31,9 +31,52 @@ admin_root = "/admin/labrack"
 
 
 
+class PermissionAdmin():
+    # Was nessary to save owners at creation
+    def save_related(self, request, form, formsets, change):
+        admin.ModelAdmin.save_related(self, request, form, formsets, change)
+        
+        ## Save the current user as an owner if there is no owner
+        if self.obj.owners.count() == 0:
+            self.obj.owners.add(request.user)
+            self.obj.save()
+
+        
+    # Save the owner of the object
+    def save_model(self, request, obj, form, change):
+        
+        self.obj = obj  # store the obj for save_related method
+
+        ## Store the obj creator
+        if getattr(obj, 'created_by', None) is None:
+            obj.created_by = request.user
+            obj.save()
+        else:
+            # Check if user has right to modify
+            if obj.writePermission(request.user):
+                obj.save()
+            else:
+                    messages.error(request, '%s is not allowed to modify this record. Ignore message below.'  
+                                   % (request.user.username))
+         
+
+            
+    # Limit view to current user based on entries permission
+    # Ref: http://stackoverflow.com/questions/6310983/django-admin-specific-user-admin-content
+    def queryset(self, request):
+        qs = admin.ModelAdmin.queryset(self, request)
+        
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(Q(owners=request.user) |
+                         Q(group_read=request.user.groups.all()) |
+                         Q(group_write=request.user.groups.all()) 
+                         ).distinct()
 
 
-class ComponentAdmin(admin.ModelAdmin):
+
+
+class ComponentAdmin(PermissionAdmin, admin.ModelAdmin):
     
     actions = ['make_csv']
     
@@ -89,13 +132,7 @@ class ComponentAdmin(admin.ModelAdmin):
 
 
     make_csv.short_description = 'Export as CSV'
-    
-    
-    # Save the owner of the object
-    def save_model(self, request, obj, form, change):
-        if getattr(obj, 'created_by', None) is None:
-            obj.created_by = request.user
-        obj.save()
+
 
 
 
@@ -152,8 +189,7 @@ class DnaComponentAdmin(ComponentAdmin):
 
 
 
-
-class ContainerAdmin(admin.ModelAdmin):
+class ContainerAdmin(PermissionAdmin, admin.ModelAdmin):
     
     actions = ['make_csv']
     
@@ -211,47 +247,7 @@ class ContainerAdmin(admin.ModelAdmin):
                                          self.exportFields, 'Container')
 
 
-    # Was nessary to save owners at creation
-    def save_related(self, request, form, formsets, change):
-        admin.ModelAdmin.save_related(self, request, form, formsets, change)
-        
-        ## Save the current user as an owner if there is no owner
-        if self.obj.owners.count() == 0:
-            self.obj.owners.add(request.user)
-            self.obj.save()
-
-        
-    # Save the owner of the object
-    def save_model(self, request, obj, form, change):
-        
-        self.obj = obj  # store the obj for save_related method
-
-        ## Store the obj creator
-        if getattr(obj, 'created_by', None) is None:
-            obj.created_by = request.user
-            obj.save()
-            
-
-        # Check if user has right to modify
-        if obj.writePermission(request.user):
-            obj.save()
-        else:
-            messages.error(request, '%s is not allowed to modify this record. Ignore message below.'  
-                          % (request.user.username))
-         
-
-            
-    # Limit view to current user based on entries permission
-    # Ref: http://stackoverflow.com/questions/6310983/django-admin-specific-user-admin-content
-    def queryset(self, request):
-        qs = admin.ModelAdmin.queryset(self, request)
-        
-        if request.user.is_superuser:
-            return qs
-        return qs.filter(Q(owners=request.user) |
-                         Q(group_read=request.user.groups.all()) |
-                         Q(group_write=request.user.groups.all()) 
-                         )
+    
 
 
 
@@ -322,8 +318,57 @@ class SamplePedigreeInline(GenericCollectionTabularInline):
 
 
 
+from django.utils.translation import ugettext_lazy as _
+from django.contrib.admin import SimpleListFilter
 
-class SampleAdmin(admin.ModelAdmin):
+class ContainerListFilter(SimpleListFilter):
+    # Human-readable title which will be displayed in the
+    # right admin sidebar just above the filter options.
+    title = _('container')
+
+    # Parameter for the filter that will be used in the URL query.
+    parameter_name = 'container__id__exact'
+
+    def lookups(self, request, model_admin):
+        """
+        Returns a list of tuples. The first element in each
+        tuple is the coded value for the option that will
+        appear in the URL query. The second element is the
+        human-readable name for the option that will appear
+        in the right sidebar.
+        """
+        
+        qs = model_admin.queryset(request)
+        
+        containerList = []
+        
+        for sample in qs:
+            containerList.append(( str(sample.container.pk), _(str(sample.container)) ))
+
+        
+        return containerList
+
+
+
+    def queryset(self, request, qs):
+        
+        if request.user.is_superuser:
+            pass
+        else:
+            qs = qs.filter(Q(owners=request.user) |
+                           Q(group_read=request.user.groups.all()) |
+                           Q(group_write=request.user.groups.all()) 
+                           ).distinct()
+        
+        if(self.value() == None):
+            return qs
+        else:
+            return qs.filter(container__id__exact=self.value())
+        
+
+
+
+class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
    
     actions = ['make_csv', 'make_ok', 'make_empty', 'make_bad']
     
@@ -371,10 +416,12 @@ class SampleAdmin(admin.ModelAdmin):
 
     list_display_links = ('displayId',)
     
-    list_filter = ('container', 'container__location', 'created_by', 'status', 
+    list_filter = ('created_by', ContainerListFilter, 'container__location', 'status', 
                    'project')
     
     ordering       = ('container', 'displayId')
+    
+    raw_id_fields = ('container',)
     
     save_as        = True
     
@@ -447,13 +494,6 @@ class SampleAdmin(admin.ModelAdmin):
     qr_code_img.short_description = 'QR code'
 
 
-    # Save the owner of the object
-    def save_model(self, request, obj, form, change):
-        if getattr(obj, 'created_by', None) is None:
-            obj.created_by = request.user
-        obj.save()
-        
-        
     def update_status(self, request, queryset, status):
         
         i = queryset.update(status=status)
@@ -512,7 +552,7 @@ class ComponentTypeAdmin(admin.ModelAdmin):
 
 
 
-class ProjectAdmin(admin.ModelAdmin):
+class ProjectAdmin(PermissionAdmin, admin.ModelAdmin):
     
     actions = ['make_csv']
     
@@ -554,11 +594,6 @@ class ProjectAdmin(admin.ModelAdmin):
     make_csv.short_description = 'Export as CSV'
     
     
-    # Save the owner of the object
-    def save_model(self, request, obj, form, change):
-        if getattr(obj, 'created_by', None) is None:
-            obj.created_by = request.user
-        obj.save()
     
     
 

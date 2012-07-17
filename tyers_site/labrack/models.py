@@ -59,8 +59,7 @@ class PermissionModel( models.Model ):
  
    
     def writePermission(self, currentUser):
-        self.hasWritePermission = True
-
+        
         # Superusers can modify
         if currentUser.is_superuser:
             return True
@@ -76,7 +75,6 @@ class PermissionModel( models.Model ):
                 if group_obj == group_member:
                     return True        
         
-        self.hasWritePermission = False
         return False
    
     class Meta:
@@ -224,7 +222,8 @@ class Sample( PermissionModel ):
                             help_text='Informative name for tables and listings')
     
     #: link to a single container
-    container = models.ForeignKey( Container, related_name='samples' )
+    container = models.ForeignKey( Container, related_name='samples' 
+                                   )
 
     aliquotNr = models.PositiveIntegerField('Number of aliquots', 
                                             null=True, blank=True)
@@ -441,6 +440,7 @@ class SampleLink(models.Model):
             from django.utils.safestring import SafeUnicode
             return SafeUnicode("<a href='" + self.link + "'>" + self.link + "</a>")
         return self.link
+
 
 
 class SampleContent(models.Model):
