@@ -25,6 +25,7 @@ import importexport
 from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
+from django.contrib import messages
 
 admin_root = "/admin/labrack"
 
@@ -209,23 +210,41 @@ class ContainerAdmin(admin.ModelAdmin):
     def make_csv(self, request, queryset):
         return importexport.generate_csv(self, request, queryset, 
                                          self.exportFields, 'Container')
+
+
+    # Was nessary to save owners at creation
+    def save_related(self, request, form, formsets, change):
+
+            
+            
+        super(ContainerAdmin, self).save_related(request, form, formsets, change)
+        #obj = self.save_form(request, form, change=True)
+        self.obj.owners.add(request.user)
+        self.obj.save()
+
         
     # Save the owner of the object
     def save_model(self, request, obj, form, change):
         
         permission_notok = 1
+        self.obj = obj  # store the obj for save_related method
         
+
         
-#        if getattr(obj, 'pk', None) is None:
-#            obj.save()
-#            obj.owners.add(request.user)
-#            obj.save()
+        if getattr(obj, 'pk', None) is None:
+            messages.error(request, '%s tset2.' % (request.user.username))
+            obj.save()
+            
+        if obj.owners.count() == 0:
+            obj.owners.add(request.user)
+            messages.error(request, '%s-%s tset3.' % (request.user, obj.owners.all()[0]))
+            obj.save()
 #            permission_notok = 0
         
-        if getattr(obj, 'created_by', None) is None:
-            obj.created_by = request.user
-            obj.save()
-            permission_notok = 0
+#        if getattr(obj, 'created_by', None) is None:
+#            obj.created_by = request.user
+#            obj.save()
+#            permission_notok = 0
         
         # Superusers can modify
         if request.user.is_superuser:
@@ -253,7 +272,6 @@ class ContainerAdmin(admin.ModelAdmin):
                     break
         
         if permission_notok:
-            from django.contrib import messages
             messages.error(request, '%s is not allowed to modify this record. Ignore message below.'  
                           % (request.user.username))
 
