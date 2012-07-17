@@ -214,98 +214,45 @@ class ContainerAdmin(admin.ModelAdmin):
 
     # Was nessary to save owners at creation
     def save_related(self, request, form, formsets, change):
-
-            
-            
-        super(ContainerAdmin, self).save_related(request, form, formsets, change)
-        #obj = self.save_form(request, form, change=True)
-        self.obj.owners.add(request.user)
-        self.obj.save()
+        admin.ModelAdmin.save_related(self, request, form, formsets, change)
+        
+        ## Save the current user as an owner if there is no owner
+        if self.obj.owners.count() == 0:
+            self.obj.owners.add(request.user)
+            self.obj.save()
 
         
     # Save the owner of the object
     def save_model(self, request, obj, form, change):
         
-        permission_notok = 1
         self.obj = obj  # store the obj for save_related method
-        
 
-        
-        if getattr(obj, 'pk', None) is None:
-            messages.error(request, '%s tset2.' % (request.user.username))
+        ## Store the obj creator
+        if getattr(obj, 'created_by', None) is None:
+            obj.created_by = request.user
             obj.save()
             
-        if obj.owners.count() == 0:
-            obj.owners.add(request.user)
-            messages.error(request, '%s-%s tset3.' % (request.user, obj.owners.all()[0]))
+
+        # Check if user has right to modify
+        if obj.writePermission(request.user):
             obj.save()
-#            permission_notok = 0
-        
-#        if getattr(obj, 'created_by', None) is None:
-#            obj.created_by = request.user
-#            obj.save()
-#            permission_notok = 0
-        
-        # Superusers can modify
-        if request.user.is_superuser:
-            obj.save()
-            permission_notok = 0
-        
-        # Creator can modify
-        if obj.created_by == request.user:
-            obj.save()
-            permission_notok = 0
-        
-        # Owners can modify
-        for user in obj.owners.all():
-            if user == request.user:
-                obj.save()
-                permission_notok = 0
-                break
-            
-        # Groups with write can modify
-        for group_obj in obj.group_write.all():
-            for group_member in request.user.groups.all():
-                if group_obj == group_member:
-                    obj.save()
-                    permission_notok = 0
-                    break
-        
-        if permission_notok:
+        else:
             messages.error(request, '%s is not allowed to modify this record. Ignore message below.'  
                           % (request.user.username))
+         
 
             
-        
-    
-    
-
     # Limit view to current user based on entries permission
     # Ref: http://stackoverflow.com/questions/6310983/django-admin-specific-user-admin-content
-    
-
-    
-
-    def change_view(self, request, object_id, form_url='', extra_context=None):
-        #if not self.queryset(request).filter(id=object_id).exists():
-        #    return HttpResponseRedirect(reverse('admin:labrack_Containermymodel_changelist'))
-        
-        
-        
-        return super(ContainerAdmin, self).change_view(request, object_id, form_url, extra_context)
-
-    
     def queryset(self, request):
-        qs = super(ContainerAdmin, self).queryset(request)
+        qs = admin.ModelAdmin.queryset(self, request)
         
         if request.user.is_superuser:
             return qs
-        return qs.filter(Q(created_by=request.user) |
-                         Q(owners=request.user) |
+        return qs.filter(Q(owners=request.user) |
                          Q(group_read=request.user.groups.all()) |
                          Q(group_write=request.user.groups.all()) 
                          )
-
 
 
 

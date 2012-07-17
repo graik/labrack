@@ -63,8 +63,12 @@
 {% endblock %}
 
 {% block after_related_objects %}{% endblock %}
-hihi {{ original }}
+{% load mytemplatetags %}
+
+{% hasWritePermission original user %}
+{% if original.hasWritePermission %}
 {% block submit_buttons_bottom %}{% submit_row %}{% endblock %}
+{% endif %}
 
 {% if adminform and add %}
    <script type="text/javascript">document.getElementById("{{ adminform.first_field.id_for_label }}").focus();</script>
