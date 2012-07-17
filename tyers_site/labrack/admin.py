@@ -128,8 +128,9 @@ class DnaComponentAdmin(ComponentAdmin):
     
     fieldsets = ComponentAdmin.fieldsets.__add__(\
         (('DNA Details', {
-            'fields': (('sequence', 'annotations'),
-                       ('optimizedFor', 'translatesTo')
+            'fields': (
+                ('optimizedFor', 'translatesTo'),
+                ('sequence', 'annotations'),
                        ),
             'classes':('collapse',)
         }
@@ -144,8 +145,6 @@ class DnaComponentAdmin(ComponentAdmin):
     
     list_filter = ComponentAdmin.list_filter.__add__(('optimizedFor',))
     
-    search_fields = ComponentAdmin.search_fields.__add__(('sequence',))
-
     search_fields = ComponentAdmin.search_fields.__add__(('sequence',))
 
     raw_id_fields = ComponentAdmin.raw_id_fields.__add__(('translatesTo',))
@@ -348,9 +347,9 @@ class SampleAdmin(admin.ModelAdmin):
    
     fieldsets = (
                  (None, {
-                         'fields' : ((('displayId', 'name', 'preparation_date'),
-                                      ('container', 'aliquotNr','status', 'attachment'),
-                                      'description',
+                         'fields' : ((('container', 'displayId'),
+                                      ('preparation_date', 'aliquotNr', 'status'),
+                                      ('description','attachment'),
                                       'project')
                                      )
                          }
@@ -367,12 +366,13 @@ class SampleAdmin(admin.ModelAdmin):
 
     inlines = [SampleContentInline, SamplePedigreeInline, SampleLinkInline]
     
-    list_display   = ('displayId', 'name','location_url', 'container_url', 
+    list_display   = ('displayId', 'container_url', 'location_url', 
                       'created_by', 'status', 'preparation_date')
 
     list_display_links = ('displayId',)
     
-    list_filter = ('container', 'container__location', 'created_by', 'status', 'project')
+    list_filter = ('container', 'container__location', 'created_by', 'status', 
+                   'project')
     
     ordering       = ('container', 'displayId')
     
