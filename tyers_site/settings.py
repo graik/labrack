@@ -5,6 +5,9 @@ import labrack.tools as T
 ## Path magic to use custom south version
 sys.path = [T.approot()] + sys.path
 
+## system-wide definition of admin base URL
+admin_root = "/admin/labrack"
+
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG

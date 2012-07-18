@@ -14,21 +14,18 @@
 ## You should have received a copy of the GNU Affero General Public
 ## License along with labhamster. If not, see <http://www.gnu.org/licenses/>.
 
-from tyers_site.labrack.models import *
 from django.contrib import admin
 from django.http import HttpResponse
 from django.utils.safestring import mark_safe
 from genericcollection import GenericCollectionTabularInline
 from collections import OrderedDict
-import tyers_site.settings as settings
-import importexport
 from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
 
-admin_root = "/admin/labrack"
-
-
+from tyers_site.labrack.models import *
+import importexport
+import tyers_site.settings as S
 
 
 
@@ -197,7 +194,7 @@ class ContainerAdmin(admin.ModelAdmin):
         
     def location_url(self, obj):
         url = obj.location.get_relative_url()
-        return mark_safe('<a href="%s/%s">%s</a>' % (admin_root, url, obj.location.__unicode__()))
+        return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.location.__unicode__()))
     
     location_url.allow_tags = True
     
@@ -401,10 +398,11 @@ class SampleAdmin(admin.ModelAdmin):
 
     inlines = [SampleContentInline, SamplePedigreeInline, SampleLinkInline]
     
-    list_display   = ('displayId', 'container_url', 'location_url', 
-                      'created_by', 'status', 'preparation_date')
+    list_display   = ('showId', 'location_url', 
+                      'created_by', 'preparation_date', 'showFullContent', 
+                      'status', 'showComment')
 
-    list_display_links = ('displayId',)
+    list_display_links = ('showId',)
     
     list_filter = ('container', 'container__location', 'created_by', 'status', 
                    'project')
@@ -423,11 +421,11 @@ class SampleAdmin(admin.ModelAdmin):
     
 
     class Media:
-        js = (settings.MEDIA_URL + '/js/genericcollection.js',)
+        js = (S.MEDIA_URL + '/js/genericcollection.js',)
 
     def container_url(self, obj):
         url = obj.container.get_relative_url()
-        return mark_safe('<a href="%s/%s">%s</a>' % (admin_root, url, obj.container.__unicode__()))
+        return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.container.__unicode__()))
     container_url.allow_tags = True
     container_url.short_description = 'Container'
     
@@ -443,7 +441,7 @@ class SampleAdmin(admin.ModelAdmin):
     
     def location_url(self, obj):
         url = obj.container.location.get_relative_url()
-        return mark_safe('<a href="%s/%s">%s</a>' % (admin_root, url, obj.container.location.__unicode__()))
+        return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.container.location.__unicode__()))
     location_url.allow_tags = True
     location_url.short_description = 'Location'
     

@@ -5,13 +5,11 @@ from datetime import datetime
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.core.files.storage import FileSystemStorage
+from django.utils.safestring import mark_safe
+from django.db.models import Q
 import urllib
-import tyers_site.settings as settings
-from django.db.models import Q
 
-
-from django.db.models import Q
-
+import tyers_site.settings as S
 
 
 class Location(models.Model):
@@ -200,6 +198,42 @@ class Project(models.Model):
 class Sample( models.Model ):
     """
     Sample describes a single tube or well holding DNA, cells or protein.
+    
+    The content of the sample (objects derived from Component) is linked in via
+    a separate table (SampleContent) together with amount, amountUnit,
+    concentration and concentrationUnit. The content objects can be accessed
+    via a related manager::
+    
+        content = sample.sampleContent.objects.all()
+        if content[0].content_type.model == u'dnacomponent':
+            content[0].concentration = 100.
+            content[0].concentrationUnit = 'ng/ul'
+       
+    or by type of content::
+    
+       sample.sampleContent.filter( content_type__model=u'dnacomponent' )
+       
+    We have created shortcut properties that give direct access to all DNA, 
+    protein, peptide, chemical or chassis content objects::
+    
+       dna_content = sample.dnas
+       dna_content
+       >>>[<DnaComponent: sb0002 - TEV protease site>]
+       
+       pro_content = sample.proteins
+       pep_content = sample.peptides
+       che_content = sample.chemicals
+       cell_content= sample.chassis
+       
+    Or all objects regardless of which sub-class of Component they belong to::
+    
+       sample.components
+       >>> [<DnaComponent: sb0002 - TEV protease site>, <ChemicalComponent: bufTE - TE buffer>]
+       
+    These properties are currently read-only and return a list of standard
+    model objects of type DnaComponent, ProteinComponent, etc. If the sample 
+    does not have any objects of this type, the property will return an empty
+    list.
     """
     
     displayId = models.CharField(max_length=20, 
@@ -223,7 +257,7 @@ class Sample( models.Model ):
     status = models.CharField( max_length=30, choices=STATUS_CHOICES, 
                                default='ok')
     
-    fs = FileSystemStorage(location=settings.FOLDER_FILES_PATH)
+    fs = FileSystemStorage(location=S.FOLDER_FILES_PATH)
     attachment = models.FileField(upload_to='sampleFiles', storage=fs, null=True, blank=True)
     
     description = models.TextField('Description / Comments', blank=True)
@@ -252,7 +286,69 @@ class Sample( models.Model ):
         unique_together = ('displayId', 'container')
         ordering = ('container', 'displayId')
     
+    # custom properties
+    def _contentObjects( self, model=u'component' ):
+        """
+        Get Component objects linked through SampleContent entries.
+        @param model: unicode, model name
+        @return [ Component ] or [] if none
+        """
+        l = self.sampleContent.filter(content_type__model=model)
+        if not l:
+            return []
+        return [ o.content_object for o in l ]
 
+    @property
+    def components( self ):
+        """
+        Get all component objects linked through SampleContent entries.
+        @return: [ Component-derived ] or [] if there is no content
+        """
+        return self.dnas + self.proteins + self.peptides + self.chassis\
+            + self.chemicals
+    
+    @property
+    def dnas( self ):
+        """
+        DnaComponent objects linked through sample content entries.
+        @return [ DnaComponent ], list of DnaComponent objects or [] if none
+        """
+        return self._contentObjects( u'dnacomponent' )
+   
+    @property
+    def proteins( self ):
+        """
+        ProteinComponent objects linked through sample content entries.
+        @return [ ProteinComponent ], list of ProteinComponent objects or [] if none
+        """
+        return self._contentObjects(u'proteincomponent')
+
+    @property
+    def chassis( self ):
+        """
+        Chassis objects linked through sample content entries.
+        @return [ Chassis ], list of Chassis objects or [] if none
+        """
+        return self._contentObjects(u'chassis')
+    
+    @property
+    def peptides( self ):
+        """
+        PeptideComponent objects linked through sample content entries.
+        @return [ PeptideComponent ], list of PeptideComponent objects or [] if none
+        """
+        return self._contentObjects(u'peptidecomponent')
+    
+    @property
+    def chemicals( self ):
+        """
+        ChemicalComponent objects linked through sample content entries.
+        @return [ ChemicalComponent ], list of ChemicalComponent objects or [] if none
+        """
+        return self._contentObjects(u'chemicalcomponent')
+    
+
+    # custom display methods for web interface
     def __unicode__(self):
         return u'%s - %s' % (self.displayId, self.name)
 
@@ -285,16 +381,41 @@ class Sample( models.Model ):
         #return data
         
         
-    def sampleContentStr(self):
+    def showFullContent(self):
+        """
+        Show all content items including amount and concentration with URL 
+        links.
+        """
         contentString = ""
-        for sc in self.samplecontent.all():
-            contentString += sc.content_object.__str__() + ": "
-            if(str(sc.amount) != "None"):
-                contentString += ' a[' + str(sc.amount) + ' ' + str(sc.amount_unit) + ']' 
-            if(str(sc.concentration) != "None"):
-                contentString += ' c[' + str(sc.concentration) + ' ' + str(sc.concentration_unit)  + ']'
-            contentString += '\n'
+        
+        for sc in self.sampleContent.all():
+            o = sc.content_object
+            
+            if contentString:
+                contentString += '<br>'     ## add line break to previous line
+
+            contentString += '<a href="%s/%s">%s</a>' % (S.admin_root, 
+                                                         o.get_relative_url(),
+                                                         str(o) )
+
+            amount = '%5.1f %s' %(sc.amount, sc.amountUnit) if sc.amount else ''
+            conc =  '%5.1f %s' % (sc.concentration, sc.concentrationUnit) \
+                if sc.concentration else ''
+            
+            if amount or conc:
+                contentString += ' [%s %s]' % (amount, conc) 
+
         return contentString
+
+    showFullContent.allow_tags = True  ## don't HTML-escape this string
+    showFullContent.short_description = 'Content'
+    
+    
+    def showMainContent(self):
+        """
+        Only show primary content objects and full content as mouse-over.
+        """
+        pass
     
     
     def samplePedigreeStr(self):
@@ -338,14 +459,14 @@ class Sample( models.Model ):
 #        return r
 #    
 #
-#    def show_dna(self):
-#        """filter '(None)' display in admin table"""
-#        if self.dna:
-#            return self.dna
-#        return u''
-#    show_dna.short_description = 'DNA'
-#    show_dna.admin_order_field = 'dna'
-#
+    def show_dna(self):
+        """filter '(None)' display in admin table"""
+        if self.dna:
+            return self.dna
+        return u''
+    show_dna.short_description = 'DNA'
+    show_dna.admin_order_field = 'dna'
+
 #    def show_vector(self):
 #        """filter '(None)' display in admin table"""
 #        if self.vector:
@@ -354,22 +475,22 @@ class Sample( models.Model ):
 #    show_vector.short_description = 'in Vector'
 #    show_vector.admin_order_field = 'vector'
 #
-#    def show_cell(self):
-#        """filter '(None)' display in admin table"""
-#        if self.cell:
-#            return self.cell
-#        return u''
-#    show_cell.short_description = 'in Cell'
-#    show_cell.admin_order_field = 'cell'
-#    
-#    def show_protein(self):
-#        """filter '(None)' display in admin table"""
-#        if self.protein:
-#            return self.protein
-#        return u''
-#    show_protein.short_description = 'Protein'
-#    show_protein.admin_order_field = 'protein'
-#    
+    def show_cell(self):
+        """filter '(None)' display in admin table"""
+        if self.cell:
+            return self.cell
+        return u''
+    show_cell.short_description = 'in Cell'
+    show_cell.admin_order_field = 'cell'
+    
+    def show_protein(self):
+        """filter '(None)' display in admin table"""
+        if self.protein:
+            return self.protein
+        return u''
+    show_protein.short_description = 'Protein'
+    show_protein.admin_order_field = 'protein'
+    
 #    def show_sampleType( self ):
 #        """
 #        @return: str; either of: , 'cells', 'DNA', 'protein' or 'unknown'
@@ -383,15 +504,15 @@ class Sample( models.Model ):
 #        return 'unknown'
 #    show_sampleType.short_description = 'Type'
 #
-    def show_Id( self ):
+    def showId( self ):
         """
         @return: str; full ID composed of container-sample.
         """
         return u'%s - %s' % (self.container.displayId, self.displayId)
-    show_Id.short_description = 'full ID'
-    show_Id.allow_tags = True  ## don't HTML-escape this string
+    showId.short_description = 'full ID'
+    showId.allow_tags = True  ## don't HTML-escape this string
     
-    def show_comments( self ):
+    def showComment( self ):
         """
         @return: str; truncated comment
         """
@@ -400,7 +521,7 @@ class Sample( models.Model ):
         if len(self.description) < 40:
             return unicode(self.description)
         return unicode(self.description[:38] + '..')
-    show_comments.short_description = 'comments'
+    showComment.short_description = 'comments'
 #    
 ##    def get_sequence( self, recenter=0 ):
 ##        return self.dna.get_sequence( recenter=recenter )
@@ -629,7 +750,7 @@ class DnaComponent(Component):
         """
         Define standard relative URL for object access in templates
         """
-        return 'nucleicacidcomponent/%i/' % self.id
+        return 'dnacomponent/%i/' % self.id
 
     def size(self):
         """@return int; size in nucleotides"""
