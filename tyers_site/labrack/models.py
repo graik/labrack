@@ -43,8 +43,44 @@ class Location(models.Model):
 
 
 
+class PermissionModel( models.Model ):
+    #: Permissions
+    created_by = models.ForeignKey(User, null=True, blank=True, 
+                                   related_name='%(class)s_created_by')
 
-class Container( models.Model ):
+    owners = models.ManyToManyField(User, null=True, blank=True, 
+                                    related_name='%(class)s_owners')
+    group_read = models.ManyToManyField(Group, null=True, blank=True, 
+                                        related_name='%(class)s_groups_read')
+    group_write = models.ManyToManyField(Group, null=True, blank=True, 
+                                         related_name='%(class)s_groups_write')
+ 
+   
+    def writePermission(self, currentUser):
+        
+        # Superusers can modify
+        if currentUser.is_superuser:
+            return True
+        
+        # Owners can modify
+        for user in self.owners.all():
+            if user == currentUser:
+                return True
+            
+        # Groups with write can modify
+        for group_obj in self.group_write.all():
+            for group_member in currentUser.groups.all():
+                if group_obj == group_member:
+                    return True        
+        
+        return False
+   
+    class Meta:
+        abstract = True
+
+
+
+class Container( PermissionModel ):
     """
     A container holding several physical samples of nucleic acids, proteins 
     or other stuff.
@@ -68,15 +104,6 @@ class Container( models.Model ):
     location = models.ForeignKey(Location, related_name='containers')
 
 
-    #: Permissions
-    created_by = models.ForeignKey(User, null=True, blank=True, 
-                                   related_name='container_created_by')
-    owners = models.ManyToManyField(User, null=True, blank=True, 
-                                    related_name='container_owners')
-    group_read = models.ManyToManyField(Group, null=True, blank=True, 
-                                        related_name='container_groups_read')
-    group_write = models.ManyToManyField(Group, null=True, blank=True, 
-                                         related_name='container_groups_write')
 
     #: optional long description
     description = models.TextField( 'Detailed description', blank=True)
@@ -156,7 +183,7 @@ class Unit(models.Model):
 
 
 
-class Project(models.Model):
+class Project(PermissionModel):
     """
     Project to group sample together
     """
@@ -169,20 +196,6 @@ class Project(models.Model):
     
     description = models.TextField( 'Detailed description', blank=True)
     
-    
-    #: Permissions
-    created_by = models.ForeignKey(User, null=True, blank=True,
-                                   related_name='project_created_by')
-    
-    owners = models.ManyToManyField(User, null=True, blank=True,
-                                    related_name='project_owners')
-    
-    group_read = models.ManyToManyField(Group, null=True, blank=True,
-                                        related_name='project_groups_read')
-    
-    group_write = models.ManyToManyField(Group, null=True, blank=True,
-                                         related_name='project_groups_write')
-
     creation_date = models.DateTimeField(auto_now_add=True)
     
     modification_date = models.DateTimeField(auto_now=True)
@@ -195,7 +208,7 @@ class Project(models.Model):
 
 
 
-class Sample( models.Model ):
+class Sample( PermissionModel ):
     """
     Sample describes a single tube or well holding DNA, cells or protein.
     
@@ -243,7 +256,8 @@ class Sample( models.Model ):
                             help_text='Informative name for tables and listings')
     
     #: link to a single container
-    container = models.ForeignKey( Container, related_name='samples' )
+    container = models.ForeignKey( Container, related_name='samples' 
+                                   )
 
     aliquotNr = models.PositiveIntegerField('Number of aliquots', 
                                             null=True, blank=True)
@@ -270,16 +284,6 @@ class Sample( models.Model ):
     
     modification_date = models.DateTimeField(auto_now=True)
 
-
-    #: Permissions
-    created_by = models.ForeignKey(User, null=True, blank=True, 
-                                   related_name='sample_created_by')
-    owners = models.ManyToManyField(User, null=True, blank=True, 
-                                    related_name='sample_owners')
-    group_read = models.ManyToManyField(Group, null=True, blank=True, 
-                                        related_name='sample_groups_read')
-    group_write = models.ManyToManyField(Group, null=True, blank=True, 
-                                         related_name='sample_groups_write')
 
     
     class Meta:
@@ -559,6 +563,7 @@ class SampleLink(models.Model):
         return self.link
 
 
+
 class SampleContent(models.Model):
     """
     Helper class to define the content that the sample is made of.
@@ -647,7 +652,7 @@ class ComponentType( models.Model ):
 
 
 
-class Component(models.Model):
+class Component(PermissionModel):
     """
     Abstract base class for cells, nucleic acids, proteins, and chemicals.
     """
@@ -695,15 +700,6 @@ class Component(models.Model):
     modification_date = models.DateTimeField(auto_now=True, null=True)
 
  
-    #: Permissions
-    created_by = models.ForeignKey(User, null=True, blank=True, 
-                                   related_name='%(class)s_created_by')
-    owners = models.ManyToManyField(User, null=True, blank=True, 
-                                    related_name='%(class)s_owners')
-    group_read = models.ManyToManyField(Group, null=True, blank=True, 
-                                        related_name='%(class)s_groups_read')
-    group_write = models.ManyToManyField(Group, null=True, blank=True, 
-                                         related_name='%(class)s_groups_write')
  
     
     def __unicode__(self):
