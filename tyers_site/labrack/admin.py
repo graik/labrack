@@ -23,6 +23,8 @@ from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
 from django.contrib import messages
+from django.utils.translation import ugettext_lazy as _
+from django.contrib.admin import SimpleListFilter
 
 from tyers_site.labrack.models import *
 import importexport
@@ -315,8 +317,7 @@ class SamplePedigreeInline(GenericCollectionTabularInline):
 
 
 
-from django.utils.translation import ugettext_lazy as _
-from django.contrib.admin import SimpleListFilter
+
 
 class ContainerListFilter(SimpleListFilter):
     # Human-readable title which will be displayed in the
@@ -338,11 +339,13 @@ class ContainerListFilter(SimpleListFilter):
         qs = model_admin.queryset(request)
         
         containerList = []
+        containerDict = {} 
         
         for sample in qs:
-            containerList.append(( str(sample.container.pk), _(str(sample.container)) ))
+            if containerDict.has_key(sample.container.pk) != True:
+                containerList.append(( str(sample.container.pk), _(str(sample.container)) ))
+            containerDict[sample.container.pk] = True
 
-        
         return containerList
 
 
