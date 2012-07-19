@@ -346,7 +346,6 @@ class ContainerListFilter(SimpleListFilter):
         return containerList
 
 
-
     def queryset(self, request, qs):
         
         if request.user.is_superuser:
@@ -409,12 +408,14 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
     inlines = [SampleContentInline, SamplePedigreeInline, SampleLinkInline]
     
     list_display   = ('showId', 'location_url', 
-                      'created_by', 'preparation_date', 'showFullContent', 
+                      'created_by', 'preparation_date', 'showSampleType', 
+                      'showMainContent', 
                       'status', 'showComment')
 
     list_display_links = ('showId',)
     
-    list_filter = ('created_by', ContainerListFilter, 'container__location', 'status', 
+    list_filter = ('created_by', ContainerListFilter, 'container__location', 
+                   'status', 
                    'project')
     
     ordering       = ('container', 'displayId')

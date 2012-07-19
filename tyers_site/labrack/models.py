@@ -206,8 +206,6 @@ class Project(PermissionModel):
 
 
 
-
-
 class Sample( PermissionModel ):
     """
     Sample describes a single tube or well holding DNA, cells or protein.
@@ -290,7 +288,7 @@ class Sample( PermissionModel ):
         unique_together = ('displayId', 'container')
         ordering = ('container', 'displayId')
     
-    # custom properties
+    # custom properties (shortcuts)
     def _contentObjects( self, model=u'component' ):
         """
         Get Component objects linked through SampleContent entries.
@@ -351,8 +349,24 @@ class Sample( PermissionModel ):
         """
         return self._contentObjects(u'chemicalcomponent')
     
+    @property
+    def sampleType( self ):
+        """
+        @return str: Either of 'cells', 'DNA', 'protein', 'peptide', 'chemical'
+        """
+        if self.chassis:
+            return u'cells'
+        if self.dnas:
+            return u'DNA'
+        if self.proteins:
+            return u'protein'
+        if self.peptides:
+            return u'peptide'
+        if self.chemicals:
+            return u'chemical'
+        return 'unknown'
 
-    # custom display methods for web interface
+    # override Django object methods
     def __unicode__(self):
         return u'%s - %s' % (self.displayId, self.name)
 
@@ -362,7 +376,8 @@ class Sample( PermissionModel ):
         """
         return 'sample/%i/' % self.id
     
-        
+    
+    # custom display methods for web interface        
     def qr_code(self):
         """?"""
         data = str(self.displayId + '\n' + self.name + '\n' \
@@ -384,42 +399,104 @@ class Sample( PermissionModel ):
         return urllib.quote(data)
         #return data
         
+    def strFullContent(self):
+        """
+        Show all content items including amount and concentration with URL 
+        links.
+        """
+        contentString = u''.encode( 'utf-8' )
+        
+        for sc in self.sampleContent.all():
+            o = sc.content_object
+            
+            if contentString:
+                contentString += u'\n'     ## add line break to previous line
+
+            contentString += unicode(o)
+
+            amount = u'%5.1f %s' %(sc.amount, sc.amountUnit) if sc.amount else ''
+            conc =  u'%5.1f %s' % (sc.concentration, sc.concentrationUnit) \
+                if sc.concentration else ''
+            
+            if amount or conc:
+                contentString += u' [%s %s]' % (amount, conc) 
+
+        return contentString
         
     def showFullContent(self):
         """
         Show all content items including amount and concentration with URL 
         links.
         """
-        contentString = ""
+        contentString = u''.encode( 'utf-8' )
         
         for sc in self.sampleContent.all():
             o = sc.content_object
             
             if contentString:
-                contentString += '<br>'     ## add line break to previous line
+                contentString += u'<br>'     ## add line break to previous line
 
-            contentString += '<a href="%s/%s">%s</a>' % (S.admin_root, 
+            contentString += u'<a href="%s/%s">%s</a>' % (S.admin_root, 
                                                          o.get_relative_url(),
                                                          str(o) )
 
-            amount = '%5.1f %s' %(sc.amount, sc.amountUnit) if sc.amount else ''
-            conc =  '%5.1f %s' % (sc.concentration, sc.concentrationUnit) \
+            amount = u'%5.1f %s' %(sc.amount, sc.amountUnit) if sc.amount else ''
+            conc =  u'%5.1f %s' % (sc.concentration, sc.concentrationUnit) \
                 if sc.concentration else ''
             
             if amount or conc:
-                contentString += ' [%s %s]' % (amount, conc) 
+                contentString += u' [%s %s]' % (amount, conc) 
 
         return contentString
 
     showFullContent.allow_tags = True  ## don't HTML-escape this string
-    showFullContent.short_description = 'Content'
+    showFullContent.short_description = u'Content'
     
     
+    def _showObject(self, olist, description='', brief=False ):
+        o = olist[0]
+        item = o.displayId if brief else str(o)
+        
+        s = u'<a href="%s/%s" title="%s">%s</a>' % \
+            (S.admin_root, o.get_relative_url(), description, item )
+        
+        if len(olist) > 1:
+            s += u' + more'
+        
+        return s
+        
+        
     def showMainContent(self):
         """
         Only show primary content objects and full content as mouse-over.
+        Scenarios:
+        Ignore chemicals if there is dna, protein, peptide or chassis;
+        
         """
-        pass
+        description = self.strFullContent()
+        s = u''
+        if self.dnas:
+            s = self._showObject( self.dnas, description)
+        elif self.proteins:
+            s = self._showObject( self.proteins, description )
+        elif self.peptides:
+            s = self._showObject( self.peptides, description )
+            
+        if s and self.chassis:
+            s += u' in %s' % self._showObject( self.chassis, brief=True ) 
+        
+        if s:
+            return s
+        
+        if self.chassis:
+            return self._showObject( self.chassis, description )
+        if self.chemicals:
+            return self._showObject( self.chemicals, description )
+
+        return u''
+    showMainContent.allow_tags = True  ## don't HTML-escape this string
+    showMainContent.short_description = u'Content'
+    
     
     
     def samplePedigreeStr(self):
@@ -465,8 +542,8 @@ class Sample( PermissionModel ):
 #
     def show_dna(self):
         """filter '(None)' display in admin table"""
-        if self.dna:
-            return self.dna
+        if self.dnas:
+            return self.dnas[0]
         return u''
     show_dna.short_description = 'DNA'
     show_dna.admin_order_field = 'dna'
@@ -481,33 +558,27 @@ class Sample( PermissionModel ):
 #
     def show_cell(self):
         """filter '(None)' display in admin table"""
-        if self.cell:
-            return self.cell
+        if self.chassis:
+            return self.chassis[0]
         return u''
     show_cell.short_description = 'in Cell'
     show_cell.admin_order_field = 'cell'
     
     def show_protein(self):
         """filter '(None)' display in admin table"""
-        if self.protein:
-            return self.protein
+        if self.proteins:
+            return self.proteins[0]
         return u''
     show_protein.short_description = 'Protein'
     show_protein.admin_order_field = 'protein'
     
-#    def show_sampleType( self ):
-#        """
-#        @return: str; either of: , 'cells', 'DNA', 'protein' or 'unknown'
-#        """
-#        if self.cell:
-#            return 'cells'
-#        if self.dna or self.vector:
-#            return 'DNA'
-#        if self.protein:
-#            return 'protein'
-#        return 'unknown'
-#    show_sampleType.short_description = 'Type'
-#
+    def showSampleType( self ):
+        """
+        @return: str; either of: 'cells', 'DNA', 'protein', 'peptide', 'chemical'
+        """
+        return self.sampleType
+    showSampleType.short_description = 'Type'
+
     def showId( self ):
         """
         @return: str; full ID composed of container-sample.
@@ -572,6 +643,7 @@ class SampleContent(models.Model):
                                      'dnacomponent', 
                                      'peptidecomponent', 
                                      'proteincomponent',
+                                     'chassis'
                                      )
                         }   
 
