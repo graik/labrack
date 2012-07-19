@@ -25,10 +25,18 @@ from django.core.urlresolvers import reverse
 from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.admin import SimpleListFilter
-
+from django import forms
+from django.contrib.admin.sites import site
+from django.contrib.admin.widgets import ManyToManyRawIdWidget, ForeignKeyRawIdWidget
+from django.utils.encoding import smart_unicode
+from django.utils.html import escape
 from tyers_site.labrack.models import *
 import importexport
 import tyers_site.settings as S
+
+
+
+
 
 class PermissionAdmin():
     # Was nessary to save owners at creation
@@ -300,17 +308,15 @@ class SampleContentInline(GenericCollectionTabularInline):
     extra = 1
     
     model = SampleContent
-    
-    
+       
 
 
-
-class SamplePedigreeInline(GenericCollectionTabularInline):
+class SampleProvenanceInline(GenericCollectionTabularInline):
     extra = 1
     
     fk_name = 'sample'
 
-    model = SamplePedigree
+    model = SampleProvenance
 
     raw_id_fields = ('sample_source',)
 
@@ -394,7 +400,8 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
                          'fields' : ((('container', 'displayId'),
                                       ('preparation_date', 'aliquotNr', 'status'),
                                       ('description','attachment'),
-                                      'project')
+                                      'sampleCollection'
+                                      )
                                      )
                          }
                   ),
@@ -408,7 +415,7 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
                  )
           
 
-    inlines = [SampleContentInline, SamplePedigreeInline, SampleLinkInline]
+    inlines = [SampleContentInline, SampleProvenanceInline, SampleLinkInline]
     
     list_display   = ('showId', 'location_url', 
                       'created_by', 'preparation_date', 'showSampleType', 
@@ -418,12 +425,12 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
     list_display_links = ('showId',)
     
     list_filter = ('created_by', ContainerListFilter, 'container__location', 
-                   'status', 
-                   'project')
+                   'status', 'sampleCollection'
+                   )
     
     ordering       = ('container', 'displayId')
     
-    raw_id_fields = ('container',)
+    raw_id_fields = ('container', 'sampleCollection')
     
     save_as        = True
     
@@ -453,6 +460,20 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
             return "No attachment"
 
     file_link.allow_tags = True
+    
+    
+    def formfield_for_dbfield(self, db_field, **kwargs):
+        
+        if db_field.name in self.raw_id_fields:
+            
+            kwargs.pop("request", None)
+            fType = db_field.rel.__class__.__name__
+            if fType == "ManyToOneRel":
+                kwargs['widget'] = VerboseForeignKeyRawIdWidget(db_field.rel, site)
+            elif fType == "ManyToManyRel":
+                kwargs['widget'] = VerboseManyToManyRawIdWidget(db_field.rel, site)
+            return db_field.formfield(**kwargs)
+        return super(SampleAdmin, self).formfield_for_dbfield(db_field, **kwargs)
     
     
     def location_url(self, obj):
@@ -554,20 +575,19 @@ class ComponentTypeAdmin(admin.ModelAdmin):
 
 
 
-class ProjectAdmin(PermissionAdmin, admin.ModelAdmin):
+class SampleCollectionAdmin(PermissionAdmin, admin.ModelAdmin):
     
     actions = ['make_csv']
     
     exportFields = OrderedDict( [('Project Name', 'name'),
-                               ('Short Description', 'shortDescription'),
-                               ('Detailled Description','description'),
+                                 ('Detailled Description','description'),
                                ])
     
     
     fieldsets = (
                  (None, {
-                         'fields' : ((('name', 'shortDescription', 
-                                       'description'),
+                         'fields' : (( 'name',  
+                                       'description',
                                       )
                                      )
                          }
@@ -581,11 +601,11 @@ class ProjectAdmin(PermissionAdmin, admin.ModelAdmin):
                   )
                  )
 
-    list_display = ('name', 'shortDescription', 'created_by', 'creation_date')
+    list_display = ('name', 'created_by', 'creation_date')
     
     save_as = True
     
-    search_fields = ('name', 'shortDescription', 'description')
+    search_fields = ('name', 'description')
     
     
     
@@ -600,9 +620,47 @@ class ProjectAdmin(PermissionAdmin, admin.ModelAdmin):
     
 
 
+
+class VerboseForeignKeyRawIdWidget(ForeignKeyRawIdWidget):
+    def label_for_value(self, value):
+        key = self.rel.get_related_field().name
+        try:
+            obj = self.rel.to._default_manager.using(self.db).get(**{key: value})
+            change_url = reverse(
+                "admin:%s_%s_change" % (obj._meta.app_label, obj._meta.object_name.lower()),
+                args=(obj.pk,)
+            )
+            return '&nbsp;<strong><a href="%s">%s</a></strong>' % (change_url, escape(obj))
+        except (ValueError, self.rel.to.DoesNotExist):
+            return '???'
+
+class VerboseManyToManyRawIdWidget(ManyToManyRawIdWidget):
+    def label_for_value(self, value):
+        values = value.split(',')
+        str_values = []
+        key = self.rel.get_related_field().name
+        for v in values:
+            try:
+                obj = self.rel.to._default_manager.using(self.db).get(**{key: v})
+                x = smart_unicode(obj)
+                change_url = reverse(
+                    "admin:%s_%s_change" % (obj._meta.app_label, obj._meta.object_name.lower()),
+                    args=(obj.pk,)
+                )
+                str_values += ['<strong><a href="%s">%s</a></strong>' % (change_url, escape(x))]
+            except self.rel.to.DoesNotExist:
+                str_values += [u'???']
+        return u', '.join(str_values)
+
+
+
+
+    
+
+
 admin.site.register(Container, ContainerAdmin)
 admin.site.register(Location, LocationAdmin)
-admin.site.register(Project, ProjectAdmin)
+admin.site.register(SampleCollection, SampleCollectionAdmin)
 admin.site.register(Sample, SampleAdmin) 
 admin.site.register(Unit, UnitAdmin) 
 admin.site.register(ComponentType, ComponentTypeAdmin)

@@ -8,7 +8,7 @@ from django.core.files.storage import FileSystemStorage
 from django.utils.safestring import mark_safe
 from django.db.models import Q
 import urllib
-
+from django.utils.safestring import SafeUnicode
 import tyers_site.settings as S
 
 
@@ -182,18 +182,13 @@ class Unit(models.Model):
 
 
 
-
-class Project(PermissionModel):
+class SampleCollection(PermissionModel):
     """
-    Project to group sample together
+    SampleCollection to group sample together
     """
     
     name = models.CharField(max_length=25, unique=True)
 
-    shortDescription = models.CharField('Short description', max_length=200,
-                                        blank=True, help_text='Brief description\
-                                        for tables and listings')
-    
     description = models.TextField( 'Detailed description', blank=True)
     
     creation_date = models.DateTimeField(auto_now_add=True)
@@ -203,6 +198,7 @@ class Project(PermissionModel):
 
     def __unicode__(self):
         return self.name
+
 
 
 
@@ -274,7 +270,7 @@ class Sample( PermissionModel ):
     
     description = models.TextField('Description / Comments', blank=True)
     
-    project = models.ManyToManyField(Project, null=True, blank=True)
+    sampleCollection = models.ManyToManyField(SampleCollection, null=True, blank=True)
     
     preparation_date = models.DateField(default=datetime.now())
     
@@ -608,6 +604,7 @@ class Sample( PermissionModel ):
 
 
 
+
 class SampleLink(models.Model):
     """
     Link to file system or url
@@ -629,7 +626,7 @@ class SampleLink(models.Model):
     
     def __unicode__(self):
         if self.linkType == 'url':
-            from django.utils.safestring import SafeUnicode
+            
             return SafeUnicode("<a href='" + self.link + "'>" + self.link + "</a>")
         return self.link
 
@@ -676,27 +673,22 @@ class SampleContent(models.Model):
 
 
 
-class SamplePedigree(models.Model):
+class SampleProvenance(models.Model):
     """
     Define the components that the sample is made of.
     """
-    sample = models.ForeignKey(Sample, related_name='samplepedigree')
+    sample = models.ForeignKey(Sample, related_name='sampleProvenance')
     
-    sample_source = models.ForeignKey(Sample, null=True, related_name='samplesource')
+    sample_source = models.ForeignKey(Sample, null=True, related_name='sampleSource')
     
-    amount = models.FloatField('Amount/Volume', null=True, blank=True)
+    PROVENANCE_TYPE = (('parent','parent'), )
     
-    amountUnit = models.ForeignKey(Unit, related_name='%(class)s_amount_unit', null=True,
-                                    blank=True, limit_choices_to=\
-                                    Q(unitType='volume') | Q(unitType='mass') | \
-                                    Q(unitType='number'))
+    provenanceType = models.CharField(max_length=25, choices=PROVENANCE_TYPE)
     
-    concentration = models.FloatField('Concentration', null=True, blank=True)
+    shortDescription = models.CharField( max_length=50,
+                                         help_text='Brief description for tables\
+                                         and listings', null=True, blank=True)
     
-    concentrationUnit = models.ForeignKey(Unit, related_name='%(class)s_concentration_unit',
-                                           null=True, blank=True,
-                                           limit_choices_to = {'unitType': 'concentration'})
-
 
 
 
@@ -773,6 +765,10 @@ class Component(PermissionModel):
 
  
  
+    def formatedUrl(self):
+        name = self.name if self.name else ''
+        return SafeUnicode("<a href='/admin/labrack/" + self.get_relative_url() + "'>" + self.displayId + ' - ' +  name + "</a>")
+
     
     def __unicode__(self):
         name = self.name if self.name else ''
@@ -939,6 +935,8 @@ class PeptideComponent(Component):
         if self.sequence:
             return len( self.sequence )
         return 0
+    
+    
     
 #    def related_samples( self ):
 #        """

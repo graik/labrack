@@ -13,3 +13,4 @@ def hasWritePermission(original, user):
         pass
     
     return ''
+
