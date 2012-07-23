@@ -31,8 +31,11 @@ from django.contrib.admin.widgets import ManyToManyRawIdWidget, ForeignKeyRawIdW
 from django.utils.encoding import smart_unicode
 from django.utils.html import escape
 from tyers_site.labrack.models import *
+from django.core.exceptions import ValidationError
+from django.forms.util import ErrorList
 import importexport
 import tyers_site.settings as S
+
 
 
 
@@ -41,23 +44,48 @@ import tyers_site.settings as S
 class PermissionAdmin():
     # Was nessary to save owners at creation
     def save_related(self, request, form, formsets, change):
-        admin.ModelAdmin.save_related(self, request, form, formsets, change)
         
-        ## Save the current user as an owner if there is no owner
-        if self.obj.owners.count() == 0:
-            self.obj.owners.add(request.user)
-            self.obj.save()
+        
+        if not self.obj.pk == None:
+        
+            admin.ModelAdmin.save_related(self, request, form, formsets, change)
+            
+            ## Save the current user as an owner
+            if self.obj.writePermission(request.user) or self.obj.created_by == request.user:
+                self.obj.owners.add(request.user)
+                self.obj.save()
+            
+                ## Copy Container permission to Sample
+                if isinstance(self.obj, Sample):
+                    self.obj.owners = self.obj.container.owners.all()
+                    self.obj.owners.add(request.user)
+                    self.obj.group_read = self.obj.container.group_read.all()
+                    self.obj.group_write = self.obj.container.group_write.all()
+                    self.obj.save()
+                
+                if isinstance(self.obj, Container):
+                    for sample in self.obj.samples.all():
+                        sample.owners = self.obj.owners.all()
+                        sample.group_read = self.obj.group_read.all()
+                        sample.group_write = self.obj.group_write.all()
+                        sample.save()
 
         
     # Save the owner of the object
     def save_model(self, request, obj, form, change):
-        
+
         self.obj = obj  # store the obj for save_related method
 
         ## Store the obj creator
         if getattr(obj, 'created_by', None) is None:
             obj.created_by = request.user
-            obj.save()
+
+            # Check that user can add sample to container
+            if isinstance(obj, Sample) and not obj.container.writePermission(request.user):
+                messages.error(request, '%s is not allowed to add sample to this container. Ignore message below.'  
+                                   % (request.user.username))
+            else:
+                obj.save()
         else:
             # Check if user has right to modify
             if obj.writePermission(request.user):
@@ -65,6 +93,7 @@ class PermissionAdmin():
             else:
                     messages.error(request, '%s is not allowed to modify this record. Ignore message below.'  
                                    % (request.user.username))
+                    
          
 
             
@@ -369,11 +398,102 @@ class ContainerListFilter(SimpleListFilter):
             return qs
         else:
             return qs.filter(container__id__exact=self.value())
+
+
+
+class SampleCollectionListFilter(SimpleListFilter):
+    # Human-readable title which will be displayed in the
+    # right admin sidebar just above the filter options.
+    title = _('sampleCollection')
+
+    # Parameter for the filter that will be used in the URL query.
+    parameter_name = 'sampleCollection__id__exact'
+
+    def lookups(self, request, model_admin):
+        """
+        Returns a list of tuples. The first element in each
+        tuple is the coded value for the option that will
+        appear in the URL query. The second element is the
+        human-readable name for the option that will appear
+        in the right sidebar.
+        """
+        
+        qs = model_admin.queryset(request)
+        
+        sampleCollectionList = []
+        sampleCollectionDict = {} 
+        
+        for sample in qs:
+            for sampleCollection in sample.sampleCollection.all():
+                if sampleCollectionDict.has_key(sampleCollection.pk) != True:
+                    sampleCollectionList.append(( str(sampleCollection.pk), _(str(sampleCollection)) ))
+                    sampleCollectionDict[sampleCollection.pk] = True
+
+        return sampleCollectionList
+
+
+    def queryset(self, request, qs):
+        
+        if request.user.is_superuser:
+            pass
+        else:
+            qs = qs.filter(Q(owners=request.user) |
+                           Q(group_read=request.user.groups.all()) |
+                           Q(group_write=request.user.groups.all()) 
+                           ).distinct()
+        
+        if(self.value() == None):
+            return qs
+        else:
+            return qs.filter(sampleCollection__id__exact=self.value())
         
 
 
 
+class SampleForm(forms.ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request', None)
+        # Voila, now you can access request anywhere in your form methods by using self.request!
+        super(SampleForm, self).__init__(*args, **kwargs)
+
+    def clean(self):
+        try:
+            container = Container.objects.get(pk=int(self.data['container']))
+        except:
+            raise ValidationError('Container id is invalid')
+    
+            
+        if not container.writePermission(self.request.user):
+            self._errors['container'] = ErrorList()
+            self._errors['container'].append(str(self.request.user) + 'is not allowed to add sample to this container.')
+            raise ValidationError('Validation Error')
+        
+        return self.cleaned_data
+
+
+    class Meta:
+        model = Sample
+
+
+
+
 class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
+   
+    form = SampleForm     
+
+    def get_form(self, request, obj=None, **kwargs):
+
+        AdminForm = super(SampleAdmin, self).get_form(request, obj, **kwargs)
+
+        class ModelFormMetaClass(AdminForm):
+            def __new__(cls, *args, **kwargs):
+                kwargs['request'] = request
+                return AdminForm(*args, **kwargs)
+
+        return ModelFormMetaClass   
+   
+   
    
     actions = ['make_csv', 'make_ok', 'make_empty', 'make_bad']
     
@@ -406,12 +526,11 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
                          }
                   ),
                  ('Permission', {
-                        'classes': ('collapse',),
-                        'fields' : (
-                                        (('owners'), ('group_read', 'group_write'))
-                                    )
+                                 'classes': ('collapse',),
+                                 'fields' : ((('owners'), ('group_read', 'group_write'))
+                                             )
                                  }
-                  )
+                  ),
                  )
           
 
@@ -425,7 +544,7 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
     list_display_links = ('showId',)
     
     list_filter = ('created_by', ContainerListFilter, 'container__location', 
-                   'status', 'sampleCollection'
+                   'status', SampleCollectionListFilter
                    )
     
     ordering       = ('container', 'displayId')
@@ -441,10 +560,9 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
     
     
     
-    
-
     class Media:
-        js = (S.MEDIA_URL + '/js/genericcollection.js',)
+        js = (S.MEDIA_URL + '/js/genericcollection.js', 
+              S.MEDIA_URL + '/js/list_filter_collapse.js',)
 
     def container_url(self, obj):
         url = obj.container.get_relative_url()
