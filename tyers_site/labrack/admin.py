@@ -525,12 +525,7 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
                                      )
                          }
                   ),
-                 ('Permission', {
-                                 'classes': ('collapse',),
-                                 'fields' : ((('owners'), ('group_read', 'group_write'))
-                                             )
-                                 }
-                  ),
+                 
                  )
           
 
