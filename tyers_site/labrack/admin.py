@@ -14,28 +14,32 @@
 ## You should have received a copy of the GNU Affero General Public
 ## License along with labhamster. If not, see <http://www.gnu.org/licenses/>.
 
-from django.contrib import admin
-from django.http import HttpResponse
-from django.utils.safestring import mark_safe
+
 from genericcollection import GenericCollectionTabularInline
 from collections import OrderedDict
-from django.db.models import Q
-from django.http import HttpResponseRedirect
-from django.core.urlresolvers import reverse
-from django.contrib import messages
-from django.utils.translation import ugettext_lazy as _
-from django.contrib.admin import SimpleListFilter
-from django import forms
-from django.contrib.admin.sites import site
-from django.contrib.admin.widgets import ManyToManyRawIdWidget, ForeignKeyRawIdWidget
-from django.utils.encoding import smart_unicode
-from django.utils.html import escape
-from tyers_site.labrack.models import *
-from django.core.exceptions import ValidationError
-from django.forms.util import ErrorList
-import importexport
-import tyers_site.settings as S
 
+from django.core.exceptions import ValidationError
+#from django.core.urlresolvers import reverse
+from django.contrib import admin
+from django.contrib import messages
+from django.contrib.admin.sites import site
+from django.db.models import Q
+from django.http import HttpResponse
+from django.http import HttpResponseRedirect
+#from django.utils.encoding import smart_unicode
+#from django.utils.html import escape
+from django.utils.safestring import mark_safe
+from django import forms
+from django.forms.util import ErrorList
+#from django.utils.translation import ugettext_lazy as _
+
+
+## Labrack imports
+import tyers_site.settings as S
+from tyers_site.labrack.models import *
+from adminFilters import *
+from adminWidgets import *
+import importexport
 
 
 
@@ -352,104 +356,6 @@ class SampleProvenanceInline(GenericCollectionTabularInline):
 
 
 
-
-
-class ContainerListFilter(SimpleListFilter):
-    # Human-readable title which will be displayed in the
-    # right admin sidebar just above the filter options.
-    title = _('container')
-
-    # Parameter for the filter that will be used in the URL query.
-    parameter_name = 'container__id__exact'
-
-    def lookups(self, request, model_admin):
-        """
-        Returns a list of tuples. The first element in each
-        tuple is the coded value for the option that will
-        appear in the URL query. The second element is the
-        human-readable name for the option that will appear
-        in the right sidebar.
-        """
-        
-        qs = model_admin.queryset(request)
-        
-        containerList = []
-        containerDict = {} 
-        
-        for sample in qs:
-            if containerDict.has_key(sample.container.pk) != True:
-                containerList.append(( str(sample.container.pk), _(str(sample.container)) ))
-            containerDict[sample.container.pk] = True
-
-        return containerList
-
-
-    def queryset(self, request, qs):
-        
-        if request.user.is_superuser:
-            pass
-        else:
-            qs = qs.filter(Q(owners=request.user) |
-                           Q(group_read=request.user.groups.all()) |
-                           Q(group_write=request.user.groups.all()) 
-                           ).distinct()
-        
-        if(self.value() == None):
-            return qs
-        else:
-            return qs.filter(container__id__exact=self.value())
-
-
-
-class SampleCollectionListFilter(SimpleListFilter):
-    # Human-readable title which will be displayed in the
-    # right admin sidebar just above the filter options.
-    title = _('sampleCollection')
-
-    # Parameter for the filter that will be used in the URL query.
-    parameter_name = 'sampleCollection__id__exact'
-
-    def lookups(self, request, model_admin):
-        """
-        Returns a list of tuples. The first element in each
-        tuple is the coded value for the option that will
-        appear in the URL query. The second element is the
-        human-readable name for the option that will appear
-        in the right sidebar.
-        """
-        
-        qs = model_admin.queryset(request)
-        
-        sampleCollectionList = []
-        sampleCollectionDict = {} 
-        
-        for sample in qs:
-            for sampleCollection in sample.sampleCollection.all():
-                if sampleCollectionDict.has_key(sampleCollection.pk) != True:
-                    sampleCollectionList.append(( str(sampleCollection.pk), _(str(sampleCollection)) ))
-                    sampleCollectionDict[sampleCollection.pk] = True
-
-        return sampleCollectionList
-
-
-    def queryset(self, request, qs):
-        
-        if request.user.is_superuser:
-            pass
-        else:
-            qs = qs.filter(Q(owners=request.user) |
-                           Q(group_read=request.user.groups.all()) |
-                           Q(group_write=request.user.groups.all()) 
-                           ).distinct()
-        
-        if(self.value() == None):
-            return qs
-        else:
-            return qs.filter(sampleCollection__id__exact=self.value())
-        
-
-
-
 class SampleForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
@@ -732,45 +638,7 @@ class SampleCollectionAdmin(PermissionAdmin, admin.ModelAdmin):
     
     
 
-
-
-class VerboseForeignKeyRawIdWidget(ForeignKeyRawIdWidget):
-    def label_for_value(self, value):
-        key = self.rel.get_related_field().name
-        try:
-            obj = self.rel.to._default_manager.using(self.db).get(**{key: value})
-            change_url = reverse(
-                "admin:%s_%s_change" % (obj._meta.app_label, obj._meta.object_name.lower()),
-                args=(obj.pk,)
-            )
-            return '&nbsp;<strong><a href="%s">%s</a></strong>' % (change_url, escape(obj))
-        except (ValueError, self.rel.to.DoesNotExist):
-            return '???'
-
-class VerboseManyToManyRawIdWidget(ManyToManyRawIdWidget):
-    def label_for_value(self, value):
-        values = value.split(',')
-        str_values = []
-        key = self.rel.get_related_field().name
-        for v in values:
-            try:
-                obj = self.rel.to._default_manager.using(self.db).get(**{key: v})
-                x = smart_unicode(obj)
-                change_url = reverse(
-                    "admin:%s_%s_change" % (obj._meta.app_label, obj._meta.object_name.lower()),
-                    args=(obj.pk,)
-                )
-                str_values += ['<strong><a href="%s">%s</a></strong>' % (change_url, escape(x))]
-            except self.rel.to.DoesNotExist:
-                str_values += [u'???']
-        return u', '.join(str_values)
-
-
-
-
-    
-
-
+## Register admin panels
 admin.site.register(Container, ContainerAdmin)
 admin.site.register(Location, LocationAdmin)
 admin.site.register(SampleCollection, SampleCollectionAdmin)
@@ -782,17 +650,4 @@ admin.site.register(ProteinComponent, ProteinComponentAdmin)
 admin.site.register(DnaComponent, DnaComponentAdmin)
 admin.site.register(ChemicalComponent, ComponentAdmin)
 admin.site.register(Chassis)
-
 #admin.site.register(Collection)
-
-
-
-
-
-
-
-
- 
-
-
-
