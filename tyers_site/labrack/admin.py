@@ -510,19 +510,34 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
     
     
     def make_bad(self, request, queryset):
-        self.update_status(request, queryset, 'bad')
+        if self.obj.writePermission(request.user):
+            self.update_status(request, queryset, 'bad')
+        else:
+            messages.error(request, '%s is not allowed to modify this record. Ignore message below.'  
+                                   % (request.user.username))
+        
         
     make_bad.short_description = 'Mark selected entries as bad'
 
     
     def make_empty(self, request, queryset):
-        self.update_status(request, queryset, 'empty')
+        if self.obj.writePermission(request.user):
+            self.update_status(request, queryset, 'empty')
+        else:
+            messages.error(request, '%s is not allowed to modify this record. Ignore message below.'  
+                                   % (request.user.username))
+        
         
     make_empty.short_description = 'Mark selected entries as empty'
     
 
     def make_ok(self, request, queryset):
-        self.update_status(request, queryset, 'ok')
+        if self.obj.writePermission(request.user):
+            self.update_status(request, queryset, 'ok')
+        else:
+            messages.error(request, '%s is not allowed to modify this record. Ignore message below.'  
+                                   % (request.user.username))
+        
         
     make_ok.short_description = 'Mark selected entries as ok'
     
