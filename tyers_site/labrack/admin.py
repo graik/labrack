@@ -510,33 +510,19 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
     
     
     def make_bad(self, request, queryset):
-        if self.obj.writePermission(request.user):
-            self.update_status(request, queryset, 'bad')
-        else:
-            messages.error(request, '%s is not allowed to modify this record. Ignore message below.'  
-                                   % (request.user.username))
-        
+        self.update_status(request, queryset, 'bad')
         
     make_bad.short_description = 'Mark selected entries as bad'
 
     
     def make_empty(self, request, queryset):
-        if self.obj.writePermission(request.user):
-            self.update_status(request, queryset, 'empty')
-        else:
-            messages.error(request, '%s is not allowed to modify this record. Ignore message below.'  
-                                   % (request.user.username))
-        
+        self.update_status(request, queryset, 'empty')
         
     make_empty.short_description = 'Mark selected entries as empty'
     
 
     def make_ok(self, request, queryset):
-        if self.obj.writePermission(request.user):
-            self.update_status(request, queryset, 'ok')
-        else:
-            messages.error(request, '%s is not allowed to modify this record. Ignore message below.'  
-                                   % (request.user.username))
+        self.update_status(request, queryset, 'ok')
         
         
     make_ok.short_description = 'Mark selected entries as ok'
@@ -553,7 +539,16 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
 
     def update_status(self, request, queryset, status):
         
-        i = queryset.update(status=status)
+        i = 0
+        
+        for obj in queryset:
+            if obj.writePermission(request.user):
+                obj.status = status
+                obj.save()
+                i += 1
+            else:
+                messages.error(request, '%s is not allowed to modify %s.'  
+                                   % (request.user.username, obj))
 
         self.message_user(request, '%i samples were set to %s'  
                           % (i, status))
