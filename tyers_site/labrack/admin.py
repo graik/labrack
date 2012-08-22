@@ -259,6 +259,7 @@ class ContainerAdmin(PermissionAdmin, admin.ModelAdmin):
                   )
                  )
     
+    
     list_display = ('displayId', 'name', 'containerType', 'location_url', 
                     'created_by')
     
@@ -453,6 +454,8 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
     raw_id_fields = ('container', 'sampleCollection')
     
     save_as        = True
+    
+    save_on_top = True
     
     search_fields  = ('displayId', 'name', 'description', 
                       'container__displayId', 'container__location__displayId', 
