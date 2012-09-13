@@ -1,0 +1,741 @@
+[
+    {
+        "pk": 1,
+        "model": "labrack.location",
+        "fields": {
+            "room": "Lab",
+            "modification_date": "2012-07-17T15:46:20.170Z",
+            "creation_date": "2012-07-17T15:46:20.170Z",
+            "temperature": -20.0,
+            "displayId": "Lab 1",
+            "name": "Lab freezer 1"
+        }
+    },
+    {
+        "pk": 1,
+        "model": "labrack.container",
+        "fields": {
+            "owners": [],
+            "description": "",
+            "modification_date": "2012-07-17T15:46:26.177Z",
+            "group_read": [],
+            "created_by": null,
+            "creation_date": "2012-07-17T15:46:26.170Z",
+            "containerType": "box",
+            "location": 1,
+            "displayId": "SB_D01",
+            "group_write": [],
+            "name": "SynBio Dna 1"
+        }
+    },
+    {
+        "pk": 2,
+        "model": "labrack.container",
+        "fields": {
+            "owners": [
+                1
+            ],
+            "description": "",
+            "modification_date": "2012-07-18T23:37:55.129Z",
+            "group_read": [],
+            "created_by": 1,
+            "creation_date": "2012-07-18T23:37:55.113Z",
+            "containerType": "box",
+            "location": 1,
+            "displayId": "SB_D02",
+            "group_write": [],
+            "name": "SynBio Dna 2"
+        }
+    },
+    {
+        "pk": 1,
+        "model": "labrack.unit",
+        "fields": {
+            "conversion": 1e-06,
+            "name": "\u00b5l",
+            "unitType": "volume"
+        }
+    },
+    {
+        "pk": 2,
+        "model": "labrack.unit",
+        "fields": {
+            "conversion": null,
+            "name": "ng/\u00b5l",
+            "unitType": "concentration"
+        }
+    },
+    {
+        "pk": 3,
+        "model": "labrack.unit",
+        "fields": {
+            "conversion": 1e-06,
+            "name": "\u00b5M",
+            "unitType": "concentration"
+        }
+    },
+    {
+        "pk": 4,
+        "model": "labrack.unit",
+        "fields": {
+            "conversion": 0.001,
+            "name": "mM",
+            "unitType": "concentration"
+        }
+    },
+    {
+        "pk": 1,
+        "model": "labrack.samplecollection",
+        "fields": {
+            "owners": [
+                1
+            ],
+            "name": "Collection 1",
+            "modification_date": "2012-07-20T16:08:25.795Z",
+            "group_read": [],
+            "created_by": 1,
+            "creation_date": "2012-07-20T16:08:25.780Z",
+            "group_write": [],
+            "description": "test 1"
+        }
+    },
+    {
+        "pk": 2,
+        "model": "labrack.samplecollection",
+        "fields": {
+            "owners": [
+                1
+            ],
+            "name": "Collection 2",
+            "modification_date": "2012-07-20T16:08:39.597Z",
+            "group_read": [],
+            "created_by": 1,
+            "creation_date": "2012-07-20T16:08:39.584Z",
+            "group_write": [],
+            "description": "even more testing\r\n"
+        }
+    },
+    {
+        "pk": 1,
+        "model": "labrack.sample",
+        "fields": {
+            "status": "ok",
+            "owners": [
+                1
+            ],
+            "container": 1,
+            "name": "",
+            "modification_date": "2012-07-20T16:06:38.373Z",
+            "preparation_date": "2012-07-17",
+            "group_read": [],
+            "created_by": 1,
+            "creation_date": "2012-07-17T17:06:17.211Z",
+            "aliquotNr": null,
+            "attachment": "",
+            "displayId": "1",
+            "group_write": [],
+            "sampleCollection": [],
+            "description": "test sample number 1 connected to DNA component (TEV Protease)"
+        }
+    },
+    {
+        "pk": 2,
+        "model": "labrack.sample",
+        "fields": {
+            "status": "ok",
+            "owners": [
+                1
+            ],
+            "container": 1,
+            "name": "",
+            "modification_date": "2012-07-20T16:08:42.757Z",
+            "preparation_date": "2012-07-17",
+            "group_read": [],
+            "created_by": 1,
+            "creation_date": "2012-07-18T21:04:30.671Z",
+            "aliquotNr": null,
+            "attachment": "",
+            "displayId": "2",
+            "group_write": [],
+            "sampleCollection": [
+                1,
+                2
+            ],
+            "description": "test sample number 1 connected to DNA component (TEV Protease)"
+        }
+    },
+    {
+        "pk": 3,
+        "model": "labrack.sample",
+        "fields": {
+            "status": "ok",
+            "owners": [
+                1
+            ],
+            "container": 1,
+            "name": "",
+            "modification_date": "2012-07-18T23:13:33.470Z",
+            "preparation_date": "2012-07-18",
+            "group_read": [],
+            "created_by": 1,
+            "creation_date": "2012-07-18T23:13:33.445Z",
+            "aliquotNr": null,
+            "attachment": "",
+            "displayId": "3",
+            "group_write": [],
+            "sampleCollection": [],
+            "description": ""
+        }
+    },
+    {
+        "pk": 4,
+        "model": "labrack.sample",
+        "fields": {
+            "status": "ok",
+            "owners": [
+                1
+            ],
+            "container": 1,
+            "name": "",
+            "modification_date": "2012-07-18T23:16:57.952Z",
+            "preparation_date": "2012-07-18",
+            "group_read": [],
+            "created_by": 1,
+            "creation_date": "2012-07-18T23:16:57.931Z",
+            "aliquotNr": null,
+            "attachment": "",
+            "displayId": "4",
+            "group_write": [],
+            "sampleCollection": [],
+            "description": ""
+        }
+    },
+    {
+        "pk": 1,
+        "model": "labrack.samplecontent",
+        "fields": {
+            "concentrationUnit": 2,
+            "object_id": 3,
+            "sample": 1,
+            "amount": 100.0,
+            "content_type": 19,
+            "concentration": 50.0,
+            "amountUnit": 1
+        }
+    },
+    {
+        "pk": 2,
+        "model": "labrack.samplecontent",
+        "fields": {
+            "concentrationUnit": null,
+            "object_id": 8,
+            "sample": 1,
+            "amount": null,
+            "content_type": 23,
+            "concentration": null,
+            "amountUnit": null
+        }
+    },
+    {
+        "pk": 3,
+        "model": "labrack.samplecontent",
+        "fields": {
+            "concentrationUnit": null,
+            "object_id": 3,
+            "sample": 2,
+            "amount": null,
+            "content_type": 19,
+            "concentration": null,
+            "amountUnit": null
+        }
+    },
+    {
+        "pk": 4,
+        "model": "labrack.samplecontent",
+        "fields": {
+            "concentrationUnit": null,
+            "object_id": 5,
+            "sample": 2,
+            "amount": null,
+            "content_type": 20,
+            "concentration": null,
+            "amountUnit": null
+        }
+    },
+    {
+        "pk": 5,
+        "model": "labrack.samplecontent",
+        "fields": {
+            "concentrationUnit": null,
+            "object_id": 1,
+            "sample": 3,
+            "amount": null,
+            "content_type": 19,
+            "concentration": null,
+            "amountUnit": null
+        }
+    },
+    {
+        "pk": 6,
+        "model": "labrack.samplecontent",
+        "fields": {
+            "concentrationUnit": null,
+            "object_id": 3,
+            "sample": 3,
+            "amount": null,
+            "content_type": 19,
+            "concentration": null,
+            "amountUnit": null
+        }
+    },
+    {
+        "pk": 7,
+        "model": "labrack.samplecontent",
+        "fields": {
+            "concentrationUnit": null,
+            "object_id": 5,
+            "sample": 3,
+            "amount": 100.0,
+            "content_type": 20,
+            "concentration": null,
+            "amountUnit": 1
+        }
+    },
+    {
+        "pk": 8,
+        "model": "labrack.samplecontent",
+        "fields": {
+            "concentrationUnit": 3,
+            "object_id": 9,
+            "sample": 4,
+            "amount": null,
+            "content_type": 22,
+            "concentration": 50.0,
+            "amountUnit": null
+        }
+    },
+    {
+        "pk": 9,
+        "model": "labrack.samplecontent",
+        "fields": {
+            "concentrationUnit": null,
+            "object_id": 8,
+            "sample": 4,
+            "amount": 100.0,
+            "content_type": 23,
+            "concentration": null,
+            "amountUnit": 1
+        }
+    },
+    {
+        "pk": 10,
+        "model": "labrack.samplecontent",
+        "fields": {
+            "concentrationUnit": 4,
+            "object_id": 10,
+            "sample": 4,
+            "amount": null,
+            "content_type": 23,
+            "concentration": 1.0,
+            "amountUnit": null
+        }
+    },
+    {
+        "pk": 1,
+        "model": "labrack.sampleprovenance",
+        "fields": {
+            "sample": 1,
+            "sample_source": 2,
+            "shortDescription": "sample derived from this one",
+            "provenanceType": "parent"
+        }
+    },
+    {
+        "pk": 1,
+        "model": "labrack.componenttype",
+        "fields": {
+            "subTypeOf": [],
+            "uri": "",
+            "name": "protein part"
+        }
+    },
+    {
+        "pk": 2,
+        "model": "labrack.componenttype",
+        "fields": {
+            "subTypeOf": [],
+            "uri": "",
+            "name": "protein part encoding"
+        }
+    },
+    {
+        "pk": 1,
+        "model": "labrack.component",
+        "fields": {
+            "status": "planning",
+            "owners": [],
+            "name": "protease site",
+            "modification_date": "2012-07-17T15:33:34.322Z",
+            "abstract": true,
+            "uri": "",
+            "created_by": null,
+            "creation_date": "2012-07-17T15:33:34.322Z",
+            "componentType": [],
+            "variantOf": [],
+            "group_read": [],
+            "displayId": "sb0001",
+            "group_write": [],
+            "annotations": [],
+            "description": "DNA parts encoding a protease cleavage site"
+        }
+    },
+    {
+        "pk": 2,
+        "model": "labrack.component",
+        "fields": {
+            "status": "available",
+            "owners": [
+                1
+            ],
+            "name": "E. coli (all strains)",
+            "modification_date": "2012-07-17T15:41:15.220Z",
+            "abstract": true,
+            "uri": "",
+            "created_by": null,
+            "creation_date": "2012-07-17T15:35:42.312Z",
+            "componentType": [],
+            "variantOf": [],
+            "group_read": [],
+            "displayId": "EC",
+            "group_write": [],
+            "annotations": [],
+            "description": "Escherichia coli"
+        }
+    },
+    {
+        "pk": 3,
+        "model": "labrack.component",
+        "fields": {
+            "status": "planning",
+            "owners": [],
+            "name": "TEV protease site",
+            "modification_date": "2012-07-17T15:40:50.330Z",
+            "abstract": false,
+            "uri": "",
+            "created_by": null,
+            "creation_date": "2012-07-17T15:36:41.874Z",
+            "componentType": [
+                2
+            ],
+            "variantOf": [],
+            "group_read": [],
+            "displayId": "sb0002",
+            "group_write": [],
+            "annotations": [],
+            "description": ""
+        }
+    },
+    {
+        "pk": 4,
+        "model": "labrack.component",
+        "fields": {
+            "status": "planning",
+            "owners": [],
+            "name": "TEV protease site",
+            "modification_date": "2012-07-17T15:39:31.173Z",
+            "abstract": false,
+            "uri": "",
+            "created_by": null,
+            "creation_date": "2012-07-17T15:39:31.173Z",
+            "componentType": [
+                1
+            ],
+            "variantOf": [],
+            "group_read": [],
+            "displayId": "sb0001p",
+            "group_write": [],
+            "annotations": [],
+            "description": "TEV protease recognition site"
+        }
+    },
+    {
+        "pk": 5,
+        "model": "labrack.component",
+        "fields": {
+            "status": "planning",
+            "owners": [],
+            "name": "E. coli Top10",
+            "modification_date": "2012-07-17T15:41:59.238Z",
+            "abstract": false,
+            "uri": "",
+            "created_by": null,
+            "creation_date": "2012-07-17T15:41:59.238Z",
+            "componentType": [],
+            "variantOf": [
+                2
+            ],
+            "group_read": [],
+            "displayId": "EC01",
+            "group_write": [],
+            "annotations": [],
+            "description": "E. coli strain for cloning purposes"
+        }
+    },
+    {
+        "pk": 6,
+        "model": "labrack.component",
+        "fields": {
+            "status": "available",
+            "owners": [
+                1
+            ],
+            "name": "S. cerevisiae (all strains)",
+            "modification_date": "2012-07-17T15:43:26.768Z",
+            "abstract": true,
+            "uri": "",
+            "created_by": null,
+            "creation_date": "2012-07-17T15:43:11.166Z",
+            "componentType": [],
+            "variantOf": [],
+            "group_read": [],
+            "displayId": "SC",
+            "group_write": [],
+            "annotations": [],
+            "description": "Baker's yeast"
+        }
+    },
+    {
+        "pk": 7,
+        "model": "labrack.component",
+        "fields": {
+            "status": "planning",
+            "owners": [
+                1
+            ],
+            "name": "H. Sapiens (all cell lines)",
+            "modification_date": "2012-07-17T15:44:20.690Z",
+            "abstract": true,
+            "uri": "",
+            "created_by": null,
+            "creation_date": "2012-07-17T15:44:20.690Z",
+            "componentType": [],
+            "variantOf": [],
+            "group_read": [],
+            "displayId": "HS",
+            "group_write": [],
+            "annotations": [],
+            "description": "Human cell lines"
+        }
+    },
+    {
+        "pk": 8,
+        "model": "labrack.component",
+        "fields": {
+            "status": "planning",
+            "owners": [],
+            "name": "TE buffer",
+            "modification_date": "2012-07-17T18:26:42.516Z",
+            "abstract": false,
+            "uri": "",
+            "created_by": null,
+            "creation_date": "2012-07-17T17:50:38.637Z",
+            "componentType": [],
+            "variantOf": [],
+            "group_read": [],
+            "displayId": "bufTE",
+            "group_write": [],
+            "annotations": [],
+            "description": "Tris-Hcl pH 7.4, 1mM EDTA"
+        }
+    },
+    {
+        "pk": 9,
+        "model": "labrack.component",
+        "fields": {
+            "status": "planning",
+            "owners": [
+                1
+            ],
+            "name": "FluoPeptide",
+            "modification_date": "2012-07-18T23:15:01.331Z",
+            "abstract": false,
+            "uri": "",
+            "created_by": 1,
+            "creation_date": "2012-07-18T23:15:01.306Z",
+            "componentType": [],
+            "variantOf": [],
+            "group_read": [],
+            "displayId": "pep01",
+            "group_write": [],
+            "annotations": [],
+            "description": ""
+        }
+    },
+    {
+        "pk": 10,
+        "model": "labrack.component",
+        "fields": {
+            "status": "planning",
+            "owners": [
+                1
+            ],
+            "name": "DTT",
+            "modification_date": "2012-07-18T23:16:35.055Z",
+            "abstract": false,
+            "uri": "",
+            "created_by": 1,
+            "creation_date": "2012-07-18T23:16:35.035Z",
+            "componentType": [],
+            "variantOf": [],
+            "group_read": [],
+            "displayId": "chem002",
+            "group_write": [],
+            "annotations": [],
+            "description": ""
+        }
+    },
+    {
+        "pk": 1,
+        "model": "labrack.dnacomponent",
+        "fields": {
+            "optimizedFor": null,
+            "group_read": [],
+            "variantOf": [],
+            "sequence": "",
+            "owners": [],
+            "componentType": [],
+            "translatesTo": null,
+            "group_write": [],
+            "annotations": []
+        }
+    },
+    {
+        "pk": 3,
+        "model": "labrack.dnacomponent",
+        "fields": {
+            "optimizedFor": 2,
+            "group_read": [],
+            "variantOf": [],
+            "sequence": "AAATTTCCCGGGAAATTTGGG",
+            "owners": [],
+            "componentType": [
+                2
+            ],
+            "translatesTo": 4,
+            "group_write": [],
+            "annotations": []
+        }
+    },
+    {
+        "pk": 2,
+        "model": "labrack.chassis",
+        "fields": {
+            "owners": [
+                1
+            ],
+            "variantOf": [],
+            "group_read": [],
+            "componentType": [],
+            "group_write": [],
+            "annotations": []
+        }
+    },
+    {
+        "pk": 5,
+        "model": "labrack.chassis",
+        "fields": {
+            "owners": [],
+            "variantOf": [
+                2
+            ],
+            "group_read": [],
+            "componentType": [],
+            "group_write": [],
+            "annotations": []
+        }
+    },
+    {
+        "pk": 6,
+        "model": "labrack.chassis",
+        "fields": {
+            "owners": [
+                1
+            ],
+            "variantOf": [],
+            "group_read": [],
+            "componentType": [],
+            "group_write": [],
+            "annotations": []
+        }
+    },
+    {
+        "pk": 7,
+        "model": "labrack.chassis",
+        "fields": {
+            "owners": [
+                1
+            ],
+            "variantOf": [],
+            "group_read": [],
+            "componentType": [],
+            "group_write": [],
+            "annotations": []
+        }
+    },
+    {
+        "pk": 4,
+        "model": "labrack.proteincomponent",
+        "fields": {
+            "owners": [],
+            "variantOf": [],
+            "sequence": "GGGGGGGGG",
+            "group_read": [],
+            "componentType": [
+                1
+            ],
+            "group_write": [],
+            "annotations": []
+        }
+    },
+    {
+        "pk": 9,
+        "model": "labrack.peptidecomponent",
+        "fields": {
+            "owners": [
+                1
+            ],
+            "variantOf": [],
+            "sequence": "*FXAA",
+            "group_read": [],
+            "componentType": [],
+            "group_write": [],
+            "annotations": []
+        }
+    },
+    {
+        "pk": 8,
+        "model": "labrack.chemicalcomponent",
+        "fields": {
+            "owners": [],
+            "variantOf": [],
+            "group_read": [],
+            "componentType": [],
+            "group_write": [],
+            "annotations": []
+        }
+    },
+    {
+        "pk": 10,
+        "model": "labrack.chemicalcomponent",
+        "fields": {
+            "owners": [
+                1
+            ],
+            "variantOf": [],
+            "group_read": [],
+            "componentType": [],
+            "group_write": [],
+            "annotations": []
+        }
+    }
+]

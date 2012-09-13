@@ -364,7 +364,7 @@ class Sample( PermissionModel ):
 
     # override Django object methods
     def __unicode__(self):
-        return u'%s - %s' % (self.displayId, self.name)
+        return u'%s - %s' % (self.displayId)
 
     def get_relative_url(self):
         """
@@ -397,8 +397,7 @@ class Sample( PermissionModel ):
         
     def strFullContent(self):
         """
-        Show all content items including amount and concentration with URL 
-        links.
+        @return str, all content items including amount and concentration
         """
         contentString = u''.encode( 'utf-8' )
         
@@ -419,6 +418,7 @@ class Sample( PermissionModel ):
 
         return contentString
         
+
     def showFullContent(self):
         """
         Show all content items including amount and concentration with URL 
@@ -450,6 +450,7 @@ class Sample( PermissionModel ):
     
     
     def _showObject(self, olist, description='', brief=False ):
+        """pick first Component object from list and wrap it into URL"""
         o = olist[0]
         item = o.displayId if brief else str(o)
         
@@ -495,7 +496,7 @@ class Sample( PermissionModel ):
     
     
     
-    def samplePedigreeStr(self):
+    def strProvenance(self):
         pedigreeString = ""
         for sp in self.samplepedigree.all():
             pedigreeString += sp.sample_source.__str__() + ": "
@@ -552,21 +553,21 @@ class Sample( PermissionModel ):
 #    show_vector.short_description = 'in Vector'
 #    show_vector.admin_order_field = 'vector'
 #
-    def show_cell(self):
+    def showCell(self):
         """filter '(None)' display in admin table"""
         if self.chassis:
             return self.chassis[0]
         return u''
-    show_cell.short_description = 'in Cell'
-    show_cell.admin_order_field = 'cell'
+    showCell.short_description = 'in Cell'
+    showCell.admin_order_field = 'cell'
     
-    def show_protein(self):
+    def showProtein(self):
         """filter '(None)' display in admin table"""
         if self.proteins:
             return self.proteins[0]
         return u''
-    show_protein.short_description = 'Protein'
-    show_protein.admin_order_field = 'protein'
+    showProtein.short_description = 'Protein'
+    showProtein.admin_order_field = 'protein'
     
     def showSampleType( self ):
         """
