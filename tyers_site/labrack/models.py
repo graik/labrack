@@ -384,7 +384,7 @@ class Sample( PermissionModel ):
 
     # override Django object methods
     def __unicode__(self):
-        return u'%s - %s' % (self.displayId)
+        return u'%s' % (self.displayId)
 
     def get_relative_url(self):
         """
