@@ -327,16 +327,6 @@ class LocationAdmin(admin.ModelAdmin):
 
 
 
-class SampleLinkInline(GenericCollectionTabularInline):
-    
-    extra = 1
-    
-    model = SampleLink
-
-
-
-
-
 class SampleContentInline(GenericCollectionTabularInline):
     
     extra = 1
@@ -426,7 +416,7 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
                  (None, {
                          'fields' : ((('container', 'displayId'),
                                       ('preparation_date', 'aliquotNr', 'status'),
-                                      ('description','attachment'),
+                                      ('description'),
                                       'sampleCollection'
                                       )
                                      )
@@ -436,7 +426,7 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
                  )
           
 
-    inlines = [SampleContentInline, SampleProvenanceInline, SampleLinkInline]
+    inlines = [SampleContentInline, SampleProvenanceInline]
     
     list_display   = ('showId', 'location_url', 
                       'created_by', 'preparation_date', 'showSampleType', 

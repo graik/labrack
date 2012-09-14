@@ -285,9 +285,6 @@ class Sample( PermissionModel ):
     status = models.CharField( max_length=30, choices=STATUS_CHOICES, 
                                default='ok')
     
-    fs = FileSystemStorage(location=S.FOLDER_FILES_PATH)
-    attachment = models.FileField(upload_to='sampleFiles', storage=fs, null=True, blank=True)
-    
     description = models.TextField('Description / Comments', blank=True)
     
     sampleCollection = models.ManyToManyField(SampleCollection, null=True, blank=True)
@@ -624,32 +621,6 @@ class Sample( PermissionModel ):
 
 
 
-
-
-class SampleLink(models.Model):
-    """
-    Link to file system or url
-    """
-    
-    sample = models.ForeignKey(Sample, related_name='samplelink')
-    
-    LINK_TYPE = (('filesystem','File System'), ('url','URL'))
-    
-    linkType = models.CharField(max_length=25, choices=LINK_TYPE)
-    
-    link = models.CharField(max_length=1000, help_text='Link to file system or url')
-    
-    shortDescription = models.CharField( max_length=50,
-                                         help_text='Brief description for tables\
-                                         and listings', null=True, blank=True)
-    
-    
-    
-    def __unicode__(self):
-        if self.linkType == 'url':
-            
-            return SafeUnicode("<a href='" + self.link + "'>" + self.link + "</a>")
-        return self.link
 
 
 
