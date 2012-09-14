@@ -16,15 +16,16 @@
           <ul class="object-tools">
             <li><a href="../../sample/add/?dna={{original.displayId}}" target="_blank">
                 Add Sample</a></li> 
-          </ul>
+          </ul>          
         {% endif %}
         
         {% if original and original.related_samples %}
           <table cellspacing="0">
             <thead>
               <tr>
-                <th>ID</th><th>Type</th><th>dna</th><th>in vector</th><th>in cell</th><th>concentration</th>
-                <th>created</th><th>comments</th>
+                <th>ID</th><th>Type</th><th>dna</th><th>in vector</th><th>in cell</th>
+                <th>concentration</th>
+                <th>created</th><th>by</th><th>comments</th>
               </tr>
             </thead>
             <tbody>
@@ -34,11 +35,15 @@
               <tr class="{% cycle 'row1' 'row2' %}">
         
                 <td><b><a href="../../{{sample.get_relative_url}}" target="_blank">
-                      {{sample.show_Id}}</a></b></td>
+                      {{sample.showId}}</a></b></td>
         
-                <td>{{sample.show_sampleType}}</td>
+                <td>{{sample.showSampleType}}</td>
         
-                <td>{{sample.dna|default:"--"}}</td>
+                <td>{{sample.showDna|default:"--"}}
+                {% if sample.dnas|length > 1 %}
+                 (out of {{sample.dnas|length}})
+                {% endif %}
+                </td>
         
                 <td>{% if sample.vector %}
                       <a href="../../{{sample.vector.get_relative_url}}" target="_blank">
@@ -47,16 +52,17 @@
                           --</td>
                     {% endif %}
         
-                <td>{% if sample.cell %}
-                      <a href="../../{{sample.cell.get_relative_url}}" target="_blank">
-                          {{sample.cell}}</a></td>
+                <td>{% if sample.chassis %}
+                      {{sample.showCellLink|safe}}
+                      
                     {% else %}
                           --</td>
                     {% endif %}
         
-                <td>{{sample.show_concentration}}</td>
-                <td>{{sample.created}}</td>
-                <td>{{sample.comments|default:""}}</td>
+                <td>{{sample.showConcentration}}</td>
+                <td>{{sample.creation_date|date:"d M Y"}}</td>
+                <td>{{sample.created_by}}</td>
+                <td>{{sample.showComment|default:""}}</td>
         
               </tr>
         
