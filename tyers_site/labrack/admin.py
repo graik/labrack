@@ -17,7 +17,7 @@
 
 from genericcollection import GenericCollectionTabularInline
 from collections import OrderedDict
-
+from django.core.exceptions import PermissionDenied
 from django.core.exceptions import ValidationError
 #from django.core.urlresolvers import reverse
 from django.contrib import admin
@@ -105,15 +105,34 @@ class PermissionAdmin():
     # Ref: http://stackoverflow.com/questions/6310983/django-admin-specific-user-admin-content
     def queryset(self, request):
         qs = admin.ModelAdmin.queryset(self, request)
+        qsSize = qs.count()
+        
         
         if request.user.is_superuser:
             return qs
-        return qs.filter(Q(owners=request.user) |
+        qs = qs.filter(Q(owners=request.user) |
                          Q(group_read=request.user.groups.all()) |
                          Q(group_write=request.user.groups.all()) 
                          ).distinct()
 
 
+        # Raise Permission denied if filtering of permission has removed required entry
+        import re
+        match = re.search('/(?P<content_type_id>\w+)/(?P<object_id>\d+)/$', request.get_full_path())
+        if qsSize != 0 and hasattr(match, 'group'):
+            
+            exception = True
+            for entry in qs:
+                if entry.pk == int(match.group('object_id')):
+                    exception = False
+                    
+            if exception:
+                raise PermissionDenied
+
+                         
+        return qs
+
+    
 
 
 class ComponentAdmin(PermissionAdmin, admin.ModelAdmin):
