@@ -154,15 +154,16 @@ class ComponentAdmin(PermissionAdmin, admin.ModelAdmin):
     
       
 
-    list_display = ('displayId', 'name','status', 'created_by')
+    list_display = ('displayId', 'name', 'created_by', 'showComment',
+                    'abstract', 'status' )
 
-    list_filter = ('status', 'created_by')
+    list_filter = ('status', 'abstract', 'created_by', 'componentType')
 
     ordering = ('displayId',)
     
     search_fields = ('displayId', 'name', 'description')
     
-    raw_id_fields = ('variantOf', 'componentType')
+    raw_id_fields = ('componentType',)
         
     
     
@@ -172,9 +173,6 @@ class ComponentAdmin(PermissionAdmin, admin.ModelAdmin):
 
 
     make_csv.short_description = 'Export as CSV'
-
-
-
 
 
 
@@ -203,28 +201,25 @@ class PeptideComponentAdmin(ProteinComponentAdmin):
 
 class DnaComponentAdmin(ComponentAdmin):
     
-    fieldsets = ComponentAdmin.fieldsets.__add__(\
-        (('DNA Details', {
-            'fields': (
-                ('optimizedFor', 'translatesTo'),
-                ('sequence', 'annotations'),
-                       ),
+    fieldsets = ComponentAdmin.fieldsets + (\
+        (('DNA Details', 
+          {'fields': (('optimizedFor', 'translatesTo'),
+                      ('sequence', 'annotations'),
+                      ),
             'classes':('collapse',)
-        }
+            }
           ),)
     )
     
-    list_display = ComponentAdmin.list_display.__add__(('show_optimizedFor', 
-                                                        'show_translatesTo', 
-##                                                        'isavailable_cells',
-##                                                        'isavailable_dna',
-                                                        ))
+    list_display = ComponentAdmin.list_display[:-2] + \
+                   ('show_optimizedFor', 'show_translatesTo') + \
+                   ComponentAdmin.list_display[-2:] 
     
     list_filter = ComponentAdmin.list_filter.__add__(('optimizedFor',))
     
     search_fields = ComponentAdmin.search_fields.__add__(('sequence',))
 
-    raw_id_fields = ComponentAdmin.raw_id_fields.__add__(('translatesTo',))
+    raw_id_fields = ComponentAdmin.raw_id_fields.__add__(('translatesTo','variantOf'))
    
 
 

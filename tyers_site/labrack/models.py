@@ -29,9 +29,6 @@ import urllib
 import tyers_site.settings as S
 
 
-
-
-
 class Location(models.Model):
     """
     A location (fridge, freezer, shelf) where containers are stored
@@ -469,7 +466,7 @@ class Sample( PermissionModel ):
     showFullContent.short_description = u'Content'
     
     
-    def _showObject(self, olist, description='', brief=False ):
+    def showObject(self, olist, description='', brief=False ):
         """pick first Component object from list and wrap it into URL"""
         o = olist[0]
         item = o.displayId if brief else str(o)
@@ -493,22 +490,22 @@ class Sample( PermissionModel ):
         description = self.strFullContent()
         s = u''
         if self.dnas:
-            s = self._showObject( self.dnas, description)
+            s = self.showObject( self.dnas, description)
         elif self.proteins:
-            s = self._showObject( self.proteins, description )
+            s = self.showObject( self.proteins, description )
         elif self.peptides:
-            s = self._showObject( self.peptides, description )
+            s = self.showObject( self.peptides, description )
             
         if s and self.chassis:
-            s += u' in %s' % self._showObject( self.chassis, brief=True ) 
+            s += u' in %s' % self.showObject( self.chassis, brief=True ) 
         
         if s:
             return s
         
         if self.chassis:
-            return self._showObject( self.chassis, description )
+            return self.showObject( self.chassis, description )
         if self.chemicals:
-            return self._showObject( self.chemicals, description )
+            return self.showObject( self.chemicals, description )
 
         return u''
     showMainContent.allow_tags = True  ## don't HTML-escape this string
@@ -557,13 +554,13 @@ class Sample( PermissionModel ):
 #        return r
 #    
 #
-    def show_dna(self):
+    def showDna(self):
         """filter '(None)' display in admin table"""
         if self.dnas:
             return self.dnas[0]
         return u''
-    show_dna.short_description = 'DNA'
-    show_dna.admin_order_field = 'dna'
+    showDna.short_description = 'DNA'
+    showDna.admin_order_field = 'dna'
 
 #    def show_vector(self):
 #        """filter '(None)' display in admin table"""
@@ -581,6 +578,12 @@ class Sample( PermissionModel ):
     showCell.short_description = 'in Cell'
     showCell.admin_order_field = 'cell'
     
+    def showCellLink(self):
+        """filter '(None)' display in admin table and give link"""
+        if self.chassis:
+            return self.showObject( self.chassis )
+        return u''
+
     def showProtein(self):
         """filter '(None)' display in admin table"""
         if self.proteins:
@@ -788,7 +791,8 @@ class Component(PermissionModel):
  
     def formatedUrl(self):
         name = self.name if self.name else ''
-        return SafeUnicode("<a href='/admin/labrack/" + self.get_relative_url() + "'>" + self.displayId + ' - ' +  name + "</a>")
+        return SafeUnicode("<a href='/admin/labrack/" +self.get_relative_url() \
+                           + "'>" + self.displayId + ' - ' +  name + "</a>")
 
     
     def __unicode__(self):
@@ -799,6 +803,27 @@ class Component(PermissionModel):
     class Meta:
         abstract = False
  
+
+    def related_samples( self ):
+        """
+        """
+        r = SampleContent.objects.filter( object_id=self.id, 
+                        content_type__model=self.__class__.__name__.lower() )
+        s = [content.sample for content in r]
+        
+        return s
+        
+    def showComment( self ):
+        """
+        @return: str; truncated comment
+        """
+        if not self.description:
+            return u''
+        if len(self.description) < 40:
+            return unicode(self.description)
+        return unicode(self.description[:38] + '..')
+    showComment.short_description = 'comment'
+
 #    def isavailable(self):
 #        return self.samples.count() > 0
 #    isavailable.short_description = 'available'
@@ -863,11 +888,6 @@ class DnaComponent(Component):
 ##    isavailable_cells.short_description = 'Cells'
 ##    isavailable_cells.boolean = True
     
-##    def related_samples( self ):
-##        """
-##        """
-##        return self.dna_samples.all()
-
     def show_translatesTo(self):
         """filter '(None)' display in admin table"""
         if self.translatesTo:
