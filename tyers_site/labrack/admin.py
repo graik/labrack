@@ -105,28 +105,28 @@ class PermissionAdmin():
     # Ref: http://stackoverflow.com/questions/6310983/django-admin-specific-user-admin-content
     def queryset(self, request):
         qs = admin.ModelAdmin.queryset(self, request)
-        qsSize = qs.count()
         
-        
+        # Super user can see anything        
         if request.user.is_superuser:
             return qs
+        
+
+        qsSize = 0
+        import re
+        match = re.search('/(?P<content_type_id>\w+)/(?P<object_id>\d+)/$', request.get_full_path())
+        if hasattr(match, 'group'):
+            qs = qs.filter(Q(pk=int(match.group('object_id'))))
+            qsSize = qs.count()
+
+
         qs = qs.filter(Q(owners=request.user) |
                          Q(group_read=request.user.groups.all()) |
                          Q(group_write=request.user.groups.all()) 
                          ).distinct()
-
+            
 
         # Raise Permission denied if filtering of permission has removed required entry
-        import re
-        match = re.search('/(?P<content_type_id>\w+)/(?P<object_id>\d+)/$', request.get_full_path())
-        if qsSize != 0 and hasattr(match, 'group'):
-            
-            exception = True
-            for entry in qs:
-                if entry.pk == int(match.group('object_id')):
-                    exception = False
-                    
-            if exception:
+        if hasattr(match, 'group') and qsSize != qs.count():
                 raise PermissionDenied
 
                          
