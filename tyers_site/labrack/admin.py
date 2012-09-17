@@ -182,8 +182,22 @@ class ComponentAdmin(PermissionAdmin, admin.ModelAdmin):
     
     search_fields = ('displayId', 'name', 'description')
     
-    raw_id_fields = ('componentType',)
+    raw_id_fields = ('componentType', 'variantOf',)
         
+    
+    
+    def formfield_for_dbfield(self, db_field, **kwargs):
+        
+        if db_field.name in self.raw_id_fields:
+            
+            kwargs.pop("request", None)
+            fType = db_field.rel.__class__.__name__
+            if fType == "ManyToOneRel":
+                kwargs['widget'] = VerboseForeignKeyRawIdWidget(db_field.rel, site)
+            elif fType == "ManyToManyRel":
+                kwargs['widget'] = VerboseManyToManyRawIdWidget(db_field.rel, site)
+            return db_field.formfield(**kwargs)
+        return super(ComponentAdmin, self).formfield_for_dbfield(db_field, **kwargs)
     
     
     def make_csv(self, request, queryset):
@@ -238,7 +252,7 @@ class DnaComponentAdmin(ComponentAdmin):
     
     search_fields = ComponentAdmin.search_fields.__add__(('sequence',))
 
-    raw_id_fields = ComponentAdmin.raw_id_fields.__add__(('translatesTo','variantOf'))
+    raw_id_fields = ComponentAdmin.raw_id_fields.__add__(('translatesTo',))
    
 
 
@@ -665,6 +679,7 @@ admin.site.register(ComponentType, ComponentTypeAdmin)
 admin.site.register(PeptideComponent, PeptideComponentAdmin)
 admin.site.register(ProteinComponent, ProteinComponentAdmin)
 admin.site.register(DnaComponent, DnaComponentAdmin)
+admin.site.register(Component, ComponentAdmin)
 admin.site.register(ChemicalComponent, ComponentAdmin)
 admin.site.register(Chassis)
 #admin.site.register(Collection)

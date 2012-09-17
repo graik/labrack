@@ -631,7 +631,8 @@ class SampleContent(models.Model):
     """
     Helper class to define the content that the sample is made of.
     """
-    COMPONENT_LIMITS = {'model__in':('chemicalcomponent', 
+    COMPONENT_LIMITS = {'model__in':('component',
+                                     'chemicalcomponent', 
                                      'dnacomponent', 
                                      'peptidecomponent', 
                                      'proteincomponent',
