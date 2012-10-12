@@ -25,6 +25,7 @@ from django.utils.safestring import mark_safe
 from django.utils.safestring import SafeUnicode
 
 from datetime import datetime
+ 
 import urllib
 import tyers_site.settings as S
 
@@ -47,6 +48,11 @@ class Location(models.Model):
     
     modification_date = models.DateTimeField('Modified at', auto_now=True)
     
+    
+    #rack = models.CharField('Rack', max_length=200, 
+    #    blank=True, help_text='Informative name of rack')
+    
+    
     def __unicode__(self):
         return self.displayId + " (" + self.temperature.__str__() \
                + unichr(176) + "C)  [Room: " + self.room + "]"
@@ -62,6 +68,7 @@ class Location(models.Model):
 
 class PermissionModel( models.Model ):
     #: Permissions
+
     created_by = models.ForeignKey(User, null=True, blank=True, 
                                    related_name='%(class)s_created_by')
 
@@ -97,6 +104,28 @@ class PermissionModel( models.Model ):
 
 
 
+
+class Rack(models.Model):
+        """
+        A Rack (box) where containers are stored
+        """
+        displayId = models.CharField(max_length=20, unique=True, 
+                                     help_text='Unique identifier')
+        
+        name = models.CharField('Name', max_length=200, 
+            blank=True, help_text='Informative name of rack ex : R1-F1 for a rack named R1 that will not move from Fridge 1')
+         
+        current_location = models.ForeignKey( 'Location', blank=True, null=True )
+        
+        def __unicode__(self):
+               return u'%s' % (self.displayId)
+           
+        def get_relative_url(self):
+            """
+            Define standard relative URL for object access in templates
+            """
+            return 'rack/%i/' % self.id          
+
 class Container( PermissionModel ):
     """
     A container holding several physical samples of nucleic acids, proteins 
@@ -118,10 +147,9 @@ class Container( PermissionModel ):
     containerType = models.CharField('Type of container', max_length=30, 
                                      choices=STORAGE_CONTAINER_TYPES )
     
-    location = models.ForeignKey(Location, related_name='containers')
-
-
-
+    location = models.ForeignKey(Location, related_name='containers')  
+    rack = models.ForeignKey(Rack, null=True, blank=True)
+    
     #: optional long description
     description = models.TextField( 'Detailed description', blank=True)
     
@@ -129,6 +157,7 @@ class Container( PermissionModel ):
     
     modification_date = models.DateTimeField('Modified at', auto_now=True)
 
+   # rack = models.ForeignKey(Rack, null=True, blank=True)
 
     def __unicode__( self ):
         return "%s" % self.displayId
@@ -465,16 +494,20 @@ class Sample( PermissionModel ):
     
     def showObject(self, olist, description='', brief=False ):
         """pick first Component object from list and wrap it into URL"""
-        o = olist[0]
-        item = o.displayId if brief else str(o)
+        try:      
+            o = olist[0]
+            item = o.displayId if brief else str(o)
+            
+            s = u'<a href="%s/%s" title="%s">%s</a>' % \
+                 (S.admin_root, o.get_relative_url(), description, item )
         
-        s = u'<a href="%s/%s" title="%s">%s</a>' % \
-            (S.admin_root, o.get_relative_url(), description, item )
-        
-        if len(olist) > 1:
-            s += u' + more'
-        
-        return s
+            if len(olist) > 1:
+                 s += u' + more'        
+            return s
+        except:
+            s = "---"
+            print 'Unexpected error'
+    
         
         
     def showMainContent(self):
@@ -567,6 +600,16 @@ class Sample( PermissionModel ):
 #    show_vector.short_description = 'in Vector'
 #    show_vector.admin_order_field = 'vector'
 #
+
+    def showPeptide(self):
+          """filter '(None)' display in admin table"""
+          if self.peptides:
+              return self.peptides[0]
+          return u''
+    showPeptide.short_description = 'Peptide'
+    showPeptide.admin_order_field = 'peptide'
+
+
     def showCell(self):
         """filter '(None)' display in admin table"""
         if self.chassis:
@@ -761,6 +804,7 @@ class Component(PermissionModel):
 
  
  
+
     def formatedUrl(self):
         name = self.name if self.name else ''
         return SafeUnicode("<a href='/admin/labrack/" +self.get_relative_url() \
@@ -795,6 +839,7 @@ class Component(PermissionModel):
             return unicode(self.description)
         return unicode(self.description[:38] + '..')
     showComment.short_description = 'comment'
+    
 
 #    def isavailable(self):
 #        return self.samples.count() > 0
@@ -826,8 +871,8 @@ class DnaComponent(Component):
                                       related_name='encodedBy', 
                         help_text='Protein part this sequence translates to' )
 
-    optimizedFor = models.ForeignKey( 'Chassis', blank=True, null=True )
-
+    optimizedFor = models.ForeignKey( 'Chassis', blank=True, null=True ) 
+    
     def get_relative_url(self):
         """
         Define standard relative URL for object access in templates
@@ -873,8 +918,36 @@ class DnaComponent(Component):
         if self.optimizedFor:
             return self.optimizedFor
         return u''
+    
+    def show_parentSample(self):
+        from django.db import connection, transaction
+        cursor = connection.cursor()
+        
+        
+        # Data retrieval operation - no commit required
+        #cursor.execute("SELECT foo FROM bar WHERE baz = %s", [self.baz])
+        
+        cursor.execute("select count(*) as nbr from labrack_dnacomponent ")
+        row = cursor.fetchone()        
+
+        return row        
+    
+    def show_parentVector(self):
+            from django.db import connection, transaction
+            cursor = connection.cursor()
+            
+            
+            # Data retrieval operation - no commit required
+            #cursor.execute("SELECT foo FROM bar WHERE baz = %s", [self.baz])
+            
+            cursor.execute("select count(*) as nbr from labrack_sample ")
+            row = cursor.fetchone()        
+    
+            return row            
+
     show_optimizedFor.short_description = 'optimized for'
     show_optimizedFor.admin_order_field = 'optimizedFor'
+       
 
 
 
@@ -1090,3 +1163,6 @@ class Collection(models.Model):
     def __unicode__(self):
         name = self.name if self.name else ''
         return u'%s %s' % (self.displayId, name)
+
+
+

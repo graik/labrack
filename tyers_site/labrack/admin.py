@@ -137,6 +137,7 @@ class PermissionAdmin():
 
 class ComponentAdmin(PermissionAdmin, admin.ModelAdmin):
     
+    
     actions = ['make_csv']
     
     exportFields = OrderedDict( [('Display ID', 'displayId'),
@@ -219,14 +220,23 @@ class ProteinComponentAdmin(ComponentAdmin):
           ),)
     )
     
-    search_fields = ComponentAdmin.search_fields.__add__(('sequence',))    
+    search_fields = ComponentAdmin.search_fields.__add__(('sequence',))
 
 
 
 
 
 class PeptideComponentAdmin(ProteinComponentAdmin):
-    pass
+    fieldsets = ComponentAdmin.fieldsets.__add__(\
+        (('Peptide Details', {
+            'fields': ('sequence', 'annotations'),
+            'classes':('collapse',)
+        }
+          ),)
+    )
+    
+    search_fields = ComponentAdmin.search_fields.__add__(('sequence',))
+
 
 
 
@@ -245,7 +255,7 @@ class DnaComponentAdmin(ComponentAdmin):
     )
     
     list_display = ComponentAdmin.list_display[:-2] + \
-                   ('show_optimizedFor', 'show_translatesTo') + \
+                   ('show_optimizedFor', 'show_translatesTo', 'show_parentSample', 'show_parentVector', 'size') + \
                    ComponentAdmin.list_display[-2:] 
     
     list_filter = ComponentAdmin.list_filter.__add__(('optimizedFor',))
@@ -265,6 +275,7 @@ class ContainerAdmin(PermissionAdmin, admin.ModelAdmin):
                                ('Name', 'name'),
                                ('Container Type','containerType'),
                                ('Location','location'),
+                               ('Rack','rack'),
                                ('Created by','created_by'),
                                ('Description','description'),
                                ('DB Entry creation date','creation_date'),
@@ -274,7 +285,7 @@ class ContainerAdmin(PermissionAdmin, admin.ModelAdmin):
     fieldsets = (
                  (None, {
                          'fields' : (('displayId', 'name'),
-                                     ('containerType', 'location'),
+                                     ('containerType', 'rack', 'location'),
                                      'description',
                                      )
                          }
@@ -288,7 +299,7 @@ class ContainerAdmin(PermissionAdmin, admin.ModelAdmin):
                  )
     
     
-    list_display = ('displayId', 'name', 'containerType', 'location_url', 
+    list_display = ('displayId', 'name', 'containerType', 'location_url','rack_url',
                     'created_by')
     
     list_filter = ('containerType', 'location__displayId', 'location__room', 
@@ -309,16 +320,19 @@ class ContainerAdmin(PermissionAdmin, admin.ModelAdmin):
     
     location_url.short_description = 'Location'
     
+    def rack_url(self, obj):
+        url = obj.rack.get_relative_url()
+        return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.rack.__unicode__()))
+        
+    rack_url.allow_tags = True
+        
+    rack_url.short_description = 'Rack'    
     
     
     def make_csv(self, request, queryset):
         return importexport.generate_csv(self, request, queryset, 
                                          self.exportFields, 'Container')
-
-
-    
-
-
+  
 
 
 class LocationAdmin(admin.ModelAdmin):
@@ -353,6 +367,41 @@ class LocationAdmin(admin.ModelAdmin):
     
     
 
+class RackAdmin(admin.ModelAdmin):
+    
+    actions = ['make_csv']
+    
+    exportFields = OrderedDict( [('Display ID', 'displayId'),
+                                   ('Name', 'name'),
+                                   ('Current location','location_url'),
+                                                  
+                                   ])
+    list_display = ('displayId', 'name', 'location_url', 
+                    )    
+    fields = (('displayId', 'name','current_location'))
+    
+    def container_url(self, obj):
+          url = obj.container.get_relative_url()
+          return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.container.__unicode__()))
+    
+    def location_url(self, obj):
+            url = obj.current_location.get_relative_url()
+            return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.current_location.__unicode__()))
+    location_url.allow_tags = True
+            
+    location_url.short_description = 'Location'              
+
+    
+    def make_csv(self, request, queryset):
+            return importexport.generate_csv(self, request, queryset, 
+                                             self.exportFields, 'Rack')
+    
+    make_csv.short_description = 'Export as CSV'
+    
+
+    
+    
+    
 
 
 class SampleContentInline(GenericCollectionTabularInline):
@@ -672,6 +721,7 @@ class SampleCollectionAdmin(PermissionAdmin, admin.ModelAdmin):
 ## Register admin panels
 admin.site.register(Container, ContainerAdmin)
 admin.site.register(Location, LocationAdmin)
+admin.site.register(Rack, RackAdmin)
 admin.site.register(SampleCollection, SampleCollectionAdmin)
 admin.site.register(Sample, SampleAdmin) 
 admin.site.register(Unit, UnitAdmin) 
@@ -681,5 +731,5 @@ admin.site.register(ProteinComponent, ProteinComponentAdmin)
 admin.site.register(DnaComponent, DnaComponentAdmin)
 admin.site.register(Component, ComponentAdmin)
 admin.site.register(ChemicalComponent, ComponentAdmin)
-admin.site.register(Chassis)
+admin.site.register(Chassis) 
 #admin.site.register(Collection)
