@@ -274,7 +274,6 @@ class ContainerAdmin(PermissionAdmin, admin.ModelAdmin):
     exportFields = OrderedDict( [('Display ID', 'displayId'),
                                ('Name', 'name'),
                                ('Container Type','containerType'),
-                               ('Location','location'),
                                ('Rack','rack'),
                                ('Created by','created_by'),
                                ('Description','description'),
@@ -285,7 +284,7 @@ class ContainerAdmin(PermissionAdmin, admin.ModelAdmin):
     fieldsets = (
                  (None, {
                          'fields' : (('displayId', 'name'),
-                                     ('containerType', 'rack', 'location'),
+                                     ('containerType', 'rack'),
                                      'description',
                                      )
                          }
@@ -299,7 +298,7 @@ class ContainerAdmin(PermissionAdmin, admin.ModelAdmin):
                  )
     
     
-    list_display = ('displayId', 'name', 'containerType', 'location_url','rack_url',
+    list_display = ('displayId', 'name', 'containerType', 'rack_url',
                     'created_by')
     
     list_filter = ('containerType', 'location__displayId', 'location__room', 

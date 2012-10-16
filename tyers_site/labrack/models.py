@@ -148,7 +148,7 @@ class Container( PermissionModel ):
                                      choices=STORAGE_CONTAINER_TYPES )
     
     location = models.ForeignKey(Location, related_name='containers')  
-    rack = models.ForeignKey(Rack, null=True, blank=True)
+    rack = models.ForeignKey(Rack)
     
     #: optional long description
     description = models.TextField( 'Detailed description', blank=True)
