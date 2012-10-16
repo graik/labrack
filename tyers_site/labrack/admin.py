@@ -255,7 +255,7 @@ class DnaComponentAdmin(ComponentAdmin):
     )
     
     list_display = ComponentAdmin.list_display[:-2] + \
-                   ('show_optimizedFor', 'show_translatesTo', 'show_parentSample', 'show_parentVector', 'size') + \
+                   ('show_optimizedFor', 'show_translatesTo', 'number_related_samples', 'size') + \
                    ComponentAdmin.list_display[-2:] 
     
     list_filter = ComponentAdmin.list_filter.__add__(('optimizedFor',))
@@ -479,6 +479,7 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
                                ('Container', 'container'),
                                ('Number of aliquots', 'aliquotNr'),
                                ('Status', 'status'),
+                               ('Reference', 'reference_status'),
                                ('Description', 'description'),
                                ('Sample content', 'strFullContent()'),
                                ('Sample pedigree', 'strProvenance()'),
@@ -492,7 +493,7 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
     fieldsets = (
                  (None, {
                          'fields' : ((('container', 'displayId'),
-                                      ('preparation_date', 'aliquotNr', 'status'),
+                                      ('preparation_date', 'aliquotNr', 'status','reference_status'),
                                       ('description'),
                                       'sampleCollection'
                                       )
@@ -508,7 +509,7 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
     list_display   = ('showId', 'location_url', 
                       'created_by', 'preparation_date', 'showSampleType', 
                       'showMainContent', 
-                      'status', 'showComment')
+                      'status','reference_status', 'showComment')
 
     list_display_links = ('showId',)
     

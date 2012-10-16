@@ -307,11 +307,13 @@ class Sample( PermissionModel ):
                       ('empty', 'empty'),
                       ('bad', 'bad'),
                      )
-    
     status = models.CharField( max_length=30, choices=STATUS_CHOICES, 
                                default='ok')
+    reference_status = models.BooleanField(default=0)
+
     
     description = models.TextField('Description / Comments', blank=True)
+     
     
     sampleCollection = models.ManyToManyField(SampleCollection, null=True, blank=True)
     
@@ -656,6 +658,10 @@ class Sample( PermissionModel ):
         if len(self.description) < 40:
             return unicode(self.description)
         return unicode(self.description[:38] + '..')
+
+    def is_reference(self):
+            return bool(self.reference_status)
+                        
     showComment.short_description = 'comments'
 #    
 ##    def get_sequence( self, recenter=0 ):
@@ -828,6 +834,15 @@ class Component(PermissionModel):
         s = [content.sample for content in r]
         
         return s
+    
+    def number_related_samples( self ):
+            """
+            """
+            r = SampleContent.objects.filter( object_id=self.id, 
+                            content_type__model=self.__class__.__name__.lower() )
+            s = r.count()
+            
+            return s    
         
     def showComment( self ):
         """
@@ -930,20 +945,7 @@ class DnaComponent(Component):
         cursor.execute("select count(*) as nbr from labrack_dnacomponent ")
         row = cursor.fetchone()        
 
-        return row        
-    
-    def show_parentVector(self):
-            from django.db import connection, transaction
-            cursor = connection.cursor()
-            
-            
-            # Data retrieval operation - no commit required
-            #cursor.execute("SELECT foo FROM bar WHERE baz = %s", [self.baz])
-            
-            cursor.execute("select count(*) as nbr from labrack_sample ")
-            row = cursor.fetchone()        
-    
-            return row            
+        return row               
 
     show_optimizedFor.short_description = 'optimized for'
     show_optimizedFor.admin_order_field = 'optimizedFor'
