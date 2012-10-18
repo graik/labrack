@@ -48,7 +48,8 @@
      		 		{{ field.field.errors.as_ul }}
         			{% ifequal field.field.name inline_admin_formset.formset.ct_fk_field %}{{ field.field }}
         			<a id="lookup_id_{{field.field.html_name}}" class="related-lookup" onclick="return showGenericRelatedObjectLookupPopup(this, {{ inline_admin_formset.formset.content_types }});" href="#">
-        			<img width="16" height="16" alt="Lookup" src="{{ MEDIA_URL }}/img/selector-search.gif"/>
+					<img width="16" height="16" alt="Lookup" src="{% static "admin/img/selector-search.gif" %}"/>
+<!--        			<img width="16" height="16" alt="Lookup" src="{{ MEDIA_URL }}/img/selector-search.gif"/>-->
         			</a>{{inline_admin_form.original.content_object.formatedUrl}}
         			
         			
@@ -114,7 +115,8 @@
         }
         $(rows).formset({
             prefix: "{{ inline_admin_formset.formset.prefix }}",
-            addText: "{% blocktrans with verbose_name=inline_admin_formset.opts.verbose_name|title %}Add another {{ verbose_name }}{% endblocktrans %}",
+<!--            addText: "{% blocktrans with verbose_name=inline_admin_formset.opts.verbose_name|title %}Add another {{ verbose_name }}{% endblocktrans %}",-->
+            addText: "{% blocktrans with verbose_name=inline_admin_formset.opts.verbose_name|title %}Add another{% endblocktrans %}",
             formCssClass: "dynamic-{{ inline_admin_formset.formset.prefix }}",
             deleteCssClass: "inline-deletelink",
             deleteText: "{% trans "Remove" %}",
