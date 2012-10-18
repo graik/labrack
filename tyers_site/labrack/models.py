@@ -692,27 +692,33 @@ class SampleContent(models.Model):
     sample = models.ForeignKey(Sample, related_name='sampleContent')
 
     content_type = models.ForeignKey(ContentType, 
+                                     verbose_name='Type of content',
                                      limit_choices_to=COMPONENT_LIMITS)
 
-    object_id = models.PositiveIntegerField()
+    object_id = models.PositiveIntegerField('Content')
 
     content_object = generic.GenericForeignKey('content_type', 'object_id')
 
+    solvent = models.CharField('Solvent/Buffer', max_length=100, 
+                                    blank=True)
+
+    concentration = models.FloatField('Concentration', null=True, blank=True)
+
+    concentrationUnit = models.ForeignKey(Unit, 
+                                          verbose_name='Concentration Unit',
+                                          related_name='concentrationUnit', 
+                                          null=True, blank=True, 
+                                          limit_choices_to = {'unitType': 'concentration'})
+
     amount = models.FloatField('Amount', null=True, blank=True)
 
-    amountUnit = models.ForeignKey(Unit, related_name='amountUnit', 
+    amountUnit = models.ForeignKey(Unit, verbose_name='Amount Unit',
+                                   related_name='amountUnit', 
                                    null=True, blank=True, 
                                    limit_choices_to=\
                                    Q(unitType='volume') | Q(unitType='mass') | \
                                    Q(unitType='number')
                                    )
-
-    concentration = models.FloatField('Concentration', null=True, blank=True)
-
-    concentrationUnit = models.ForeignKey(Unit, 
-                                          related_name='concentrationUnit', 
-                                          null=True, blank=True, 
-                                          limit_choices_to = {'unitType': 'concentration'})
 
 
 
@@ -888,6 +894,9 @@ class DnaComponent(Component):
 
     optimizedFor = models.ForeignKey( 'Chassis', blank=True, null=True ) 
     
+    class Meta:
+        verbose_name = 'DNA part'
+
     def get_relative_url(self):
         """
         Define standard relative URL for object access in templates
@@ -971,9 +980,9 @@ class Chassis(Component):
         """
         """
         return self.cell_samples.all()
-
-
-
+    
+    class Meta:
+        verbose_name = 'Cell'
 
 
 class ProteinComponent(Component):
@@ -996,6 +1005,9 @@ class ProteinComponent(Component):
             return len( self.sequence )
         return 0
 
+    class Meta:
+        verbose_name = 'Protein part'
+        
 #    def related_samples( self ):
 #        """
 #        """
@@ -1024,6 +1036,8 @@ class PeptideComponent(Component):
             return len( self.sequence )
         return 0
     
+    class Meta:
+        verbose_name = 'Peptide'
     
     
 #    def related_samples( self ):
@@ -1047,6 +1061,8 @@ class ChemicalComponent(Component):
         """
         return 'chemicalcomponent/%i/' % self.id
 
+    class Meta:
+        verbose_name = 'Chemical'
 
 
 
