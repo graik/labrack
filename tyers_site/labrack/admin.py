@@ -301,8 +301,9 @@ class ContainerAdmin(PermissionAdmin, admin.ModelAdmin):
     list_display = ('displayId', 'name', 'containerType', 'rack_url',
                     'created_by')
     
-    list_filter = ('containerType', 'location__displayId', 'location__room', 
-                   'location__temperature', 'created_by')
+    list_filter = ('containerType', 'rack__current_location__displayId', 
+                   'rack__current_location__room', 
+                   'rack__current_location__temperature', 'created_by')
     
     ordering = ('displayId',)
     
@@ -380,19 +381,19 @@ class RackAdmin(admin.ModelAdmin):
     fields = (('displayId', 'name','current_location'))
     
     def container_url(self, obj):
-          url = obj.container.get_relative_url()
-          return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.container.__unicode__()))
+        url = obj.container.get_relative_url()
+        return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.container.__unicode__()))
     
     def location_url(self, obj):
-            url = obj.current_location.get_relative_url()
-            return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.current_location.__unicode__()))
+        url = obj.current_location.get_relative_url()
+        return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.current_location.__unicode__()))
     location_url.allow_tags = True
             
     location_url.short_description = 'Location'              
 
     
     def make_csv(self, request, queryset):
-            return importexport.generate_csv(self, request, queryset, 
+        return importexport.generate_csv(self, request, queryset, 
                                              self.exportFields, 'Rack')
     
     make_csv.short_description = 'Export as CSV'
@@ -419,7 +420,6 @@ class SampleProvenanceInline(GenericCollectionTabularInline):
     model = SampleProvenance
 
     raw_id_fields = ('sample_source',)
-
 
 
 
@@ -512,7 +512,7 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
 
     list_display_links = ('showId',)
     
-    list_filter = ('created_by', ContainerListFilter, 'container__location', 
+    list_filter = ('created_by', ContainerListFilter, 'container__rack__current_location', 
                    'status', SampleCollectionListFilter
                    )
     
@@ -525,9 +525,10 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
     save_on_top = True
     
     search_fields  = ('displayId', 'name', 'description', 
-                      'container__displayId', 'container__location__displayId', 
-                      'container__location__temperature', 
-                      'container__location__room')
+                      'container__displayId', 
+                      'container__rack__current_location__displayId', 
+                      'container__rack__current_location__location__temperature', 
+                      'container__rack__current_location__location__room')
     
     
     

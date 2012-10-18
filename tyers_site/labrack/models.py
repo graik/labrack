@@ -147,7 +147,6 @@ class Container( PermissionModel ):
     containerType = models.CharField('Type of container', max_length=30, 
                                      choices=STORAGE_CONTAINER_TYPES )
     
-    location = models.ForeignKey(Location, related_name='containers')  
     rack = models.ForeignKey(Rack)
     
     #: optional long description
@@ -309,7 +308,8 @@ class Sample( PermissionModel ):
                      )
     status = models.CharField( max_length=30, choices=STATUS_CHOICES, 
                                default='ok')
-    reference_status = models.BooleanField(default=0)
+    reference_status = models.BooleanField('Reference sample',default=False,
+                                           help_text='mark sample as master or reference')
 
     
     description = models.TextField('Description / Comments', blank=True)
