@@ -139,6 +139,7 @@ class ComponentAdmin(PermissionAdmin, admin.ModelAdmin):
     
     
     actions = ['make_csv']
+      
     
     exportFields = OrderedDict( [('Display ID', 'displayId'),
                                ('Name', 'name'),
@@ -153,7 +154,7 @@ class ComponentAdmin(PermissionAdmin, admin.ModelAdmin):
     
     fieldsets = (
                  (None, {
-                         'fields': (('displayId', 'name','status'),
+                         'fields': (('displayId', 'name','status','GenBankfile',),
                                     ('uri',))
                                     
                          }
@@ -174,8 +175,7 @@ class ComponentAdmin(PermissionAdmin, admin.ModelAdmin):
     
       
 
-    list_display = ('displayId', 'name', 'created_by', 'showComment',
-                    'abstract', 'status' )
+    list_display = ('displayId', 'name', 'created_by', 'showComment','GenBankfile','abstract', 'status' )
 
     list_filter = ('status', 'abstract', 'created_by', 'componentType')
 
@@ -187,6 +187,7 @@ class ComponentAdmin(PermissionAdmin, admin.ModelAdmin):
         
     
     
+
     def formfield_for_dbfield(self, db_field, **kwargs):
         
         if db_field.name in self.raw_id_fields:
@@ -214,7 +215,7 @@ class ProteinComponentAdmin(ComponentAdmin):
     
     fieldsets = ComponentAdmin.fieldsets.__add__(\
         (('Protein Details', {
-            'fields': ('sequence', 'annotations'),
+            'fields': ('sequence',),
             'classes':('collapse',)
         }
           ),)
@@ -229,7 +230,7 @@ class ProteinComponentAdmin(ComponentAdmin):
 class PeptideComponentAdmin(ProteinComponentAdmin):
     fieldsets = ComponentAdmin.fieldsets.__add__(\
         (('Peptide Details', {
-            'fields': ('sequence', 'annotations'),
+            'fields': ('sequence',),
             'classes':('collapse',)
         }
           ),)
@@ -247,7 +248,7 @@ class DnaComponentAdmin(ComponentAdmin):
     fieldsets = ComponentAdmin.fieldsets + (\
         (('DNA Details', 
           {'fields': (('optimizedFor', 'translatesTo'),
-                      ('sequence', 'annotations'),
+                      ('sequence',),
                       ),
             'classes':('collapse',)
             }
@@ -264,8 +265,7 @@ class DnaComponentAdmin(ComponentAdmin):
 
     raw_id_fields = ComponentAdmin.raw_id_fields.__add__(('translatesTo',))
    
-
-
+   
 
 class ContainerAdmin(PermissionAdmin, admin.ModelAdmin):
     
@@ -719,6 +719,22 @@ class SampleCollectionAdmin(PermissionAdmin, admin.ModelAdmin):
     
     
 
+class SequenceAnnotationAdmin(admin.ModelAdmin):
+    
+    #fieldsets = ComponentAdmin.fieldsets.__add__(\
+    #    (('uri', {
+    #        'fields': ('sequence',),
+    #        'classes':('collapse',)
+    #    }
+    #      ),)
+    #)
+    
+    search_fields = ComponentAdmin.search_fields.__add__(('uri',))
+
+
+
+
+
 ## Register admin panels
 admin.site.register(Container, ContainerAdmin)
 admin.site.register(Location, LocationAdmin)
@@ -732,5 +748,6 @@ admin.site.register(ProteinComponent, ProteinComponentAdmin)
 admin.site.register(DnaComponent, DnaComponentAdmin)
 admin.site.register(Component, ComponentAdmin)
 admin.site.register(ChemicalComponent, ComponentAdmin)
+admin.site.register(SequenceAnnotation, SequenceAnnotationAdmin)
 admin.site.register(Chassis) 
 #admin.site.register(Collection)

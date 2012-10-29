@@ -23,6 +23,10 @@ from django.db import models
 from django.db.models import Q
 from django.utils.safestring import mark_safe
 from django.utils.safestring import SafeUnicode
+from Bio import SeqIO
+from tyers_site import settings
+import os
+
 
 from datetime import datetime
  
@@ -806,16 +810,14 @@ class Component(PermissionModel):
     abstract = models.BooleanField( 'Abstract Part', default=False, 
         help_text='Entry only serves as container to organize related parts.')
     
-    annotations = models.ManyToManyField( 'SequenceAnnotation', 
-                                          verbose_name='Annotations', 
-                                          blank=True, null=True )
-    
     creation_date = models.DateTimeField(auto_now_add=True, null=True)
     
     modification_date = models.DateTimeField(auto_now=True, null=True)
 
  
- 
+    GenBankfile = models.FileField(upload_to='documents/GenBank/%Y/%m/%d')
+   
+    
 
     def formatedUrl(self):
         name = self.name if self.name else ''
@@ -841,6 +843,36 @@ class Component(PermissionModel):
         
         return s
     
+    
+    def related_seq( self ):
+            """
+            """
+            gb_file = settings.MEDIA_ROOT+"/"+os.path.normpath(self.GenBankfile.name)
+            gb_features = ''
+            for gb_record in SeqIO.parse(open(gb_file,"r"), "genbank") :
+                # now do something with the record
+                #gb_features += "Name %s, %i features" % (gb_record.name, len(gb_record.features))
+                gb_features += gb_record.name
+            return gb_features
+   
+    
+    def related_file_annotation( self ):
+
+        gb_file = settings.MEDIA_ROOT+"/"+os.path.normpath(self.GenBankfile.name)
+        gb_features = ""
+        for gb_record in SeqIO.parse(open(gb_file,"r"), "genbank") :
+            # now do something with the record
+            print "Name %s, %i features" % (gb_record.name, len(gb_record.features))
+            print repr(gb_record.seq)
+            for ind in xrange(len(gb_record.features)) :
+                gb_features += '\n'+ repr(gb_record.features[ind].type) + " Location start : "+ repr(gb_record.features[ind].location._start.position) + " Location end : "+ repr(gb_record.features[ind].location._end.position)
+                startPos = repr(gb_record.features[ind].location._start.position)
+                endPos = repr(gb_record.features[ind].location._end.position)
+                an2db = SequenceAnnotation(uri ='',bioStart = startPos, bioEnd = endPos, strand = '?', precedes = self, subComponent = self)
+                an2db.save()
+            return gb_features
+        
+    
     def number_related_samples( self ):
             """
             """
@@ -849,7 +881,9 @@ class Component(PermissionModel):
             s = r.count()
             
             return s    
-        
+     
+   
+    
     def showComment( self ):
         """
         @return: str; truncated comment
@@ -958,6 +992,12 @@ class DnaComponent(Component):
 
     show_optimizedFor.short_description = 'optimized for'
     show_optimizedFor.admin_order_field = 'optimizedFor'
+    
+    def save(self, *args, **kwargs):
+        #Saving the sequence
+        self.sequence = self.related_seq()
+        super(DnaComponent, self).save(*args, **kwargs) # Call the "real" save() method.
+
        
 
 
@@ -1144,7 +1184,9 @@ class SequenceAnnotation(models.Model):
     precedes = models.ManyToManyField( 'self', symmetrical=False,
                                        null=True, blank=True )
 
-
+    subComponent = models.ForeignKey('Component', related_name ='subComponentOf')
+        
+    componentAnnotated = models.ForeignKey('Component', related_name ='annotatedForComponent',null=True, blank=True)
 
 
     
