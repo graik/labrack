@@ -175,7 +175,7 @@ class ComponentAdmin(PermissionAdmin, admin.ModelAdmin):
     
       
 
-    list_display = ('displayId', 'name', 'created_by', 'showComment','GenBankfile','abstract', 'status' )
+    list_display = ('displayId', 'name', 'created_by', 'abstract', 'status', 'showComment', )
 
     list_filter = ('status', 'abstract', 'created_by', 'componentType')
 

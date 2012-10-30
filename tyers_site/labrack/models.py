@@ -815,7 +815,7 @@ class Component(PermissionModel):
     modification_date = models.DateTimeField(auto_now=True, null=True)
 
  
-    GenBankfile = models.FileField(upload_to='documents/GenBank/%Y/%m/%d')
+    GenBankfile = models.FileField(upload_to='documents/GenBank/%Y/%m/%d',blank=True,null=True)
    
     
 
@@ -844,16 +844,29 @@ class Component(PermissionModel):
         return s
     
     
+    def related_annotations( self ):
+            """
+            """
+            r = SequenceAnnotation.objects.filter( subComponent=self.id).order_by('bioStart')
+            
+            #s = [content.sequenceannotation for content in r]
+            
+            return r    
+
     def related_seq( self ):
             """
             """
             gb_file = settings.MEDIA_ROOT+"/"+os.path.normpath(self.GenBankfile.name)
+            print gb_file.__str__
             gb_features = ''
-            for gb_record in SeqIO.parse(open(gb_file,"r"), "genbank") :
-                # now do something with the record
-                #gb_features += "Name %s, %i features" % (gb_record.name, len(gb_record.features))
-                gb_features += gb_record.name
-            return gb_features
+            try:
+                for gb_record in SeqIO.parse(open(gb_file,"r"), "genbank") :
+                    # now do something with the record
+                    #gb_features += "Name %s, %i features" % (gb_record.name, len(gb_record.features))
+                    gb_features += gb_record.seq.tostring()
+                return gb_features
+            except Exception:
+                return ''
    
     
     def related_file_annotation( self ):
@@ -866,23 +879,57 @@ class Component(PermissionModel):
             print repr(gb_record.seq)
             for ind in xrange(len(gb_record.features)) :
                 gb_features += '\n'+ repr(gb_record.features[ind].type) + " Location start : "+ repr(gb_record.features[ind].location._start.position) + " Location end : "+ repr(gb_record.features[ind].location._end.position)
-                startPos = repr(gb_record.features[ind].location._start.position)
-                endPos = repr(gb_record.features[ind].location._end.position)
-                an2db = SequenceAnnotation(uri ='',bioStart = startPos, bioEnd = endPos, strand = '?', precedes = self, subComponent = self)
-                an2db.save()
+                #startPos = repr(gb_record.features[ind].location._start.position)
+                #endPos = repr(gb_record.features[ind].location._end.position)
+                #an2db = SequenceAnnotation(uri ='',bioStart = 1, bioEnd = 3, strand = '-', precedes = None, subComponent = self)
+                #an2db.save()
+                #print "tried"
             return gb_features
+    def save_annotation( self ):
+        if (self.GenBankfile):
+            gb_file = settings.MEDIA_ROOT+"/"+os.path.normpath(self.GenBankfile.name)
+            gb_features = ""
+            dispId = 1
+            isParsingDone = False
+            for gb_record in SeqIO.parse(open(gb_file,"r"), "genbank") :
+                if (not isParsingDone):
+                    for ind in xrange(len(gb_record.features)) :
+                        isParsingDone = True
+                        #gb_features += '\n'+ repr(gb_record.features[ind].type) + " Location start : "+ repr(gb_record.features[ind].location._start.position) + " Location end : "+ repr(gb_record.features[ind].location._end.position)
+                        nameType = repr(gb_record.features[ind].type).replace("'", "")
+                        strandValue = repr(gb_record.features[ind].strand)
+                        startPos = repr(gb_record.features[ind].location._start.position)
+                        endPos = repr(gb_record.features[ind].location._end.position)
+                        ###check if the annotation refering to this dna already exists using start and end point and dnaID (this is to solve a bug but should be removed, the bug is that its saving the annotated dna twice))
+                        if (not SequenceAnnotation.objects.filter(bioStart = startPos, bioEnd = endPos, strand = strandValue, subComponent = self)):
+                            # save in the DNA/Peptide if necessary
+                            fullSequence = gb_record.seq.tostring()
+                            partOfSequence = fullSequence[int(startPos):int(endPos)]
+                            # the reason to save it twice is to get a unique ID to be able to put it in DisplayId
+                            dna2db = DnaComponent(displayId='#######', sequence = partOfSequence, name = nameType, GenBankfile = None)
+                            dna2db.saveWithoutAnnotations()
+                            dna2db.displayId=dna2db.id
+                            dna2db.saveWithoutAnnotations()
+                            # save the annotation in the database
+                            an2db = SequenceAnnotation(uri ='', bioStart = startPos, bioEnd = endPos, strand = strandValue, subComponent = self, componentAnnotated = dna2db)
+                            an2db.save()                   
         
     
     def number_related_samples( self ):
             """
             """
-            r = SampleContent.objects.filter( object_id=self.id, 
-                            content_type__model=self.__class__.__name__.lower() )
+            r = SampleContent.objects.filter( object_id=self.id ).order_by('bioStart')
             s = r.count()
             
-            return s    
-     
-   
+            return s
+        
+    def number_related_annotations( self ):
+            """
+            """
+            r = SequenceAnnotation.objects.filter( subComponent=self.id)
+            s = r.count()
+                  
+            return s        
     
     def showComment( self ):
         """
@@ -997,7 +1044,14 @@ class DnaComponent(Component):
         #Saving the sequence
         self.sequence = self.related_seq()
         super(DnaComponent, self).save(*args, **kwargs) # Call the "real" save() method.
-
+        if self.GenBankfile:
+            self.save_annotation()
+         
+    def saveWithoutAnnotations(self, *args, **kwargs):
+        #Saving the sequence
+        #self.sequence = self.related_seq()
+        super(DnaComponent, self).save(*args, **kwargs) # Call the "real" save() method.
+                    
        
 
 
@@ -1188,6 +1242,11 @@ class SequenceAnnotation(models.Model):
         
     componentAnnotated = models.ForeignKey('Component', related_name ='annotatedForComponent',null=True, blank=True)
 
+    def get_relative_url(self):
+            """
+            Define standard relative URL for object access in templates
+            """
+            return 'sequenceannotation/%i/' % self.id
 
     
 class Collection(models.Model):
