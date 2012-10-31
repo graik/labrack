@@ -79,4 +79,59 @@
       
 </div>
 
+<div class="module aligned">
+  <h2>Annotations</h2>
+        <div class="description">
+          Note, clicking any of the links below will open a new window/tab!
+        </div>
+        
+        <p></p>
+        
+        {% if original %}
+          <ul class="object-tools">
+            <li><a href="../../sequenceannotation/add/?subComponent={{original.id}}" target="_blank">
+                Add Annotation</a></li> 
+          </ul>                  
+        {% endif %}
+        
+               
+        {% if original and original.related_annotations %}
+          <table cellspacing="0">
+            <thead>
+              <tr>
+                <th>ID</th><th>Start</th><th>End</th><th>strand</th><th>Protein</th>
+              </tr>
+            </thead>
+            <tbody>
+        
+            {% for sequenceannotation in original.related_annotations %}
+        
+              <tr class="{% cycle 'row1' 'row2' %}">
+        
+                <td><b><a href="../../{{sequenceannotation.get_relative_url}}" target="_blank">
+                      {{sequenceannotation.id}}</a></b></td><td>{{sequenceannotation.bioStart}}</td>   
+                      <td>{{sequenceannotation.bioEnd}}</td>
+                      <td>{% if sequenceannotation.strand == "-1" %}
+                      (-)</td>
+                    {% else %}
+                          (+)</td>
+                    {% endif %}
+                <td>{% if sequenceannotation.componentAnnotated %}
+                      <a href="../{{sequenceannotation.componentAnnotated.id}}" target="_blank">
+                      {{sequenceannotation.componentAnnotated}}</a></td>
+                    {% else %}
+                          --</td>
+                    {% endif %}
+              </tr>
+        
+            {% endfor %}
+        
+            </tbody>
+          </table>
+          
+        {% else %}
+          <div class="description"><b>No Sequence Annotations found for this item.</b></div>
+        {% endif %}
+        <p></p>
+</div>
 {% endblock %}

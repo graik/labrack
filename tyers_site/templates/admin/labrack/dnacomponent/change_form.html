@@ -84,6 +84,14 @@
         </div>
         
         <p></p>
+        
+        {% if original %}
+          <ul class="object-tools">
+            <li><a href="../../sequenceannotation/add/?subComponent={{original.id}}" target="_blank">
+                Add Annotation</a></li> 
+          </ul>                  
+        {% endif %}
+        
                
         {% if original and original.related_annotations %}
           <table cellspacing="0">

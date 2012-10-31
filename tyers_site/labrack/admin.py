@@ -31,6 +31,8 @@ from django.http import HttpResponseRedirect
 from django.utils.safestring import mark_safe
 from django import forms
 from django.forms.util import ErrorList
+from django.shortcuts import render_to_response
+
 #from django.utils.translation import ugettext_lazy as _
 
 
@@ -150,11 +152,11 @@ class ComponentAdmin(PermissionAdmin, admin.ModelAdmin):
                                ('Created by','created_by'),
                                ('DB Entry creation date','creation_date'),
                                ('DB Entry modification date','modification_date'),
-                               ])
+                               ]) 
     
     fieldsets = (
                  (None, {
-                         'fields': (('displayId', 'name','status','GenBankfile',),
+                         'fields': (('displayId', 'name','status',),
                                     ('uri',))
                                     
                          }
@@ -212,14 +214,25 @@ class ComponentAdmin(PermissionAdmin, admin.ModelAdmin):
 
 
 class ProteinComponentAdmin(ComponentAdmin):
-    
+     
     fieldsets = ComponentAdmin.fieldsets.__add__(\
-        (('Protein Details', {
+        ((None, {
+            'fields': ('GenBankfile',),
+        }
+          ),
+         ('Protein Details', {
             'fields': ('sequence',),
             'classes':('collapse',)
         }
           ),)
     )
+    #fieldsets = ComponentAdmin.fieldsets.__add__(\
+    #        (('Protein Details', {
+    #            'fields': ('sequence',),
+    #            'classes':('collapse',)
+    #        }
+    #          ),)
+    #    )    
     
     search_fields = ComponentAdmin.search_fields.__add__(('sequence',))
 
@@ -245,8 +258,11 @@ class PeptideComponentAdmin(ProteinComponentAdmin):
 
 class DnaComponentAdmin(ComponentAdmin):
     
-    fieldsets = ComponentAdmin.fieldsets + (\
-        (('DNA Details', 
+    fieldsets = ComponentAdmin.fieldsets.__add__(\
+        ((None, {
+            'fields': ('GenBankfile',),
+        }
+          ),('DNA Details', 
           {'fields': (('optimizedFor', 'translatesTo'),
                       ('sequence',),
                       ),
@@ -444,7 +460,6 @@ class SampleForm(forms.ModelForm):
         
         return self.cleaned_data
 
-
     class Meta:
         model = Sample
 
@@ -468,7 +483,7 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
    
    
    
-    actions = ['make_csv', 'make_ok', 'make_empty', 'make_bad']
+    actions = ['make_csv', 'make_ok', 'make_empty', 'make_bad','load_samples_from_CSV']
     
     date_hierarchy = 'preparation_date'
     
@@ -597,6 +612,12 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
         
         
     make_ok.short_description = 'Mark selected entries as ok'
+    
+    def load_samples_from_CSV(self):
+        #self.update_status(request, queryset, 'ok')
+            
+            
+        load_samples_from_CSV.short_description = 'Load Samples from CSV File'    
     
     
     
