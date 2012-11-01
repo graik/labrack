@@ -483,7 +483,7 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
    
    
    
-    actions = ['make_csv', 'make_ok', 'make_empty', 'make_bad','load_samples_from_CSV']
+    actions = ['make_csv', 'make_ok', 'make_empty', 'make_bad']
     
     date_hierarchy = 'preparation_date'
     
@@ -612,12 +612,6 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
         
         
     make_ok.short_description = 'Mark selected entries as ok'
-    
-    def load_samples_from_CSV(self):
-        #self.update_status(request, queryset, 'ok')
-            
-            
-        load_samples_from_CSV.short_description = 'Load Samples from CSV File'    
     
     
     

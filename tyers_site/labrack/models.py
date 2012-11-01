@@ -19,6 +19,7 @@ from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.core.files.storage import FileSystemStorage
+from django.contrib import messages
 from django.db import models
 from django.db.models import Q
 from django.utils.safestring import mark_safe
@@ -26,7 +27,8 @@ from django.utils.safestring import SafeUnicode
 from Bio import SeqIO
 from tyers_site import settings  
 
-from csvImporter.model import CsvDbModel
+from csvImporter.model import CsvModel
+from csvImporter import fields
 
 import os
 
@@ -292,7 +294,7 @@ class Sample( PermissionModel ):
     list.
     """
 
-    displayId = models.CharField(max_length=20, 
+    displayId = models.CharField(max_length=20,
                                  help_text='Label or well position. Must be unique within container.')
 
     name = models.CharField('Name', max_length=200, blank=True, 
@@ -677,17 +679,50 @@ class Sample( PermissionModel ):
 
 
 
-    
+
 class CSVSample(CsvModel):
-    DisplayId =	
-    name	
-    container
-    status
-    
-        class Meta:
-            dbModel = Sample
-            delimiter = ";"
-            has_header = True
+    DisplayId = fields.CharField()
+    name = fields.CharField()
+    container = fields.CharField()
+    status = fields.IntegerField()
+
+    PreparationDate = fields.CharField()
+    NumberOfAliquots = fields.CharField()
+    isReference = fields.CharField()
+    Description	= fields.CharField()
+    SampleCollection = fields.CharField()
+
+    Chemical_DisplayID = fields.CharField()
+    Chemical_SolventBuffer = fields.CharField()
+    Chemical_Concentration = fields.CharField()
+    Chemical_Concentration_Unit = fields.CharField()
+    Chemical_Amount = fields.CharField()
+    Chemical_Amount_Unit = fields.CharField()
+
+    DNA_DisplayID = fields.CharField()
+    DNA_SolventBuffer = fields.CharField()
+    DNA_Concentration = fields.CharField()
+    DNA_Concentration_Unit = fields.CharField()
+    DNA_Amount = fields.CharField()
+    DNA_Amount_Unit = fields.CharField()
+
+    Peptide_DisplayID = fields.CharField()
+    Peptide_SolventBuffer = fields.CharField()
+    Peptide_Concentration = fields.CharField()
+    Peptide_Concentration_Unit = fields.CharField()
+    Peptide_Amount = fields.CharField()
+    Peptide_Amount_Unit = fields.CharField()
+
+    Protein_DisplayID = fields.CharField()
+    Protein_SolventBuffer = fields.CharField()
+    Protein_Concentration = fields.CharField()
+    Protein_Concentration_Unit = fields.CharField()
+    Protein_Amount = fields.CharField()
+    Protein_Amount_Unit = fields.CharField()
+
+    class Meta:
+        delimiter = ";"
+        has_header = True
 
 
 
@@ -867,8 +902,8 @@ class Component(PermissionModel):
     def related_seq( self ):
         """
         """
-        
-         
+
+
         gb_features = ''
         try:
             gb_file = settings.MEDIA_ROOT+"/"+os.path.normpath(self.GenBankfile.name)
@@ -898,7 +933,7 @@ class Component(PermissionModel):
             gb_features = ""
             dispId = 1
             isParsingDone = False
-            
+
             for gb_record in SeqIO.parse(open(gb_file,"r"), "genbank") :
                 if (not isParsingDone):
                     for ind in xrange(len(gb_record.features)) :
@@ -1118,14 +1153,14 @@ class ProteinComponent(Component):
         if self.sequence:
             return len( self.sequence )
         return 0
-    
+
     def save(self, *args, **kwargs):
-            #Saving the sequence
-            self.sequence = self.related_seq()
-            super(ProteinComponent, self).save(*args, **kwargs) # Call the "real" save() method.
-            if self.GenBankfile:
-                self.save_annotation()
-    
+        #Saving the sequence
+        self.sequence = self.related_seq()
+        super(ProteinComponent, self).save(*args, **kwargs) # Call the "real" save() method.
+        if self.GenBankfile:
+            self.save_annotation()
+
     def saveWithoutAnnotations(self, *args, **kwargs):
         #Saving the sequence
         #self.sequence = self.related_seq()
@@ -1248,7 +1283,7 @@ class SelectiveMarker( models.Model ):
 
 class Document(models.Model):
     docfile = models.FileField(upload_to='documents/BulkSamples/%Y/%m/%d')
-        
+
 
 class SequenceAnnotation(models.Model):
     """
@@ -1276,6 +1311,10 @@ class SequenceAnnotation(models.Model):
 
     componentAnnotated = models.ForeignKey('Component', related_name ='annotatedForComponent',null=True, blank=True)
 
+    # override Django object methods
+    def __unicode__(self):
+        return u'(%s - %s)(%s,%s)' % (self.subComponent, self.componentAnnotated,self.bioStart,self.bioEnd)
+    
     def get_relative_url(self):
         """
         Define standard relative URL for object access in templates
@@ -1316,5 +1355,4 @@ class Collection(models.Model):
     def __unicode__(self):
         name = self.name if self.name else ''
         return u'%s %s' % (self.displayId, name)
-
 
