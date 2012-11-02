@@ -8,6 +8,9 @@ from tyers_site import settings
 from django.core.files.storage import FileSystemStorage
 from tyers_site.labrack.models import Container
 from tyers_site.labrack.models import DnaComponent
+from tyers_site.labrack.models import ChemicalComponent
+from tyers_site.labrack.models import PeptideComponent
+from tyers_site.labrack.models import ProteinComponent
 from tyers_site.labrack.models import SampleContent
 from tyers_site.labrack.models import Unit
 from django.contrib.contenttypes.models import ContentType
@@ -58,6 +61,45 @@ def list(request):
                                         amountUnit = Unit.objects.get(name=each_line.DNA_Amount_Unit)
                                         sampleContentToDB = SampleContent(sample = sample2db,content_type = content_type,object_id = object_id, solvent=solvent,concentration = concentration,concentrationUnit = concentrationUnit, amount=amount, amountUnit=amountUnit)
                                         sampleContentToDB.save()
+                                #Chemical Content
+                                chemLine = each_line.Chemical_DisplayID.strip()
+                                if (chemLine != ''):
+                                        chemicalFromDB = ChemicalComponent.objects.get(displayId=chemLine)
+                                        content_type = ContentType.objects.get(model='chemicalcomponent')
+                                        object_id = chemicalFromDB.id
+                                        solvent = each_line.Chemical_SolventBuffer
+                                        concentration = each_line.Chemical_Concentration
+                                        concentrationUnit = Unit.objects.get(name=each_line.Chemical_Concentration_Unit)
+                                        amount = each_line.Chemical_Amount
+                                        amountUnit = Unit.objects.get(name=each_line.Chemical_Amount_Unit)
+                                        sampleContentToDB = SampleContent(sample = sample2db,content_type = content_type,object_id = object_id, solvent=solvent,concentration = concentration,concentrationUnit = concentrationUnit, amount=amount, amountUnit=amountUnit)
+                                        sampleContentToDB.save()
+                                #Peptide Content
+                                peptideLine = each_line.Peptide_DisplayID.strip()
+                                if (peptideLine != ''):
+                                        peptideFromDB = PeptideComponent.objects.get(displayId=peptideLine)
+                                        content_type = ContentType.objects.get(model='peptidecomponent')
+                                        object_id = peptideFromDB.id
+                                        solvent = each_line.Peptide_SolventBuffer
+                                        concentration = each_line.Peptide_Concentration
+                                        concentrationUnit = Unit.objects.get(name=each_line.Peptide_Concentration_Unit)
+                                        amount = each_line.Peptide_Amount
+                                        amountUnit = Unit.objects.get(name=each_line.Peptide_Amount_Unit)
+                                        sampleContentToDB = SampleContent(sample = sample2db,content_type = content_type,object_id = object_id, solvent=solvent,concentration = concentration,concentrationUnit = concentrationUnit, amount=amount, amountUnit=amountUnit)
+                                        sampleContentToDB.save() 
+                                #Protein Content
+                                proteinLine = each_line.Protein_DisplayID.strip()
+                                if (proteinLine != ''):
+                                        proteinFromDB = ProteinComponent.objects.get(displayId=proteinLine)
+                                        content_type = ContentType.objects.get(model='proteincomponent')
+                                        object_id = proteinFromDB.id
+                                        solvent = each_line.Protein_SolventBuffer
+                                        concentration = each_line.Protein_Concentration
+                                        concentrationUnit = Unit.objects.get(name=each_line.Protein_Concentration_Unit)
+                                        amount = each_line.Protein_Amount
+                                        amountUnit = Unit.objects.get(name=each_line.Protein_Amount_Unit)
+                                        sampleContentToDB = SampleContent(sample = sample2db,content_type = content_type,object_id = object_id, solvent=solvent,concentration = concentration,concentrationUnit = concentrationUnit, amount=amount, amountUnit=amountUnit)
+                                        sampleContentToDB.save()                                        
 
                                     # Redirect to the document list after POST
                         #return HttpResponseRedirect(reverse('labrack.views.list'))
