@@ -31,7 +31,10 @@ def list(request):
                         p = newdoc.docfile.url
                         gb_file = settings.MEDIA_ROOT+os.path.normpath(newdoc.docfile.url)
                         gb_file2 = settings.TEMPLATE_DIRS+os.path.normpath(newdoc.docfile.url)
-                        myCSVSsample = CSVSample.import_data(data = open(gb_file2))
+                        try:
+                                myCSVSsample = CSVSample.import_data(data = open(gb_file2))
+                        except Exception:
+                                print "Oops!  That was no valid number.  Try again..." 
                         #break                
                         #create a new sample for each line
                         for each_line in myCSVSsample:

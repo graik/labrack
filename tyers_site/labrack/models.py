@@ -723,6 +723,7 @@ class CSVSample(CsvModel):
     class Meta:
         delimiter = ";"
         has_header = True
+        
 
 
 
@@ -941,9 +942,9 @@ class Component(PermissionModel):
                         #gb_features += '\n'+ repr(gb_record.features[ind].type) + " Location start : "+ repr(gb_record.features[ind].location._start.position) + " Location end : "+ repr(gb_record.features[ind].location._end.position)
                         nameType = repr(gb_record.features[ind].type).replace("'", "")
                         strandValue = repr(gb_record.features[ind].strand)
-                        startPos = repr(gb_record.features[ind].location._start.position)
+                        startPos = repr(gb_record.features[ind].location._start.position+1)
                         endPos = repr(gb_record.features[ind].location._end.position)
-                        label = repr(gb_record.features[ind].qualifiers.get('label')).replace("['","").replace("']","")
+                        label = repr(gb_record.features[ind].qualifiers.get('label')).replace("['","").replace("']","").replace("\\"," ")
                         ###check if the annotation refering to this dna already exists using start and end point and dnaID (this is to solve a bug but should be removed, the bug is that its saving the annotated dna twice))
                         if (not SequenceAnnotation.objects.filter(bioStart = startPos, bioEnd = endPos, strand = strandValue, subComponent = self)):
                             # save in the DNA/Protein if necessary
