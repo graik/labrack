@@ -945,11 +945,14 @@ class Component(PermissionModel):
                         startPos = repr(gb_record.features[ind].location._start.position+1)
                         endPos = repr(gb_record.features[ind].location._end.position)
                         label = repr(gb_record.features[ind].qualifiers.get('label')).replace("['","").replace("']","").replace("\\"," ")
+                        if (label == 'None' ):
+                            label = repr(gb_record.features[ind].qualifiers.get('gene')).replace("['","").replace("']","").replace("\\"," ")
+                        
                         ###check if the annotation refering to this dna already exists using start and end point and dnaID (this is to solve a bug but should be removed, the bug is that its saving the annotated dna twice))
                         if (not SequenceAnnotation.objects.filter(bioStart = startPos, bioEnd = endPos, strand = strandValue, subComponent = self)):
                             # save in the DNA/Protein if necessary
                             fullSequence = gb_record.seq.tostring()
-                            partOfSequence = fullSequence[int(startPos):int(endPos)]
+                            partOfSequence = fullSequence[int(startPos):int(endPos)].replace(" ","").upper()
                             # the reason to save it twice is to get a unique ID to be able to put it in DisplayId
                             # retrieve the part type, if not existing create it
                             if (not ComponentType.objects.filter(name=nameType)):
