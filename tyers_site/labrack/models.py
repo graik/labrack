@@ -128,6 +128,13 @@ class Rack(models.Model):
 
     def __unicode__(self):
         return u'%s' % (self.displayId)
+    
+    def related_containers( self ):
+         
+        r = Container.objects.filter( rack = self.id )
+#        s = [content.sample for content in r]        
+
+        return r    
 
     def get_relative_url(self):
         """
@@ -169,6 +176,22 @@ class Container( PermissionModel ):
 
     def __unicode__( self ):
         return "%s" % self.displayId
+
+    def related_samples( self ):
+        """
+        """
+         
+         
+        r = Sample.objects.filter( container = self.id )
+#        s = [content.sample for content in r]        
+
+        return r
+    
+    def get_relative_url(self):
+        """
+        Define standard relative URL for object access in templates
+        """
+        return 'container/%i/' % self.id    
 
     def next_well( self ):
         """
@@ -807,14 +830,54 @@ class ComponentType( models.Model ):
     name = models.CharField('Name', max_length=200, 
                             help_text='Informative name')
 
-    #: required ? directional relationship to parent type or types
-    subTypeOf = models.ManyToManyField('self', symmetrical=False, blank=True, 
-                                       null=True, related_name='subTypes')
-
+    
     def __unicode__( self ):
         return unicode(self.name)
 
+    class Meta:
+        abstract = True
+        
 
+class DNAComponentType( ComponentType ):
+
+    #: required ? directional relationship to parent type or types
+    subTypeOf = models.ManyToManyField('self', symmetrical=False, blank=True, 
+                                       null=True, related_name='subTypes')
+    class Meta:
+        verbose_name = 'DNA PartType'
+        abstract = False
+        
+class ProteinComponentType( ComponentType ):
+    #: required ? directional relationship to parent type or types
+    subTypeOf = models.ManyToManyField('self', symmetrical=False, blank=True, 
+                                       null=True, related_name='subTypes')
+    class Meta:
+        verbose_name = 'Protein PartType'
+        abstract = False        
+        
+class ChemicalComponentType( ComponentType ):
+    #: required ? directional relationship to parent type or types
+    subTypeOf = models.ManyToManyField('self', symmetrical=False, blank=True, 
+                                       null=True, related_name='subTypes')
+    class Meta:
+        verbose_name = 'Chemical PartType'
+        abstract = False
+        
+class ChassisComponentType( ComponentType ):
+    #: required ? directional relationship to parent type or types
+    subTypeOf = models.ManyToManyField('self', symmetrical=False, blank=True, 
+                                       null=True, related_name='subTypes')
+    class Meta:
+        verbose_name = 'Chassis PartType'
+        abstract = False   
+
+class PeptideComponentType( ComponentType ):
+    #: required ? directional relationship to parent type or types
+    subTypeOf = models.ManyToManyField('self', symmetrical=False, blank=True, 
+                                       null=True, related_name='subTypes')
+    class Meta:
+        verbose_name = 'Peptide PartType'
+        abstract = False         
 
 
 
@@ -838,16 +901,11 @@ class Component(PermissionModel):
 
     #: uri should be constructed from #displayId if left empty
     uri = models.URLField( blank=True, null=True, unique=False, 
-                           help_text='Specify external URI or leave blank for local URI') 
+                           help_text='Specify external URI or leave blank for local URI')
 
     #: non-SBOL compliant status    
     status = models.CharField( max_length=30, choices=STATUS_CHOICES, 
                                default='planning')
-
-    componentType = models.ManyToManyField(ComponentType, 
-                                           blank=True, null=True, 
-                                           verbose_name='Part type', 
-                                           help_text='Classification of this part.')
 
     variantOf = models.ManyToManyField( 'self', symmetrical=False, 
                                         blank=True, null=True, 
@@ -928,52 +986,6 @@ class Component(PermissionModel):
             return gb_features
 
 
-    def save_annotation( self ):
-        if (self.GenBankfile):
-            gb_file = settings.MEDIA_ROOT+"/"+os.path.normpath(self.GenBankfile.name)
-            gb_features = ""
-            dispId = 1
-            isParsingDone = False
-
-            for gb_record in SeqIO.parse(open(gb_file,"r"), "genbank") :
-                if (not isParsingDone):
-                    for ind in xrange(len(gb_record.features)) :
-                        isParsingDone = True
-                        #gb_features += '\n'+ repr(gb_record.features[ind].type) + " Location start : "+ repr(gb_record.features[ind].location._start.position) + " Location end : "+ repr(gb_record.features[ind].location._end.position)
-                        nameType = repr(gb_record.features[ind].type).replace("'", "")
-                        strandValue = repr(gb_record.features[ind].strand)
-                        startPos = repr(gb_record.features[ind].location._start.position+1)
-                        endPos = repr(gb_record.features[ind].location._end.position)
-                        label = repr(gb_record.features[ind].qualifiers.get('label')).replace("['","").replace("']","").replace("\\"," ")
-                        if (label == 'None' ):
-                            label = repr(gb_record.features[ind].qualifiers.get('gene')).replace("['","").replace("']","").replace("\\"," ")
-                        
-                        ###check if the annotation refering to this dna already exists using start and end point and dnaID (this is to solve a bug but should be removed, the bug is that its saving the annotated dna twice))
-                        if (not SequenceAnnotation.objects.filter(bioStart = startPos, bioEnd = endPos, strand = strandValue, subComponent = self)):
-                            # save in the DNA/Protein if necessary
-                            fullSequence = gb_record.seq.tostring()
-                            partOfSequence = fullSequence[int(startPos):int(endPos)].replace(" ","").upper()
-                            # the reason to save it twice is to get a unique ID to be able to put it in DisplayId
-                            # retrieve the part type, if not existing create it
-                            if (not ComponentType.objects.filter(name=nameType)):
-                                ct = ComponentType(name = nameType)
-                                ct.save()
-                            ct = ComponentType.objects.filter(name=nameType)
-                            # save the dna
-                            #if (not DnaComponent.objects.filter(sequence=partOfSequence)):
-                            if (not self.__class__.objects.filter(sequence=partOfSequence)):
-                                dna2db = self.__class__(displayId='########', sequence = partOfSequence, name = label, GenBankfile = None)
-                                dna2db.saveWithoutAnnotations()
-                                dna2db.componentType = ct
-                                dna2db.displayId="gb%06i"%dna2db.id
-                                dna2db.saveWithoutAnnotations()
-                            dna2db = self.__class__.objects.get(sequence=partOfSequence)
-                            # save the annotation in the database
-                            #an2db = SequenceAnnotation(uri ='', bioStart = startPos, bioEnd = endPos, strand = strandValue, subComponent = self, componentAnnotated = dna2db)
-                            an2db = SequenceAnnotation(uri ='', bioStart = startPos, bioEnd = endPos, strand = strandValue, subComponent = self, componentAnnotated = dna2db)
-                            an2db.save()                   
-
-
     def number_related_samples( self ):
         """
         """
@@ -1032,7 +1044,17 @@ class DnaComponent(Component):
                                       related_name='encodedBy', 
                                       help_text='Protein part this sequence translates to' )
 
-    optimizedFor = models.ForeignKey( 'Chassis', blank=True, null=True ) 
+    optimizedFor = models.ForeignKey( 'Chassis', blank=True, null=True )
+    
+
+    componentType = models.ManyToManyField(DNAComponentType, 
+                                           blank=True, null=True, 
+                                           verbose_name='Part type', 
+                                           help_text='Classification of this part.')    
+    
+    circular = models.BooleanField( 'Circular', default=False, 
+                                    help_text='is the DNA Circular or not.')
+
 
     class Meta:
         verbose_name = 'DNA part'
@@ -1110,6 +1132,51 @@ class DnaComponent(Component):
         #Saving the sequence
         #self.sequence = self.related_seq()
         super(DnaComponent, self).save(*args, **kwargs) # Call the "real" save() method.
+        
+    def save_annotation( self ):
+        if (self.GenBankfile):
+            gb_file = settings.MEDIA_ROOT+"/"+os.path.normpath(self.GenBankfile.name)
+            gb_features = ""
+            dispId = 1
+            isParsingDone = False
+
+            for gb_record in SeqIO.parse(open(gb_file,"r"), "genbank") :
+                if (not isParsingDone):
+                    for ind in xrange(len(gb_record.features)) :
+                        isParsingDone = True
+                        #gb_features += '\n'+ repr(gb_record.features[ind].type) + " Location start : "+ repr(gb_record.features[ind].location._start.position) + " Location end : "+ repr(gb_record.features[ind].location._end.position)
+                        nameType = repr(gb_record.features[ind].type).replace("'", "")
+                        strandValue = repr(gb_record.features[ind].strand)
+                        startPos = repr(gb_record.features[ind].location._start.position+1)
+                        endPos = repr(gb_record.features[ind].location._end.position)
+                        label = repr(gb_record.features[ind].qualifiers.get('label')).replace("['","").replace("']","").replace("\\"," ")
+                        if (label == 'None' ):
+                            label = repr(gb_record.features[ind].qualifiers.get('gene')).replace("['","").replace("']","").replace("\\"," ")
+                        
+                        ###check if the annotation refering to this dna already exists using start and end point and dnaID (this is to solve a bug but should be removed, the bug is that its saving the annotated dna twice))
+                        if (not SequenceAnnotation.objects.filter(bioStart = startPos, bioEnd = endPos, strand = strandValue, subComponent = self)):
+                            # save in the DNA/Protein if necessary
+                            fullSequence = gb_record.seq.tostring()
+                            partOfSequence = fullSequence[int(startPos):int(endPos)].replace(" ","").upper()
+                            # the reason to save it twice is to get a unique ID to be able to put it in DisplayId
+                            # retrieve the part type, if not existing create it
+                            if (not DNAComponentType.objects.filter(name=nameType)):
+                                ct = DNAComponentType(name = nameType)
+                                ct.save()
+                            ct = DNAComponentType.objects.filter(name=nameType)
+                            # save the dna
+                            #if (not DnaComponent.objects.filter(sequence=partOfSequence)):
+                            if (not self.__class__.objects.filter(sequence=partOfSequence)):
+                                dna2db = self.__class__(displayId='########', sequence = partOfSequence, name = label, GenBankfile = None)
+                                dna2db.saveWithoutAnnotations()
+                                dna2db.componentType = ct
+                                dna2db.displayId="gb%06i"%dna2db.id
+                                dna2db.saveWithoutAnnotations()
+                            dna2db = self.__class__.objects.get(sequence=partOfSequence)
+                            # save the annotation in the database
+                            #an2db = SequenceAnnotation(uri ='', bioStart = startPos, bioEnd = endPos, strand = strandValue, subComponent = self, componentAnnotated = dna2db)
+                            an2db = SequenceAnnotation(uri ='', bioStart = startPos, bioEnd = endPos, strand = strandValue, subComponent = self, componentAnnotated = dna2db)
+                            an2db.save()             
 
 
 
@@ -1122,7 +1189,11 @@ class Chassis(Component):
     Description of a host system. Usually this will be a cell type or bacterial
     strain.
     """
-
+    componentType = models.ManyToManyField(ChassisComponentType, 
+                                               blank=True, null=True, 
+                                               verbose_name='Part type', 
+                                               help_text='Classification of this part.')   
+    
     def get_relative_url(self):
         """
         Define standard relative URL for object access in templates
@@ -1145,6 +1216,13 @@ class ProteinComponent(Component):
     #: optional sequence
     sequence = models.TextField( help_text='amino acid sequence', 
                                  blank=True, null=True )
+    
+    
+    componentType = models.ManyToManyField(ProteinComponentType, 
+                                                   blank=True, null=True, 
+                                                   verbose_name='Part type', 
+                                                   help_text='Classification of this part.')   
+    
 
     def get_relative_url(self):
         """
@@ -1188,6 +1266,12 @@ class PeptideComponent(Component):
     """
     sequence = models.TextField( help_text='amino acid sequence', 
                                  blank=True, null=True )
+    
+    componentType = models.ManyToManyField(PeptideComponentType, 
+                                                   blank=True, null=True, 
+                                                   verbose_name='Part type', 
+                                                   help_text='Classification of this part.')   
+    
 
     def get_relative_url(self):
         """
@@ -1219,7 +1303,11 @@ class ChemicalComponent(Component):
     Description of a chemical.
     """
     #: To define
-
+    componentType = models.ManyToManyField(ChemicalComponentType, 
+                                                   blank=True, null=True, 
+                                                   verbose_name='Part type', 
+                                                   help_text='Classification of this part.')   
+        
     def get_relative_url(self):
         """
         Define standard relative URL for object access in templates

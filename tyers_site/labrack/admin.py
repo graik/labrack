@@ -168,7 +168,7 @@ class ComponentAdmin(PermissionAdmin, admin.ModelAdmin):
                                  }
                   ),
                  ('Details', {
-                              'fields' : (('componentType', 'variantOf', 'abstract'),
+                              'fields' : (('variantOf', 'abstract'),
                                           ('description',)),
           
                                           }
@@ -179,13 +179,13 @@ class ComponentAdmin(PermissionAdmin, admin.ModelAdmin):
 
     list_display = ('displayId', 'name', 'created_by', 'abstract', 'status', 'showComment', )
 
-    list_filter = ('status', 'abstract', 'created_by', 'componentType')
+    list_filter = ('status', 'abstract', 'created_by')
+     
 
     ordering = ('displayId',)
     
     search_fields = ('displayId', 'name', 'description')
     
-    raw_id_fields = ('componentType', 'variantOf',)
         
     
     
@@ -236,7 +236,7 @@ class ProteinComponentAdmin(ComponentAdmin):
     
     search_fields = ComponentAdmin.search_fields.__add__(('sequence',))
 
-
+    raw_id_fields = ('componentType', 'variantOf',)
 
 
 
@@ -250,6 +250,7 @@ class PeptideComponentAdmin(ProteinComponentAdmin):
     )
     
     search_fields = ComponentAdmin.search_fields.__add__(('sequence',))
+    raw_id_fields = ('componentType', 'variantOf',)
 
 
 
@@ -260,16 +261,17 @@ class DnaComponentAdmin(ComponentAdmin):
     
     fieldsets = ComponentAdmin.fieldsets.__add__(\
         ((None, {
-            'fields': ('GenBankfile',),
+            'fields': ('componentType','GenBankfile',),
         }
           ),('DNA Details', 
-          {'fields': (('optimizedFor', 'translatesTo'),
+          {'fields': (('optimizedFor', 'translatesTo', 'circular'),
                       ('sequence',),
                       ),
             'classes':('collapse',)
             }
           ),)
     )
+     
     
     list_display = ComponentAdmin.list_display[:-2] + \
                    ('show_optimizedFor', 'show_translatesTo', 'number_related_samples', 'size') + \
@@ -279,7 +281,9 @@ class DnaComponentAdmin(ComponentAdmin):
     
     search_fields = ComponentAdmin.search_fields.__add__(('sequence',))
 
-    raw_id_fields = ComponentAdmin.raw_id_fields.__add__(('translatesTo',))
+    #raw_id_fields = ComponentAdmin.raw_id_fields.__add__(('translatesTo',))
+    #raw_id_fields = ('componentType', 'variantOf',)
+    raw_id_fields = ('componentType', 'variantOf',)
    
    
 
@@ -757,12 +761,13 @@ admin.site.register(Rack, RackAdmin)
 admin.site.register(SampleCollection, SampleCollectionAdmin)
 admin.site.register(Sample, SampleAdmin) 
 admin.site.register(Unit, UnitAdmin) 
-admin.site.register(ComponentType, ComponentTypeAdmin)
+admin.site.register(DNAComponentType, ComponentTypeAdmin)
+admin.site.register(ProteinComponentType, ComponentTypeAdmin)
 admin.site.register(PeptideComponent, PeptideComponentAdmin)
 admin.site.register(ProteinComponent, ProteinComponentAdmin)
 admin.site.register(DnaComponent, DnaComponentAdmin)
 admin.site.register(Component, ComponentAdmin)
 admin.site.register(ChemicalComponent, ComponentAdmin)
-admin.site.register(SequenceAnnotation, SequenceAnnotationAdmin)
+#admin.site.register(SequenceAnnotation, SequenceAnnotationAdmin)
 admin.site.register(Chassis) 
 #admin.site.register(Collection)
