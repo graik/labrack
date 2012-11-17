@@ -84,7 +84,14 @@
 {% endif %}
 
 {% if original == None %}
-{% block submit_buttons_bottom2 %}{% submit_row %}{% endblock %}
+{% block submit_buttons_bottom2 %}
+{{ block.super }}{% submit_row %}
+<form method="post">
+<input name="Cancel" type="button" value="Cancel" onClick="javascript:window.location.href='../';" /> 
+{{ form }} 
+</form>
+{% endblock %}
+ 
 {% endif %}
 
 

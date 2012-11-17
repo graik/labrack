@@ -277,7 +277,7 @@ class DnaComponentAdmin(ComponentAdmin):
                    ('show_optimizedFor', 'show_translatesTo', 'number_related_samples', 'size') + \
                    ComponentAdmin.list_display[-2:] 
     
-    list_filter = ComponentAdmin.list_filter.__add__(('optimizedFor',))
+    list_filter = ComponentAdmin.list_filter.__add__(('optimizedFor','componentType',))
     
     search_fields = ComponentAdmin.search_fields.__add__(('sequence',))
 
@@ -761,11 +761,12 @@ admin.site.register(Rack, RackAdmin)
 admin.site.register(SampleCollection, SampleCollectionAdmin)
 admin.site.register(Sample, SampleAdmin) 
 admin.site.register(Unit, UnitAdmin) 
-admin.site.register(DNAComponentType, ComponentTypeAdmin)
+#admin.site.register(CSVComponentType, ComponentTypeAdmin)
 admin.site.register(ProteinComponentType, ComponentTypeAdmin)
 admin.site.register(PeptideComponent, PeptideComponentAdmin)
 admin.site.register(ProteinComponent, ProteinComponentAdmin)
 admin.site.register(DnaComponent, DnaComponentAdmin)
+admin.site.register(DNAComponentType, ComponentTypeAdmin) 
 admin.site.register(Component, ComponentAdmin)
 admin.site.register(ChemicalComponent, ComponentAdmin)
 #admin.site.register(SequenceAnnotation, SequenceAnnotationAdmin)

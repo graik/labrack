@@ -25,6 +25,7 @@ from django.db.models import Q
 from django.utils.safestring import mark_safe
 from django.utils.safestring import SafeUnicode
 from Bio import SeqIO
+from Bio.Seq import Seq
 from tyers_site import settings  
 
 from csvImporter.model import CsvModel
@@ -1157,13 +1158,26 @@ class DnaComponent(Component):
                         if (not SequenceAnnotation.objects.filter(bioStart = startPos, bioEnd = endPos, strand = strandValue, subComponent = self)):
                             # save in the DNA/Protein if necessary
                             fullSequence = gb_record.seq.tostring()
-                            partOfSequence = fullSequence[int(startPos):int(endPos)].replace(" ","").upper()
+                            if (startPos==endPos):
+                                partOfSequence = fullSequence[int(startPos):int(endPos)+1].replace(" ","").upper()
+                            else:
+                                partOfSequence = fullSequence[int(startPos):int(endPos)].replace(" ","").upper()
+                            
+                            if (strandValue == '-1'):
+                                partOfSequence = Seq(partOfSequence).reverse_complement().tostring()
+
+                            
                             # the reason to save it twice is to get a unique ID to be able to put it in DisplayId
                             # retrieve the part type, if not existing create it
+                            if (not DNAComponentType.objects.filter(name='GenebankType')):
+                                subCtGenebankType = DNAComponentType(name = 'GenebankType')
+                                subCtGenebankType.save() 
+                            subCtGenebankType = DNAComponentType.objects.get(name='GenebankType')
                             if (not DNAComponentType.objects.filter(name=nameType)):
                                 ct = DNAComponentType(name = nameType)
                                 ct.save()
                             ct = DNAComponentType.objects.filter(name=nameType)
+                            ct.subTypeOf = subCtGenebankType
                             # save the dna
                             #if (not DnaComponent.objects.filter(sequence=partOfSequence)):
                             if (not self.__class__.objects.filter(sequence=partOfSequence)):
