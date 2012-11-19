@@ -2,7 +2,6 @@ import csv
 from django.http import HttpResponse
 
 
-
 def generate_csv(self, request, queryset, fields, tableName):
     """
     Export selected objects as CSV file
