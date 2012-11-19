@@ -44,7 +44,7 @@ class Location(models.Model):
     """
     A location (fridge, freezer, shelf) where containers are stored
     """
-    displayId = models.CharField(max_length=20, unique=True, 
+    displayId = models.CharField('Location ID', max_length=20, unique=True, 
                                  help_text='Unique identifier')
 
     name = models.CharField('Name', max_length=200, 
@@ -119,7 +119,7 @@ class Rack(models.Model):
     """
     A Rack (box) where containers are stored
     """
-    displayId = models.CharField(max_length=20, unique=True, 
+    displayId = models.CharField('Rack ID', max_length=20, unique=True, 
                                  help_text='Unique identifier')
 
     name = models.CharField('Name', max_length=200, 
@@ -143,6 +143,7 @@ class Rack(models.Model):
         """
         return 'rack/%i/' % self.id          
 
+
 class Container( PermissionModel ):
     """
     A container holding several physical samples of nucleic acids, proteins 
@@ -155,7 +156,7 @@ class Container( PermissionModel ):
         ('box', 'Freezer box'),
         ('other', 'other' ) )
 
-    displayId = models.CharField(max_length=20, unique=True, 
+    displayId = models.CharField('Container ID', max_length=20, unique=True, 
                                  help_text='Unique identifier. E.g. D001 or C012 (D...DNA, C...Cells)')
 
     name = models.CharField('Name', max_length=200, blank=True, 
@@ -318,7 +319,7 @@ class Sample( PermissionModel ):
     list.
     """
 
-    displayId = models.CharField(max_length=20,
+    displayId = models.CharField('Sample ID', max_length=20,
                                  help_text='Label or well position. Must be unique within container.')
 
     name = models.CharField('Name', max_length=200, blank=True, 
@@ -338,7 +339,7 @@ class Sample( PermissionModel ):
                       )
     status = models.CharField( max_length=30, choices=STATUS_CHOICES, 
                                default='ok')
-    reference_status = models.BooleanField('Reference sample',default=False,
+    reference_status = models.BooleanField('is Reference sample',default=False,
                                            help_text='mark sample as master or reference')
 
 
@@ -815,7 +816,9 @@ class SampleProvenance(models.Model):
                                          help_text='Brief description for tables\
                                          and listings', null=True, blank=True)
 
-
+    class Meta:
+        verbose_name = 'Sample History'
+        verbose_name_plural = 'Sample History'
 
 
 
@@ -869,7 +872,7 @@ class ChassisComponentType( ComponentType ):
     subTypeOf = models.ManyToManyField('self', symmetrical=False, blank=True, 
                                        null=True, related_name='subTypes')
     class Meta:
-        verbose_name = 'Chassis PartType'
+        verbose_name = 'Cell PartType'
         abstract = False   
 
 class PeptideComponentType( ComponentType ):
@@ -892,7 +895,7 @@ class Component(PermissionModel):
                        ('under_construction', 'under construction'),
                        ('abandoned', 'abandoned'))
 
-    displayId = models.CharField('display ID', max_length=20, unique=True, 
+    displayId = models.CharField('ID', max_length=20, unique=True, 
                                  help_text='Unique identification')
 
     name = models.CharField('Name', max_length=200, blank=True, 
@@ -913,7 +916,7 @@ class Component(PermissionModel):
                                         verbose_name='Variant of', 
                                         help_text='Specify part(s) this part is derived from, if any.' )
 
-    abstract = models.BooleanField( 'Abstract Part', default=False, 
+    abstract = models.BooleanField( 'is Abstract Part', default=False, 
                                     help_text='Entry only serves as container to organize related parts.')
 
     creation_date = models.DateTimeField(auto_now_add=True, null=True)
@@ -962,8 +965,6 @@ class Component(PermissionModel):
     def related_seq( self ):
         """
         """
-
-
         gb_features = ''
         try:
             gb_file = settings.MEDIA_ROOT+"/"+os.path.normpath(self.GenBankfile.name)
