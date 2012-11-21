@@ -296,8 +296,6 @@ class SelectiveMarker( models.Model ):
 #        """
 #        return self.vector_samples.all()
 
-
-
 class Document(models.Model):
     docfile = models.FileField(upload_to='documents/BulkSamples/%Y/%m/%d')
     class Meta:
