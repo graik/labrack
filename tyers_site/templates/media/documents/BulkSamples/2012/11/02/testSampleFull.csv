@@ -1,0 +1,9 @@
+DisplayId;name;container;status;PreparationDate;NumberOfAliquots;isReference;Description;SampleCollection;Chemical_DisplayID;Chemical_SolventBuffer;Chemical_Concentration;Chemical_Concentration_Unit;Chemical_Amount;Chemical_Amount_Unit;DNA_DisplayID;DNA_SolventBuffer;DNA_Concentration;DNA_Concentration_Unit;DNA_Amount;DNA_Amount_Unit;Peptide_DisplayID;Peptide_SolventBuffer;Peptide_Concentration;Peptide_Concentration_Unit;Peptide_Amount;Peptide_Amount_Unit;Protein_DisplayID;Protein_SolventBuffer;Protein_Concentration;Protein_Concentration_Unit;Protein_Amount;Protein_Amount_Unit
+69999909090;9090;A12;1;;0;;;;;;;;;;33333;DMSO;10;ul;111;ul;;;;;;;;;;;;
+69999909091;9091;A12;2;;1;;;;;;;;;;33333;DMSO;11;ul;112;ul;;;;;;;;;;;;
+69999909092;9092;A12;3;;2;;;;;;;;;;33333;DMSO;10;ul;113;ul;;;;;;;;;;;;
+69999909093;9093;A12;4;;3;1;;;;;;;;;33333;DMSO;11;ul;114;ul;;;;;;;;;;;;
+69999909094;9094;A12;5;;4;1;;;;;;;;;33333;DMSO;11;ul;115;ul;;;;;;;;;;;;
+69999909095;9095;A12;6;;5;;;;;;;;;;33333;DMSO;12;ul;116;ul;;;;;;;;;;;;
+69999909096;9096;A12;7;;6;;;;;;;;;;33333;DMSO;11;ul;117;ul;;;;;;;;;;;;
+69999909097;9097;A12;8;;7;0;;;;;;;;;33333;DMSO;12;ul;118;ul;;;;;;;;;;;;

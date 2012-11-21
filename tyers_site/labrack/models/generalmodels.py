@@ -14,7 +14,7 @@
 ## You should have received a copy of the GNU Affero General Public
 ## License along with labhamster. If not, see <http://www.gnu.org/licenses/>.
 
- 
+
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.core.files.storage import FileSystemStorage
@@ -27,14 +27,14 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from tyers_site import settings   
 
- 
+
 from permissionModel import PermissionModel
 
 from labrack.models.component import Component
 from labrack.models.component import ChassisComponentType
 
 
- 
+
 
 ## importing custom models
 
@@ -85,7 +85,7 @@ class Location(models.Model):
 
     class Meta:
         app_label = 'labrack'
- 
+
 
 
 
@@ -104,9 +104,9 @@ class Rack(models.Model):
 
     def __unicode__(self):
         return u'%s' % (self.displayId)
-    
+
     def related_containers( self ):
-         
+
         r = Container.objects.filter( rack = self.id )
 #        s = [content.sample for content in r]        
 
@@ -159,13 +159,13 @@ class Container( PermissionModel ):
     def related_samples( self ):
         """
         """
-         
-         
+
+
         r = Sample.objects.filter( container = self.id )
 #        s = [content.sample for content in r]        
 
         return r
-    
+
     def get_relative_url(self):
         """
         Define standard relative URL for object access in templates
@@ -215,7 +215,7 @@ class Container( PermissionModel ):
     class Meta:
         app_label = 'labrack'   
 
- 
+
 
 
 class Chassis(Component):
@@ -224,10 +224,10 @@ class Chassis(Component):
     strain.
     """
     componentType = models.ManyToManyField(ChassisComponentType, 
-                                               blank=True, null=True, 
-                                               verbose_name='Part type', 
-                                               help_text='Classification of this part.')   
-    
+                                           blank=True, null=True, 
+                                           verbose_name='Part type', 
+                                           help_text='Classification of this part.')   
+
     def get_relative_url(self):
         """
         Define standard relative URL for object access in templates
@@ -330,13 +330,13 @@ class SequenceAnnotation(models.Model):
     # override Django object methods
     def __unicode__(self):
         return u'(%s - %s)(%s,%s)' % (self.subComponent, self.componentAnnotated,self.bioStart,self.bioEnd)
-    
+
     def get_relative_url(self):
         """
         Define standard relative URL for object access in templates
         """
         return 'sequenceannotation/%i/' % self.id
-    
+
     class Meta:
         app_label = 'labrack'    
 
@@ -379,4 +379,3 @@ class Collection(models.Model):
 
     class Meta:
         app_label = 'labrack'    
-

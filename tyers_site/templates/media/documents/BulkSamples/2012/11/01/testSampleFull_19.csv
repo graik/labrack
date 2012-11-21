@@ -1,0 +1,9 @@
+DisplayId;name;container;status;PreparationDate;NumberOfAliquots;isReference;Description;SampleCollection;Chemical_DisplayID;Chemical_SolventBuffer;Chemical_Concentration;Chemical_Concentration_Unit;Chemical_Amount;Chemical_Amount_Unit;DNA_DisplayID;DNA_SolventBuffer;DNA_Concentration;DNA_Concentration_Unit;DNA_Amount;DNA_Amount_Unit;Peptide_DisplayID;Peptide_SolventBuffer;Peptide_Concentration;Peptide_Concentration_Unit;Peptide_Amount;Peptide_Amount_Unit;Protein_DisplayID;Protein_SolventBuffer;Protein_Concentration;Protein_Concentration_Unit;Protein_Amount;Protein_Amount_Unit
+6909090;9090;A12;1;;0;;;;;;;;;;33333;;;;;;;;;;;;;;;;;
+6909091;9091;A12;2;;1;;;;;;;;;;33334;;;;;;;;;;;;;;;;;
+6909092;9092;A12;3;;2;;;;;;;;;;33335;;;;;;;;;;;;;;;;;
+6909093;9093;A12;4;;3;;;;;;;;;;33336;;;;;;;;;;;;;;;;;
+6909094;9094;A12;5;;4;;;;;;;;;;33337;;;;;;;;;;;;;;;;;
+6909095;9095;A12;6;;5;;;;;;;;;;33338;;;;;;;;;;;;;;;;;
+6909096;9096;A12;7;;6;;;;;;;;;;33339;;;;;;;;;;;;;;;;;
+6909097;9097;A12;8;;7;;;;;;;;;;33340;;;;;;;;;;;;;;;;;

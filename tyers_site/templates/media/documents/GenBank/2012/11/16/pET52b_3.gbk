@@ -1,0 +1,180 @@
+LOCUS       pET-52b   5227 bp    DNA   circular             1-SEP-2005
+DEFINITION  pET-52b(+) vector sequence.
+SOURCE      
+  ORGANISM  
+COMMENT     VNTNAME|pET-52b(+)|
+COMMENT     VNTREPLTYPE|Plasmid
+COMMENT     VNTEXTCHREPL|Bacteria
+FEATURES             Location/Qualifiers
+     misc_RNA        complement(1656..1763)
+                     /vntifkey="53"
+                     /label=RNA\I
+     misc_RNA        1648..2203
+                     /vntifkey="53"
+                     /label=RNA\II
+     CDS             complement(2634..2825)
+                     /vntifkey="4"
+                     /label=ROP
+     RBS             4944..4949
+                     /vntifkey="32"
+                     /label=RBS-1
+     primer          4824..4839
+                     /vntifkey="27"
+                     /label=pET\Upstream\Primer
+     promoter        4870..4886
+                     /vntifkey="30"
+                     /label=T7\promoter
+     CDS             complement(3397..4479)
+                     /vntifkey="4"
+                     /label=lac\I
+     rep_origin      2203..2203
+                     /vntifkey="33"
+                     /label=ColE1\pBR322\origin
+     CDS             complement(582..1442)
+                     /vntifkey="4"
+                     /label=bla\(amp)\sequence
+     rep_origin      13..460
+                     /vntifkey="33"
+                     /label=f1\origin
+     CDS             4890..4911
+                     /vntifkey="4"
+                     /label=lac\operator
+     terminator      5155..5202
+                     /vntifkey="43"
+                     /label=T7\Terminator
+     -35_signal      1616..1621
+                     /vntifkey="48"
+                     /label=-35\RNA\II
+     -10_signal      1639..1644
+                     /vntifkey="47"
+                     /label=-10\RNA\II
+     misc_RNA        1652..2203
+                     /vntifkey="53"
+                     /label=RNA\II
+     -35_signal      complement(1793..1798)
+                     /vntifkey="48"
+                     /label=-35\RNA\I
+     -10_signal      complement(1769..1774)
+                     /vntifkey="47"
+                     /label=-10\RNA\I
+     misc_RNA        complement(1626..1762)
+                     /vntifkey="53"
+                     /label=RNA\I
+     terminator      1607..1625
+                     /vntifkey="43"
+                     /label=RNA\I\Terminator
+     protein_bind    4966..4989
+                     /vntifkey="31"
+                     /label=Strep-Tag\II
+     protein_bind    4996..5018
+                     /vntifkey="31"
+                     /label=3c
+     misc_feature    5065..5082
+                     /vntifkey="21"
+                     /label=Thrombin\site
+     misc_binding    5089..5119
+                     /vntifkey="20"
+                     /label=10x\His-Tag
+     primer          4990..5082
+                     /vntifkey="27"
+                     /label=S-3cLIC\MCS
+     primer          complement(4996..5088)
+                     /vntifkey="27"
+                     /label=AS-3cLIC\MCS
+     primer          4956..4989
+                     /vntifkey="27"
+                     /label=S-NTerm\Strep
+     primer          complement(4960..4995)
+                     /vntifkey="27"
+                     /label=AS-NTerm\Strep
+BASE COUNT     1207 a      1401 c      1355 g      1264 t 
+ORIGIN
+        1 tggcgaatgg gacgcgccct gtagcggcgc attaagcgcg gcgggtgtgg tggttacgcg 
+       61 cagcgtgacc gctacacttg ccagcgccct agcgcccgct cctttcgctt tcttcccttc 
+      121 ctttctcgcc acgttcgccg gctttccccg tcaagctcta aatcgggggc tccctttagg 
+      181 gttccgattt agtgctttac ggcacctcga ccccaaaaaa cttgattagg gtgatggttc 
+      241 acgtagtggg ccatcgccct gatagacggt ttttcgccct ttgacgttgg agtccacgtt 
+      301 ctttaatagt ggactcttgt tccaaactgg aacaacactc aaccctatct cggtctattc 
+      361 ttttgattta taagggattt tgccgatttc ggcctattgg ttaaaaaatg agctgattta 
+      421 acaaaaattt aacgcgaatt ttaacaaaat attaacgttt acaatttctg gcggcacgat 
+      481 ggcatgagat tatcaaaaag gatcttcacc tagatccttt taaattaaaa atgaagtttt 
+      541 aaatcaatct aaagtatata tgagtaaact tggtctgaca gttaccaatg cttaatcagt 
+      601 gaggcaccta tctcagcgat ctgtctattt cgttcatcca tagttgcctg actccccgtc 
+      661 gtgtagataa ctacgatacg ggagggctta ccatctggcc ccagtgctgc aatgataccg 
+      721 cgagacccac gctcaccggc tccagattta tcagcaataa accagccagc cggaagggcc 
+      781 gagcgcagaa gtggtcctgc aactttatcc gcctccatcc agtctattaa ttgttgccgg 
+      841 gaagctagag taagtagttc gccagttaat agtttgcgca acgttgttgc cattgctaca 
+      901 ggcatcgtgg tgtcacgctc gtcgtttggt atggcttcat tcagctccgg ttcccaacga 
+      961 tcaaggcgag ttacatgatc ccccatgttg tgcaaaaaag cggttagctc cttcggtcct 
+     1021 ccgatcgttg tcagaagtaa gttggccgca gtgttatcac tcatggttat ggcagcactg 
+     1081 cataattctc ttactgtcat gccatccgta agatgctttt ctgtgactgg tgagtactca 
+     1141 accaagtcat tctgagaata gtgtatgcgg cgaccgagtt gctcttgccc ggcgtcaata 
+     1201 cgggataata ccgcgccaca tagcagaact ttaaaagtgc tcatcattgg aaaacgttct 
+     1261 tcggggcgaa aactctcaag gatcttaccg ctgttgagat ccagttcgat gtaacccact 
+     1321 cgtgcaccca actgatcttc agcatctttt actttcacca gcgtttctgg gtgagcaaaa 
+     1381 acaggaaggc aaaatgccgc aaaaaaggga ataagggcga cacggaaatg ttgaatactc 
+     1441 atactcttcc tttttcaatc atgattgaag catttatcag ggttattgtc tcatgagcgg 
+     1501 atacatattt gaatgtattt agaaaaataa acaaataggt catgaccaaa atcccttaac 
+     1561 gtgagttttc gttccactga gcgtcagacc ccgtagaaaa gatcaaagga tcttcttgag 
+     1621 atcctttttt tctgcgcgta atctgctgct tgcaaacaaa aaaaccaccg ctaccagcgg 
+     1681 tggtttgttt gccggatcaa gagctaccaa ctctttttcc gaaggtaact ggcttcagca 
+     1741 gagcgcagat accaaatact gtccttctag tgtagccgta gttaggccac cacttcaaga 
+     1801 actctgtagc accgcctaca tacctcgctc tgctaatcct gttaccagtg gctgctgcca 
+     1861 gtggcgataa gtcgtgtctt accgggttgg actcaagacg atagttaccg gataaggcgc 
+     1921 agcggtcggg ctgaacgggg ggttcgtgca cacagcccag cttggagcga acgacctaca 
+     1981 ccgaactgag atacctacag cgtgagctat gagaaagcgc cacgcttccc gaagggagaa 
+     2041 aggcggacag gtatccggta agcggcaggg tcggaacagg agagcgcacg agggagcttc 
+     2101 cagggggaaa cgcctggtat ctttatagtc ctgtcgggtt tcgccacctc tgacttgagc 
+     2161 gtcgattttt gtgatgctcg tcaggggggc ggagcctatg gaaaaacgcc agcaacgcgg 
+     2221 cctttttacg gttcctggcc ttttgctggc cttttgctca catgttcttt cctgcgttat 
+     2281 cccctgattc tgtggataac cgtattaccg cctttgagtg agctgatacc gctcgccgca 
+     2341 gccgaacgac cgagcgcagc gagtcagtga gcgaggaagc ggaagagcgc ctgatgcggt 
+     2401 attttctcct tacgcatctg tgcggtattt cacaccgcat atatggtgca ctctcagtac 
+     2461 aatctgctct gatgccgcat agttaagcca gtatacactc cgctatcgct acgtgactgg 
+     2521 gtcatggctg cgccccgaca cccgccaaca cccgctgacg cgccctgacg ggcttgtctg 
+     2581 ctcccggcat ccgcttacag acaagctgtg accgtctccg ggagctgcat gtgtcagagg 
+     2641 ttttcaccgt catcaccgaa acgcgcgagg cagctgcggt aaagctcatc agcgtggtcg 
+     2701 tgaagcgatt cacagatgtc tgcctgttca tccgcgtcca gctcgttgag tttctccaga 
+     2761 agcgttaatg tctggcttct gataaagcgg gccatgttaa gggcggtttt ttcctgtttg 
+     2821 gtcactgatg cctccgtgta agggggattt ctgttcatgg gggtaatgat accgatgaaa 
+     2881 cgagagagga tgctcacgat acgggttact gatgatgaac atgcccggtt actggaacgt 
+     2941 tgtgagggta aacaactggc ggtatggatg cggcgggacc agagaaaaat cactcagggt 
+     3001 caatgccagc gcttcgttaa tacagatgta ggtgttccac agggtagcca gcagcatcct 
+     3061 gcgatgcaga tccggaacat aatggtgcag ggcgctgact tccgcgtttc cagactttac 
+     3121 gaaacacgga aaccgaagac cattcatgtt gttgctcagg tcgcagacgt tttgcagcag 
+     3181 cagtcgcttc acgttcgctc gcgtatcggt gattcattct gctaaccagt aaggcaaccc 
+     3241 cgccagccta gccgggtcct caacgacagg agcacgatca tgctagtcat gccccgcgcc 
+     3301 caccggaagg agctgactgg gttgaaggct ctcaagggca tcggtcgaga tcccggtgcc 
+     3361 taatgagtga gctaacttac attaattgcg ttgcgctcac tgcccgcttt ccagtcggga 
+     3421 aacctgtcgt gccagctgca ttaatgaatc ggccaacgcg cggggagagg cggtttgcgt 
+     3481 attgggcgcc agggtggttt ttcttttcac cagtgagacg ggcaacagct gattgccctt 
+     3541 caccgcctgg ccctgagaga gttgcagcaa gcggtccacg ctggtttgcc ccagcaggcg 
+     3601 aaaatcctgt ttgatggtgg ttaacggcgg gatataacat gagctgtctt cggtatcgtc 
+     3661 gtatcccact accgagatgt ccgcaccaac gcgcagcccg gactcggtaa tggcgcgcat 
+     3721 tgcgcccagc gccatctgat cgttggcaac cagcatcgca gtgggaacga tgccctcatt 
+     3781 cagcatttgc atggtttgtt gaaaaccgga catggcactc cagtcgcctt cccgttccgc 
+     3841 tatcggctga atttgattgc gagtgagata tttatgccag ccagccagac gcagacgcgc 
+     3901 cgagacagaa cttaatgggc ccgctaacag cgcgatttgc tggtgaccca atgcgaccag 
+     3961 atgctccacg cccagtcgcg taccgtcttc atgggagaaa ataatactgt tgatgggtgt 
+     4021 ctggtcagag acatcaagaa ataacgccgg aacattagtg caggcagctt ccacagcaat 
+     4081 ggcatcctgg tcatccagcg gatagttaat gatcagccca ctgacgcgtt gcgcgagaag 
+     4141 attgtgcacc gccgctttac aggcttcgac gccgcttcgt tctaccatcg acaccaccac 
+     4201 gctggcaccc agttgatcgg cgcgagattt aatcgccgcg acaatttgcg acggcgcgtg 
+     4261 cagggccaga ctggaggtgg caacgccaat cagcaacgac tgtttgcccg ccagttgttg 
+     4321 tgccacgcgg ttgggaatgt aattcagctc cgccatcgcc gcttccactt tttcccgcgt 
+     4381 tttcgcagaa acgtggctgg cctggttcac cacgcgggaa acggtctgat aagagacacc 
+     4441 ggcatactct gcgacatcgt ataacgttac tggtttcaca ttcaccaccc tgaattgact 
+     4501 ctcttccggg cgctatcatg ccataccgcg aaaggttttg cgccattcga tggtgtccgg 
+     4561 gatctcgacg ctctccctta tgcgactcct gcattaggaa gcagcccagt agtaggttga 
+     4621 ggccgttgag caccgccgcc gcaaggaatg gtgcatgcaa ggagatggcg cccaacagtc 
+     4681 ccccggccac ggggcctgcc accataccca cgccgaaaca agcgctcatg agcccgaagt 
+     4741 ggcgagcccg atcttcccca tcggtgatgt cggcgatata ggcgccagca accgcacctg 
+     4801 tggcgccggt gatgccggcc acgatgcgtc cggcgtagag gatcgagatc gatctcgatc 
+     4861 ccgcgaaatt aatacgactc actatagggg aattgtgagc ggataacaat tcccctctag 
+     4921 aaataatttt gtttaacttt aagaaggaga tataccatgg caagctggag ccacccgcag 
+     4981 ttcgaaaagg gtgcacttga agtcctcttt cagggacccg ggtaccagga tcctgtacaa 
+     5041 gtcgacgcgg ccgcagagct cgctctggtg ccacgcggta gttccgctca tcaccaccat 
+     5101 catcaccatc accaccacta attaacctag gctgctgcca ccgctgagca ataactagca 
+     5161 taaccccttg gggcctctaa acgggtcttg aggggttttt tgctgaaagg aggaactata 
+     5221 tccggat 
+//
