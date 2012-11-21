@@ -157,15 +157,15 @@ class ComponentAdmin(PermissionAdmin, admin.ModelAdmin):
     actions = ['make_csv']
       
     
-    exportFields = OrderedDict( [('Display ID', 'displayId'),
+    exportFields = OrderedDict( [('ID', 'displayId'),
                                ('Name', 'name'),
                                ('URI','uri'),
                                ('Description','description'),
                                ('Status','status'),
-                               ('Abstract','abstract'),
+                               ('is Abstract','abstract'),
                                ('Created by','created_by'),
-                               ('DB Entry creation date','creation_date'),
-                               ('DB Entry modification date','modification_date'),
+                               ('registered at','creation_date'),
+                               ('modified at','modification_date'),
                                ]) 
     
     fieldsets = (
@@ -191,7 +191,8 @@ class ComponentAdmin(PermissionAdmin, admin.ModelAdmin):
     
       
 
-    list_display = ('displayId', 'name', 'created_by', 'abstract', 'status', 'showComment', )
+    list_display = ('displayId', 'name', 'created_by', 'abstract', 'status', 
+                    'showComment', )
 
     list_filter = ('status', 'abstract', 'created_by')
      
@@ -306,14 +307,14 @@ class ContainerAdmin(PermissionAdmin, admin.ModelAdmin):
     
     actions = ['make_csv']
     
-    exportFields = OrderedDict( [('Display ID', 'displayId'),
+    exportFields = OrderedDict( [('Container ID', 'displayId'),
                                ('Name', 'name'),
                                ('Container Type','containerType'),
                                ('Rack','rack'),
                                ('Created by','created_by'),
                                ('Description','description'),
-                               ('DB Entry creation date','creation_date'),
-                               ('DB Entry modification date','modification_date'),
+                               ('Registered at','creation_date'),
+                               ('last modified','modification_date'),
                                ])
     
     fieldsets = (
@@ -374,12 +375,12 @@ class LocationAdmin(admin.ModelAdmin):
     
     actions = ['make_csv']
     
-    exportFields = OrderedDict( [('Display ID', 'displayId'),
+    exportFields = OrderedDict( [('Location ID', 'displayId'),
                                ('Name', 'name'),
                                ('Temperature','temperature'),
                                ('Room','room'),
-                               ('DB Entry creation date','creation_date'),
-                               ('DB Entry modification date','modification_date'),
+                               ('Registered at','creation_date'),
+                               ('Last modified','modification_date'),
                                ])
     
     fields = (('displayId', 'name'), 'temperature', 'room')
@@ -406,7 +407,7 @@ class RackAdmin(admin.ModelAdmin):
     
     actions = ['make_csv']
     
-    exportFields = OrderedDict( [('Display ID', 'displayId'),
+    exportFields = OrderedDict( [('Rack ID', 'displayId'),
                                    ('Name', 'name'),
                                    ('Current location','location_url'),
                                                   
@@ -433,10 +434,7 @@ class RackAdmin(admin.ModelAdmin):
     
     make_csv.short_description = 'Export as CSV'
     
-
-    
-    
-    
+   
 
 
 class SampleContentInline(GenericCollectionTabularInline):
@@ -506,7 +504,7 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
     
     date_hierarchy = 'preparation_date'
     
-    exportFields = OrderedDict( [('Display ID', 'displayId'),
+    exportFields = OrderedDict( [('Sample ID', 'displayId'),
                                ('Name', 'name'),
                                ('Location', 'container.location'),
                                ('Container', 'container'),
@@ -515,20 +513,22 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
                                ('Reference', 'reference_status'),
                                ('Description', 'description'),
                                ('Sample content', 'strFullContent()'),
-                               ('Sample pedigree', 'strProvenance()'),
+                               ('History', 'strProvenance()'),
                                ('Sample link','sampleLinkStr()'),
                                ('Preparation date', 'preparation_date'),
-                               ('DB Entry creation date','creation_date'),
-                               ('DB Entry modification date','modification_date'),
+                               ('Registered at','creation_date'),
+                               ('Last modified','modification_date'),
                                ])
 
    
     fieldsets = (
                  (None, {
-                         'fields' : ((('container', 'displayId'),
-                                      ('preparation_date', 'aliquotNr', 'status','reference_status'),
+                         'fields' : ((('container', 'displayId', 
+                                       'reference_status'),
+                                      ('aliquotNr',),
+                                      ('preparation_date', 'status'),
                                       ('description'),
-                                      'sampleCollection'
+##                                      'sampleCollection'
                                       )
                                      )
                          }
@@ -552,7 +552,7 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
     
     ordering       = ('container', 'displayId')
     
-    raw_id_fields = ('container', 'sampleCollection')
+    raw_id_fields = ('container',)
     
     save_as        = True
     
@@ -677,14 +677,12 @@ class UnitAdmin(admin.ModelAdmin):
     def make_csv(self, request, queryset):
         
         fields = OrderedDict( [('Unit name', 'name'),
-                               ('Unit Type', 'unitType'),
+                               ('Unit type', 'unitType'),
                                ])
         
         return importexport.generate_csv(self, request, queryset, fields, 'Unit')
 
     make_csv.short_description = 'Export as CSV'
-
-
 
 
 
@@ -706,15 +704,12 @@ class ComponentTypeAdmin(admin.ModelAdmin):
     search_fields = ('name',)
 
 
-
-
-
 class SampleCollectionAdmin(PermissionAdmin, admin.ModelAdmin):
     
     actions = ['make_csv']
     
-    exportFields = OrderedDict( [('Project Name', 'name'),
-                                 ('Detailled Description','description'),
+    exportFields = OrderedDict( [('Name', 'name'),
+                                 ('Description','description'),
                                ])
     
     

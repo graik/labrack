@@ -1,0 +1,1465 @@
+## Copyright 2012 Raik Gruenberg / Mathieu Courcelles
+
+## This file is part of the labhamster project (http://labhamster.sf.net)
+## Labhamster is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Affero General Public License as
+## published by the Free Software Foundation, either version 3 of the
+## License, or (at your option) any later version.
+
+## Labhamster is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU Affero General Public License for more details.
+
+## You should have received a copy of the GNU Affero General Public
+## License along with labhamster. If not, see <http://www.gnu.org/licenses/>.
+
+from django.contrib.auth.models import User
+from django.contrib.auth.models import Group
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes import generic
+from django.core.files.storage import FileSystemStorage
+from django.contrib import messages
+from django.db import models
+from django.db.models import Q
+from django.utils.safestring import mark_safe
+from django.utils.safestring import SafeUnicode
+from Bio import SeqIO
+from Bio.Seq import Seq
+from tyers_site import settings  
+
+from csvImporter.model import CsvModel
+from csvImporter import fields
+
+import os
+
+
+from datetime import datetime
+
+import urllib
+import tyers_site.settings as S
+
+
+class Location(models.Model):
+    """
+    A location (fridge, freezer, shelf) where containers are stored
+    """
+    displayId = models.CharField('Location ID', max_length=20, unique=True, 
+                                 help_text='Unique identifier')
+
+    name = models.CharField('Name', max_length=200, 
+                            blank=True, help_text='Informative name of fridge, freezer or shelf')
+
+    temperature = models.FloatField('Temperature', help_text= unichr(176) +'C')
+
+    room = models.CharField('Room', max_length=20)
+
+    creation_date = models.DateTimeField('Created at', auto_now_add=True)
+
+    modification_date = models.DateTimeField('Modified at', auto_now=True)
+
+
+    #rack = models.CharField('Rack', max_length=200, 
+    #    blank=True, help_text='Informative name of rack')
+
+
+    def __unicode__(self):
+        return self.displayId + " (" + self.temperature.__str__() \
+               + unichr(176) + "C)  [Room: " + self.room + "]"
+
+    def get_relative_url(self):
+        """
+        Define standard relative URL for object access in templates
+        """
+        return 'location/%i/' % self.id
+
+
+
+
+class PermissionModel( models.Model ):
+    #: Permissions
+
+    created_by = models.ForeignKey(User, null=True, blank=True, 
+                                   related_name='%(class)s_created_by')
+
+    owners = models.ManyToManyField(User, null=True, blank=True, 
+                                    related_name='%(class)s_owners')
+    group_read = models.ManyToManyField(Group, null=True, blank=True, 
+                                        related_name='%(class)s_groups_read')
+    group_write = models.ManyToManyField(Group, null=True, blank=True, 
+                                         related_name='%(class)s_groups_write')
+
+
+    def writePermission(self, currentUser):
+
+        # Superusers can modify
+        if currentUser.is_superuser:
+            return True
+
+        # Owners can modify
+        for user in self.owners.all():
+            if user == currentUser:
+                return True
+
+        # Groups with write can modify
+        for group_obj in self.group_write.all():
+            for group_member in currentUser.groups.all():
+                if group_obj == group_member:
+                    return True        
+
+        return False
+
+    class Meta:
+        abstract = True
+
+
+
+
+class Rack(models.Model):
+    """
+    A Rack (box) where containers are stored
+    """
+    displayId = models.CharField('Rack ID', max_length=20, unique=True, 
+                                 help_text='Unique identifier')
+
+    name = models.CharField('Name', max_length=200, 
+                            blank=True, help_text='Informative name of rack ex : R1-F1 for a rack named R1 that will not move from Fridge 1')
+
+    current_location = models.ForeignKey( 'Location', blank=True, null=True )
+
+    def __unicode__(self):
+        return u'%s' % (self.displayId)
+    
+    def related_containers( self ):
+         
+        r = Container.objects.filter( rack = self.id )
+#        s = [content.sample for content in r]        
+
+        return r    
+
+    def get_relative_url(self):
+        """
+        Define standard relative URL for object access in templates
+        """
+        return 'rack/%i/' % self.id          
+
+
+class Container( PermissionModel ):
+    """
+    A container holding several physical samples of nucleic acids, proteins 
+    or other stuff.
+    """
+
+    STORAGE_CONTAINER_TYPES= (
+        ('96-well-plate', '96 well plate'),
+        ('384-well-plate','384 well plate'),
+        ('box', 'Freezer box'),
+        ('other', 'other' ) )
+
+    displayId = models.CharField('Container ID', max_length=20, unique=True, 
+                                 help_text='Unique identifier. E.g. D001 or C012 (D...DNA, C...Cells)')
+
+    name = models.CharField('Name', max_length=200, blank=True, 
+                            help_text='Informative name for tables and listings')
+
+    containerType = models.CharField('Type of container', max_length=30, 
+                                     choices=STORAGE_CONTAINER_TYPES )
+
+    rack = models.ForeignKey(Rack)
+
+    #: optional long description
+    description = models.TextField( 'Detailed description', blank=True)
+
+    creation_date = models.DateTimeField('Created at', auto_now_add=True)
+
+    modification_date = models.DateTimeField('Modified at', auto_now=True)
+
+    # rack = models.ForeignKey(Rack, null=True, blank=True)
+
+    def __unicode__( self ):
+        return "%s" % self.displayId
+
+    def related_samples( self ):
+        """
+        """
+         
+         
+        r = Sample.objects.filter( container = self.id )
+#        s = [content.sample for content in r]        
+
+        return r
+    
+    def get_relative_url(self):
+        """
+        Define standard relative URL for object access in templates
+        """
+        return 'container/%i/' % self.id    
+
+    def next_well( self ):
+        """
+        Try to guess next free well.
+        """
+        r = ''
+
+        if self.container_type == 'box':
+            try:
+                wells = [ int(s.well) for s in self.samples.all() ]
+                wells.sort()
+                r = str( wells[-1] + 1 )
+            except:
+                r = "%02i" % self.samples.count() + 1
+
+        if self.container_type in ['96-well-plate', '384-well-plate']:
+            try:
+                wells = [ s.well for s in self.samples.all() ]
+                wells.sort()
+                row = wells[-1][0]
+                col = wells[-1][1:] + 1
+                r = "%s%02i" % (row, col)
+            except:
+                r = "%02i" % self.samples.count() + 1
+
+        return r
+
+
+    class Meta:
+        ordering = ('displayId',)
+
+    def get_relative_url(self):
+        """
+        Define standard relative URL for object access in templates
+        """
+        return 'container/%i/' % self.id
+
+
+
+
+
+class Unit(models.Model):
+    """
+    Unit for amount, concentration, volume
+    """
+
+    UNIT_TYPE = (('mass','mass'), 
+                 ('volume','volume'), 
+                 ('concentration','concentration'),
+                 ('number','number'),
+                 ('other','other'))
+
+    name = models.CharField(max_length=10)
+
+    conversion = models.FloatField('Conversion Factor', blank=True, null=True,
+                                   help_text='Factor for conversion to SI unit')
+
+    unitType = models.CharField(max_length=25, choices=UNIT_TYPE)
+
+
+
+    def __unicode__(self):
+        return self.name
+
+
+
+
+class SampleCollection(PermissionModel):
+    """
+    SampleCollection to group sample together
+    """
+
+    name = models.CharField(max_length=25, unique=True)
+
+    description = models.TextField( 'Detailed description', blank=True)
+
+    creation_date = models.DateTimeField(auto_now_add=True)
+
+    modification_date = models.DateTimeField(auto_now=True)
+
+
+    def __unicode__(self):
+        return self.name
+
+class Sample( PermissionModel ):
+    """
+    Sample describes a single tube or well holding DNA, cells or protein.
+
+    The content of the sample (objects derived from Component) is linked in via
+    a separate table (SampleContent) together with amount, amountUnit,
+    concentration and concentrationUnit. The content objects can be accessed
+    via a related manager::
+
+        content = sample.sampleContent.objects.all()
+        if content[0].content_type.model == u'dnacomponent':
+            content[0].concentration = 100.
+            content[0].concentrationUnit = 'ng/ul'
+
+    or by type of content::
+
+       sample.sampleContent.filter( content_type__model=u'dnacomponent' )
+
+    We have created shortcut properties that give direct access to all DNA, 
+    protein, peptide, chemical or chassis content objects::
+
+       dna_content = sample.dnas
+       dna_content
+       >>>[<DnaComponent: sb0002 - TEV protease site>]
+
+       pro_content = sample.proteins
+       pep_content = sample.peptides
+       che_content = sample.chemicals
+       cell_content= sample.chassis
+
+    Or all objects regardless of which sub-class of Component they belong to::
+
+       sample.components
+       >>> [<DnaComponent: sb0002 - TEV protease site>, <ChemicalComponent: bufTE - TE buffer>]
+
+    These properties are currently read-only and return a list of standard
+    model objects of type DnaComponent, ProteinComponent, etc. If the sample 
+    does not have any objects of this type, the property will return an empty
+    list.
+    """
+
+    displayId = models.CharField('Sample ID', max_length=20,
+                                 help_text='Label or well position. Must be unique within container.')
+
+    name = models.CharField('Name', max_length=200, blank=True, 
+                            help_text='Informative name for tables and listings')
+
+    #: link to a single container
+    container = models.ForeignKey( Container, related_name='samples' 
+                                   )
+
+    aliquotNr = models.PositiveIntegerField('Number of aliquots', 
+                                            null=True, blank=True)
+
+    STATUS_CHOICES = (('ok', 'ok'), 
+                      ('preparation', 'in preparation'),
+                      ('empty', 'empty'),
+                      ('bad', 'bad'),
+                      )
+    status = models.CharField( max_length=30, choices=STATUS_CHOICES, 
+                               default='ok')
+    reference_status = models.BooleanField('is Reference sample',default=False,
+                                           help_text='mark sample as master or reference')
+
+
+    description = models.TextField('Description / Comments', blank=True)
+
+
+    sampleCollection = models.ManyToManyField(SampleCollection, null=True, blank=True)
+
+    preparation_date = models.DateField(default=datetime.now())
+
+    creation_date = models.DateTimeField(auto_now_add=True)
+
+    modification_date = models.DateTimeField(auto_now=True)
+
+
+
+    class Meta:
+        unique_together = ('displayId', 'container')
+        ordering = ('container', 'displayId')
+
+    # custom properties (shortcuts)
+    def _contentObjects( self, model=u'component' ):
+        """
+        Get Component objects linked through SampleContent entries.
+        @param model: unicode, model name
+        @return [ Component ] or [] if none
+        """
+        l = self.sampleContent.filter(content_type__model=model)
+        if not l:
+            return []
+        return [ o.content_object for o in l ]
+
+    @property
+    def components( self ):
+        """
+        Get all component objects linked through SampleContent entries.
+        @return: [ Component-derived ] or [] if there is no content
+        """
+        return self.dnas + self.proteins + self.peptides + self.chassis\
+               + self.chemicals
+
+    @property
+    def dnas( self ):
+        """
+        DnaComponent objects linked through sample content entries.
+        @return [ DnaComponent ], list of DnaComponent objects or [] if none
+        """
+        return self._contentObjects( u'dnacomponent' )
+
+    @property
+    def proteins( self ):
+        """
+        ProteinComponent objects linked through sample content entries.
+        @return [ ProteinComponent ], list of ProteinComponent objects or [] if none
+        """
+        return self._contentObjects(u'proteincomponent')
+
+    @property
+    def chassis( self ):
+        """
+        Chassis objects linked through sample content entries.
+        @return [ Chassis ], list of Chassis objects or [] if none
+        """
+        return self._contentObjects(u'chassis')
+
+    @property
+    def peptides( self ):
+        """
+        PeptideComponent objects linked through sample content entries.
+        @return [ PeptideComponent ], list of PeptideComponent objects or [] if none
+        """
+        return self._contentObjects(u'peptidecomponent')
+
+    @property
+    def chemicals( self ):
+        """
+        ChemicalComponent objects linked through sample content entries.
+        @return [ ChemicalComponent ], list of ChemicalComponent objects or [] if none
+        """
+        return self._contentObjects(u'chemicalcomponent')
+
+    @property
+    def sampleType( self ):
+        """
+        @return str: Either of 'cells', 'DNA', 'protein', 'peptide', 'chemical'
+        """
+        if self.chassis:
+            return u'cells'
+        if self.dnas:
+            return u'DNA'
+        if self.proteins:
+            return u'protein'
+        if self.peptides:
+            return u'peptide'
+        if self.chemicals:
+            return u'chemical'
+        return 'unknown'
+
+    # override Django object methods
+    def __unicode__(self):
+        return u'%s' % (self.displayId)
+
+    def get_relative_url(self):
+        """
+        Define standard relative URL for object access in templates
+        """
+        return 'sample/%i/' % self.id
+
+
+    # custom display methods for web interface        
+    def qr_code(self):
+        """?"""
+        data = str(self.displayId + '\n' + self.name + '\n' \
+                   + self.preparation_date.__str__() + '\n')
+
+        for x in self.samplecontent.all():
+            data += x.content_object.__str__()
+
+            if(str(x.amount) != "None"):
+                data += '[' + str(x.amount) + ' ' + str(x.amount_unit) + ']' 
+
+            if(str(x.concentration) != "None"):
+                data += '[' + str(x.concentration) + ' ' \
+                    + str(x.concentration_unit)  + ']'
+
+            data += '\n'
+
+        data += '\n' 
+        return urllib.quote(data)
+        #return data
+
+    def strFullContent(self):
+        """
+        @return str, all content items including amount and concentration
+        """
+        contentString = u''.encode( 'utf-8' )
+
+        for sc in self.sampleContent.all():
+            o = sc.content_object
+
+            if contentString:
+                contentString += u'\n'     ## add line break to previous line
+
+            contentString += unicode(o)
+
+            amount = u'%5.1f %s' %(sc.amount, sc.amountUnit) if sc.amount else ''
+            conc =  u'%5.1f %s' % (sc.concentration, sc.concentrationUnit) \
+                if sc.concentration else ''
+
+            if amount or conc:
+                contentString += u' [%s %s]' % (amount, conc) 
+
+        return contentString
+
+
+    def showFullContent(self):
+        """
+        Show all content items including amount and concentration with URL 
+        links.
+        """
+        contentString = u''.encode( 'utf-8' )
+
+        for sc in self.sampleContent.all():
+            o = sc.content_object
+
+            if contentString:
+                contentString += u'<br>'     ## add line break to previous line
+
+            contentString += u'<a href="%s/%s">%s</a>' % (S.admin_root, 
+                                                          o.get_relative_url(),
+                                                          str(o) )
+
+            amount = u'%5.1f %s' %(sc.amount, sc.amountUnit) if sc.amount else ''
+            conc =  u'%5.1f %s' % (sc.concentration, sc.concentrationUnit) \
+                if sc.concentration else ''
+
+            if amount or conc:
+                contentString += u' [%s %s]' % (amount, conc) 
+
+        return contentString
+
+    showFullContent.allow_tags = True  ## don't HTML-escape this string
+    showFullContent.short_description = u'Content'
+
+
+    def showObject(self, olist, description='', brief=False ):
+        """pick first Component object from list and wrap it into URL"""
+        try:      
+            o = olist[0]
+            item = o.displayId if brief else str(o)
+
+            s = u'<a href="%s/%s" title="%s">%s</a>' % \
+                (S.admin_root, o.get_relative_url(), description, item )
+
+            if len(olist) > 1:
+                s += u' + more'        
+            return s
+        except:
+            s = "---"
+            print 'Unexpected error'
+
+
+
+    def showMainContent(self):
+        """
+        Only show primary content objects and full content as mouse-over.
+        Scenarios:
+        Ignore chemicals if there is dna, protein, peptide or chassis;
+
+        """
+        description = self.strFullContent()
+        s = u''
+        if self.dnas:
+            s = self.showObject( self.dnas, description)
+        elif self.proteins:
+            s = self.showObject( self.proteins, description )
+        elif self.peptides:
+            s = self.showObject( self.peptides, description )
+
+        if s and self.chassis:
+            s += u' in %s' % self.showObject( self.chassis, brief=True ) 
+
+        if s:
+            return s
+
+        if self.chassis:
+            return self.showObject( self.chassis, description )
+        if self.chemicals:
+            return self.showObject( self.chemicals, description )
+
+        return u''
+    showMainContent.allow_tags = True  ## don't HTML-escape this string
+    showMainContent.short_description = u'Content'
+
+
+
+    def strProvenance(self):
+        pedigreeString = ""
+        for sp in self.samplepedigree.all():
+            pedigreeString += sp.sample_source.__str__() + ": "
+            if(str(sp.amount) != "None"):
+                pedigreeString += ' a[' + str(sp.amount) + ' ' + str(sp.amount_unit) + ']' 
+            if(str(sp.concentration) != "None"):
+                pedigreeString += ' c[' + str(sp.concentration) + ' ' + str(sp.concentration_unit)  + ']'
+            pedigreeString += '\n'
+        return pedigreeString
+
+    def sampleLinkStr(self):
+        linkString = ""
+        for sl in self.samplelink.all():
+            linkString += sl.linkType + " : " + sl.link + " [" + sl.name + "]"
+            linkString += '\n'
+        return linkString
+
+#    def related_samples( self ):
+#        """
+#        @return: QuerySet of samples with same DNA content
+#        """
+#        r = []
+#
+#        if self.dna:
+#            r = Sample.objects.filter( dna=self.dna )
+#        elif self.vector:
+#            ## only consider vector if there is no insert:
+#            r = Sample.objects.filter( vector=self.vector )
+#
+#        elif self.protein:
+#            r = Sample.objects.filter( protein=self.protein )
+#
+#        elif self.cell:
+#            r = Sample.objects.filter( cell=self.cell )
+#            
+#        if r:
+#            return r.exclude( pk=self.pk )
+#        return r
+#    
+#
+    def showDna(self):
+        """filter '(None)' display in admin table"""
+        if self.dnas:
+            return self.dnas[0]
+        return u''
+    showDna.short_description = 'DNA'
+    showDna.admin_order_field = 'dna'
+
+#    def show_vector(self):
+#        """filter '(None)' display in admin table"""
+#        if self.vector:
+#            return self.vector
+#        return u''
+#    show_vector.short_description = 'in Vector'
+#    show_vector.admin_order_field = 'vector'
+#
+
+    def showPeptide(self):
+        """filter '(None)' display in admin table"""
+        if self.peptides:
+            return self.peptides[0]
+        return u''
+    showPeptide.short_description = 'Peptide'
+    showPeptide.admin_order_field = 'peptide'
+
+
+    def showCell(self):
+        """filter '(None)' display in admin table"""
+        if self.chassis:
+            return self.chassis[0]
+        return u''
+    showCell.short_description = 'in Cell'
+    showCell.admin_order_field = 'cell'
+
+    def showCellLink(self):
+        """filter '(None)' display in admin table and give link"""
+        if self.chassis:
+            return self.showObject( self.chassis )
+        return u''
+
+    def showProtein(self):
+        """filter '(None)' display in admin table"""
+        if self.proteins:
+            return self.proteins[0]
+        return u''
+    showProtein.short_description = 'Protein'
+    showProtein.admin_order_field = 'protein'
+
+    def showSampleType( self ):
+        """
+        @return: str; either of: 'cells', 'DNA', 'protein', 'peptide', 'chemical'
+        """
+        return self.sampleType
+    showSampleType.short_description = 'Type'
+
+    def showId( self ):
+        """
+        @return: str; full ID composed of container-sample.
+        """
+        return u'%s - %s' % (self.container.displayId, self.displayId)
+    showId.short_description = 'full ID'
+    showId.allow_tags = True  ## don't HTML-escape this string
+
+    def showComment( self ):
+        """
+        @return: str; truncated comment
+        """
+        if not self.description:
+            return u''
+        if len(self.description) < 40:
+            return unicode(self.description)
+        return unicode(self.description[:38] + '..')
+
+    def is_reference(self):
+        return bool(self.reference_status)
+
+    showComment.short_description = 'comments'
+#    
+##    def get_sequence( self, recenter=0 ):
+##        return self.dna.get_sequence( recenter=recenter )
+##
+##    def get_pretty_sequence( self, recenter=0 ):
+##        return self.dna.get_pretty_sequence( recenter=recenter )
+
+
+
+
+
+class CSVSample(CsvModel):
+    DisplayId = fields.CharField()
+    name = fields.CharField()
+    container = fields.CharField()
+    status = fields.IntegerField()
+
+    PreparationDate = fields.CharField()
+    NumberOfAliquots = fields.CharField()
+    isReference = fields.CharField()
+    Description	= fields.CharField()
+    SampleCollection = fields.CharField()
+
+    Chemical_DisplayID = fields.CharField()
+    Chemical_SolventBuffer = fields.CharField()
+    Chemical_Concentration = fields.CharField()
+    Chemical_Concentration_Unit = fields.CharField()
+    Chemical_Amount = fields.CharField()
+    Chemical_Amount_Unit = fields.CharField()
+
+    DNA_DisplayID = fields.CharField()
+    DNA_SolventBuffer = fields.CharField()
+    DNA_Concentration = fields.CharField()
+    DNA_Concentration_Unit = fields.CharField()
+    DNA_Amount = fields.CharField()
+    DNA_Amount_Unit = fields.CharField()
+
+    Peptide_DisplayID = fields.CharField()
+    Peptide_SolventBuffer = fields.CharField()
+    Peptide_Concentration = fields.CharField()
+    Peptide_Concentration_Unit = fields.CharField()
+    Peptide_Amount = fields.CharField()
+    Peptide_Amount_Unit = fields.CharField()
+
+    Protein_DisplayID = fields.CharField()
+    Protein_SolventBuffer = fields.CharField()
+    Protein_Concentration = fields.CharField()
+    Protein_Concentration_Unit = fields.CharField()
+    Protein_Amount = fields.CharField()
+    Protein_Amount_Unit = fields.CharField()
+
+    class Meta:
+        delimiter = ";"
+        has_header = True
+        
+
+
+
+class SampleContent(models.Model):
+    """
+    Helper class to define the content that the sample is made of.
+    """
+    COMPONENT_LIMITS = {'model__in':('component',
+                                     'chemicalcomponent', 
+                                     'dnacomponent', 
+                                     'peptidecomponent', 
+                                     'proteincomponent',
+                                     'chassis'
+                                     )
+                        }   
+
+    sample = models.ForeignKey(Sample, related_name='sampleContent')
+
+    content_type = models.ForeignKey(ContentType, 
+                                     verbose_name='Type of content',
+                                     limit_choices_to=COMPONENT_LIMITS)
+
+    object_id = models.PositiveIntegerField('Content')
+
+    content_object = generic.GenericForeignKey('content_type', 'object_id')
+
+    solvent = models.CharField('Solvent/Buffer', max_length=100, 
+                               blank=True)
+
+    concentration = models.FloatField('Concentration', null=True, blank=True)
+
+    concentrationUnit = models.ForeignKey(Unit, 
+                                          verbose_name='Concentration Unit',
+                                          related_name='concentrationUnit', 
+                                          null=True, blank=True, 
+                                          limit_choices_to = {'unitType': 'concentration'})
+
+    amount = models.FloatField('Amount', null=True, blank=True)
+
+    amountUnit = models.ForeignKey(Unit, verbose_name='Amount Unit',
+                                   related_name='amountUnit', 
+                                   null=True, blank=True, 
+                                   limit_choices_to=\
+                                   Q(unitType='volume') | Q(unitType='mass') | \
+                                   Q(unitType='number')
+                                   )
+
+
+
+
+
+class SampleProvenance(models.Model):
+    """
+    Define the components that the sample is made of.
+    """
+    sample = models.ForeignKey(Sample, related_name='sampleProvenance')
+
+    sample_source = models.ForeignKey(Sample, null=True, related_name='sampleSource')
+
+    PROVENANCE_TYPE = (('parent','parent'), )
+
+    provenanceType = models.CharField(max_length=25, choices=PROVENANCE_TYPE)
+
+    shortDescription = models.CharField( max_length=50,
+                                         help_text='Brief description for tables\
+                                         and listings', null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'Sample History'
+        verbose_name_plural = 'Sample History'
+
+
+
+class ComponentType( models.Model ):
+    """
+    Helper class for classifying parts.
+    Following SBOL, each type should in theory correspond to a Sequence Ontology term.
+    """
+
+    uri = models.URLField( unique=False, blank=True, null=True,
+                           help_text='Typically a sequence ontology URI, example: http://purl.obolibrary.org/obo/SO_0000167' )
+
+    name = models.CharField('Name', max_length=200, 
+                            help_text='Informative name')
+
+    
+    def __unicode__( self ):
+        return unicode(self.name)
+
+    class Meta:
+        abstract = True
+        
+
+class DNAComponentType( ComponentType ):
+
+    #: required ? directional relationship to parent type or types
+    subTypeOf = models.ManyToManyField('self', symmetrical=False, blank=True, 
+                                       null=True, related_name='subTypes')
+    class Meta:
+        verbose_name = 'DNA PartType'
+        abstract = False
+        
+class ProteinComponentType( ComponentType ):
+    #: required ? directional relationship to parent type or types
+    subTypeOf = models.ManyToManyField('self', symmetrical=False, blank=True, 
+                                       null=True, related_name='subTypes')
+    class Meta:
+        verbose_name = 'Protein PartType'
+        abstract = False        
+        
+class ChemicalComponentType( ComponentType ):
+    #: required ? directional relationship to parent type or types
+    subTypeOf = models.ManyToManyField('self', symmetrical=False, blank=True, 
+                                       null=True, related_name='subTypes')
+    class Meta:
+        verbose_name = 'Chemical PartType'
+        abstract = False
+        
+class ChassisComponentType( ComponentType ):
+    #: required ? directional relationship to parent type or types
+    subTypeOf = models.ManyToManyField('self', symmetrical=False, blank=True, 
+                                       null=True, related_name='subTypes')
+    class Meta:
+        verbose_name = 'Cell PartType'
+        abstract = False   
+
+class PeptideComponentType( ComponentType ):
+    #: required ? directional relationship to parent type or types
+    subTypeOf = models.ManyToManyField('self', symmetrical=False, blank=True, 
+                                       null=True, related_name='subTypes')
+    class Meta:
+        verbose_name = 'Peptide PartType'
+        abstract = False         
+
+
+
+class Component(PermissionModel):
+    """
+    Abstract base class for cells, nucleic acids, proteins, and chemicals.
+    """
+
+    STATUS_CHOICES = ( ('available', 'available'),
+                       ('planning', 'planning'),
+                       ('under_construction', 'under construction'),
+                       ('abandoned', 'abandoned'))
+
+    displayId = models.CharField('ID', max_length=20, unique=True, 
+                                 help_text='Unique identification')
+
+    name = models.CharField('Name', max_length=200, blank=True, 
+                            help_text='Descriptive name (e.g. "TEV protease")')
+
+    description = models.TextField( 'Detailed description', blank=True)
+
+    #: uri should be constructed from #displayId if left empty
+    uri = models.URLField( blank=True, null=True, unique=False, 
+                           help_text='Specify external URI or leave blank for local URI')
+
+    #: non-SBOL compliant status    
+    status = models.CharField( max_length=30, choices=STATUS_CHOICES, 
+                               default='planning')
+
+    variantOf = models.ManyToManyField( 'self', symmetrical=False, 
+                                        blank=True, null=True, 
+                                        verbose_name='Variant of', 
+                                        help_text='Specify part(s) this part is derived from, if any.' )
+
+    abstract = models.BooleanField( 'is Abstract Part', default=False, 
+                                    help_text='Entry only serves as container to organize related parts.')
+
+    creation_date = models.DateTimeField(auto_now_add=True, null=True)
+
+    modification_date = models.DateTimeField(auto_now=True, null=True)
+
+
+    GenBankfile = models.FileField(upload_to='documents/GenBank/%Y/%m/%d',blank=True,null=True)
+
+
+
+    def formatedUrl(self):
+        name = self.name if self.name else ''
+        return SafeUnicode("<a href='/admin/labrack/" +self.get_relative_url() \
+                           + "'>" + self.displayId + ' - ' +  name + "</a>")
+
+
+    def __unicode__(self):
+        name = self.name if self.name else ''
+        return u'%s - %s' % (self.displayId, name)
+
+
+    class Meta:
+        abstract = False
+
+
+    def related_samples( self ):
+        """
+        """
+        r = SampleContent.objects.filter( object_id=self.id, 
+                                          content_type__model=self.__class__.__name__.lower() )
+        s = [content.sample for content in r]
+
+        return s
+
+
+    def related_annotations( self ):
+        """
+        """
+        r = SequenceAnnotation.objects.filter( subComponent=self.id).order_by('bioStart')
+
+        #s = [content.sequenceannotation for content in r]
+
+        return r    
+
+    def related_seq( self ):
+        """
+        """
+        gb_features = ''
+        try:
+            gb_file = settings.MEDIA_ROOT+"/"+os.path.normpath(self.GenBankfile.name)
+            for gb_record in SeqIO.parse(open(gb_file,"r"), "genbank") :
+                # now do something with the record
+                #gb_features += "Name %s, %i features" % (gb_record.name, len(gb_record.features))
+                gb_features += gb_record.seq.tostring()
+            return gb_features
+        except Exception:
+            return ''
+
+
+    def related_file_annotation( self ):
+
+        gb_file = settings.MEDIA_ROOT+"/"+os.path.normpath(self.GenBankfile.name)
+        gb_features = ""
+        for gb_record in SeqIO.parse(open(gb_file,"r"), "genbank") :
+            # now do something with the record
+            for ind in xrange(len(gb_record.features)) :
+                gb_features += '\n'+ repr(gb_record.features[ind].type) + " Location start : "+ repr(gb_record.features[ind].location._start.position) + " Location end : "+ repr(gb_record.features[ind].location._end.position)
+            return gb_features
+
+
+    def number_related_samples( self ):
+        """
+        """
+        r = SampleContent.objects.filter( object_id=self.id ).order_by('bioStart')
+        s = r.count()
+
+        return s
+
+    def number_related_annotations( self ):
+        """
+        """
+        r = SequenceAnnotation.objects.filter( subComponent=self.id)
+        s = r.count()
+
+        return s        
+
+    def showComment( self ):
+        """
+        @return: str; truncated comment
+        """
+        if not self.description:
+            return u''
+        if len(self.description) < 40:
+            return unicode(self.description)
+        return unicode(self.description[:38] + '..')
+    showComment.short_description = 'comment'
+
+
+#    def isavailable(self):
+#        return self.samples.count() > 0
+#    isavailable.short_description = 'available'
+#    isavailable.boolean = True
+#    
+#    def related_samples( self ):
+#        """
+#        """
+#        from django.db.models import Q
+#        q = Q(dna=self) | Q(cell=self) | Q(vector=self) | Q(protein=self)
+#        
+#        r = Sample.objects.filter( q )
+#        return r
+
+
+
+
+
+class DnaComponent(Component):
+    """
+    Description of a stretch of DNA or RNA.
+    """
+    #: optional sequence
+    sequence = models.TextField( help_text='nucleotide sequence', 
+                                 blank=True, null=True )
+
+    translatesTo = models.ForeignKey( 'ProteinComponent', blank=True, null=True, 
+                                      related_name='encodedBy', 
+                                      help_text='Protein part this sequence translates to' )
+
+    optimizedFor = models.ForeignKey( 'Chassis', blank=True, null=True )
+    
+
+    componentType = models.ManyToManyField(DNAComponentType, 
+                                           blank=True, null=True, 
+                                           verbose_name='Part type', 
+                                           help_text='Classification of this part.')    
+    
+    circular = models.BooleanField( 'Circular', default=False, 
+                                    help_text='is the DNA Circular or not.')
+
+
+    class Meta:
+        verbose_name = 'DNA part'
+
+    def get_relative_url(self):
+        """
+        Define standard relative URL for object access in templates
+        """
+        return 'dnacomponent/%i/' % self.id
+
+    def size(self):
+        """@return int; size in nucleotides"""
+        if self.sequence:
+            return len( self.sequence )
+        return 0
+
+##    def isavailable_dna(self):
+##        """True if there is a DNA-only sample containing this NucleicAcidComponent"""
+##        return self.dna_samples.count() > 0
+##    isavailable_dna.short_description = 'DNA'
+##    isavailable_dna.boolean = True
+
+##    def isavailable_cells(self):
+##        """
+##        True if there is a cell stock (DNA + cells) sample for this 
+##        NucleicAcidComponent
+##        """
+##        samples = self.dna_samples.all()
+##
+##        for s in samples:
+##            if s.cell:
+##                return True
+##        return False
+##    isavailable_cells.short_description = 'Cells'
+##    isavailable_cells.boolean = True
+
+    def show_translatesTo(self):
+        """filter '(None)' display in admin table"""
+        if self.translatesTo:
+            return self.translatesTo
+        return u''
+    show_translatesTo.short_description = 'translates to'
+    show_translatesTo.admin_order_field = 'translatesTo'
+
+    def show_optimizedFor(self):
+        """filter '(None)' display in admin table"""
+        if self.optimizedFor:
+            return self.optimizedFor
+        return u''
+
+    def show_parentSample(self):
+        from django.db import connection, transaction
+        cursor = connection.cursor()
+
+
+        # Data retrieval operation - no commit required
+        #cursor.execute("SELECT foo FROM bar WHERE baz = %s", [self.baz])
+
+        cursor.execute("select count(*) as nbr from labrack_dnacomponent ")
+        row = cursor.fetchone()        
+
+        return row               
+
+    show_optimizedFor.short_description = 'optimized for'
+    show_optimizedFor.admin_order_field = 'optimizedFor'
+
+    def save(self, *args, **kwargs):
+        #Saving the sequence
+        self.sequence = self.related_seq()
+        super(DnaComponent, self).save(*args, **kwargs) # Call the "real" save() method.
+        if self.GenBankfile:
+            self.save_annotation()
+
+    def saveWithoutAnnotations(self, *args, **kwargs):
+        #Saving the sequence
+        #self.sequence = self.related_seq()
+        super(DnaComponent, self).save(*args, **kwargs) # Call the "real" save() method.
+        
+    def save_annotation( self ):
+        if (self.GenBankfile):
+            gb_file = settings.MEDIA_ROOT+"/"+os.path.normpath(self.GenBankfile.name)
+            gb_features = ""
+            dispId = 1
+            isParsingDone = False
+
+            for gb_record in SeqIO.parse(open(gb_file,"r"), "genbank") :
+                if (not isParsingDone):
+                    for ind in xrange(len(gb_record.features)) :
+                        isParsingDone = True
+                        #gb_features += '\n'+ repr(gb_record.features[ind].type) + " Location start : "+ repr(gb_record.features[ind].location._start.position) + " Location end : "+ repr(gb_record.features[ind].location._end.position)
+                        nameType = repr(gb_record.features[ind].type).replace("'", "")
+                        strandValue = repr(gb_record.features[ind].strand)
+                        startPos = repr(gb_record.features[ind].location._start.position+1)
+                        endPos = repr(gb_record.features[ind].location._end.position)
+                        label = repr(gb_record.features[ind].qualifiers.get('label')).replace("['","").replace("']","").replace("\\"," ")
+                        if (label == 'None' ):
+                            label = repr(gb_record.features[ind].qualifiers.get('gene')).replace("['","").replace("']","").replace("\\"," ")
+                        
+                        ###check if the annotation refering to this dna already exists using start and end point and dnaID (this is to solve a bug but should be removed, the bug is that its saving the annotated dna twice))
+                        if (not SequenceAnnotation.objects.filter(bioStart = startPos, bioEnd = endPos, strand = strandValue, subComponent = self)):
+                            # save in the DNA/Protein if necessary
+                            fullSequence = gb_record.seq.tostring()
+                            if (startPos==endPos):
+                                partOfSequence = fullSequence[int(startPos):int(endPos)+1].replace(" ","").upper()
+                            else:
+                                partOfSequence = fullSequence[int(startPos):int(endPos)].replace(" ","").upper()
+                            
+                            if (strandValue == '-1'):
+                                partOfSequence = Seq(partOfSequence).reverse_complement().tostring()
+
+                            
+                            # the reason to save it twice is to get a unique ID to be able to put it in DisplayId
+                            # retrieve the part type, if not existing create it
+                            if (not DNAComponentType.objects.filter(name='GenebankType')):
+                                subCtGenebankType = DNAComponentType(name = 'GenebankType')
+                                subCtGenebankType.save() 
+                            subCtGenebankType = DNAComponentType.objects.get(name='GenebankType')
+                            if (not DNAComponentType.objects.filter(name=nameType)):
+                                ct = DNAComponentType(name = nameType)
+                                ct.save()
+                            ct = DNAComponentType.objects.filter(name=nameType)
+                            ct.subTypeOf = subCtGenebankType
+                            # save the dna
+                            #if (not DnaComponent.objects.filter(sequence=partOfSequence)):
+                            if (not self.__class__.objects.filter(sequence=partOfSequence)):
+                                dna2db = self.__class__(displayId='########', sequence = partOfSequence, name = label, GenBankfile = None)
+                                dna2db.saveWithoutAnnotations()
+                                dna2db.componentType = ct
+                                dna2db.displayId="gb%06i"%dna2db.id
+                                dna2db.saveWithoutAnnotations()
+                            dna2db = self.__class__.objects.get(sequence=partOfSequence)
+                            # save the annotation in the database
+                            #an2db = SequenceAnnotation(uri ='', bioStart = startPos, bioEnd = endPos, strand = strandValue, subComponent = self, componentAnnotated = dna2db)
+                            an2db = SequenceAnnotation(uri ='', bioStart = startPos, bioEnd = endPos, strand = strandValue, subComponent = self, componentAnnotated = dna2db)
+                            an2db.save()             
+
+
+
+
+
+
+
+class Chassis(Component):
+    """
+    Description of a host system. Usually this will be a cell type or bacterial
+    strain.
+    """
+    componentType = models.ManyToManyField(ChassisComponentType, 
+                                               blank=True, null=True, 
+                                               verbose_name='Part type', 
+                                               help_text='Classification of this part.')   
+    
+    def get_relative_url(self):
+        """
+        Define standard relative URL for object access in templates
+        """
+        return 'chassis/%i/' % self.id
+
+    def related_samples( self ):
+        """
+        """
+        return self.cell_samples.all()
+
+    class Meta:
+        verbose_name = 'Cell'
+
+
+class ProteinComponent(Component):
+    """
+    Description of a protein 'part'.
+    """
+    #: optional sequence
+    sequence = models.TextField( help_text='amino acid sequence', 
+                                 blank=True, null=True )
+    
+    
+    componentType = models.ManyToManyField(ProteinComponentType, 
+                                                   blank=True, null=True, 
+                                                   verbose_name='Part type', 
+                                                   help_text='Classification of this part.')   
+    
+
+    def get_relative_url(self):
+        """
+        Define standard relative URL for object access in templates
+        """
+        return 'proteincomponent/%i/' % self.id
+
+    def size(self):
+        """@return int; size in aminoacids"""
+        if self.sequence:
+            return len( self.sequence )
+        return 0
+
+    def save(self, *args, **kwargs):
+        #Saving the sequence
+        self.sequence = self.related_seq()
+        super(ProteinComponent, self).save(*args, **kwargs) # Call the "real" save() method.
+        if self.GenBankfile:
+            self.save_annotation()
+
+    def saveWithoutAnnotations(self, *args, **kwargs):
+        #Saving the sequence
+        #self.sequence = self.related_seq()
+        super(ProteinComponent, self).save(*args, **kwargs) # Call the "real" save() method.    
+
+    class Meta:
+        verbose_name = 'Protein part'
+
+#    def related_samples( self ):
+#        """
+#        """
+#        return self.protein_samples.all()
+
+
+
+
+
+class PeptideComponent(Component):
+    """
+    Description of a peptide 'part'.
+    """
+    sequence = models.TextField( help_text='amino acid sequence', 
+                                 blank=True, null=True )
+    
+    componentType = models.ManyToManyField(PeptideComponentType, 
+                                                   blank=True, null=True, 
+                                                   verbose_name='Part type', 
+                                                   help_text='Classification of this part.')   
+    
+
+    def get_relative_url(self):
+        """
+        Define standard relative URL for object access in templates
+        """
+        return 'peptidecomponent/%i/' % self.id
+
+    def size(self):
+        """@return int; size in aminoacids"""
+        if self.sequence:
+            return len( self.sequence )
+        return 0
+
+    class Meta:
+        verbose_name = 'Peptide'
+
+
+#    def related_samples( self ):
+#        """
+#        """
+#        return self.protein_samples.all()
+
+
+
+
+
+class ChemicalComponent(Component):
+    """
+    Description of a chemical.
+    """
+    #: To define
+    componentType = models.ManyToManyField(ChemicalComponentType, 
+                                                   blank=True, null=True, 
+                                                   verbose_name='Part type', 
+                                                   help_text='Classification of this part.')   
+        
+    def get_relative_url(self):
+        """
+        Define standard relative URL for object access in templates
+        """
+        return 'chemicalcomponent/%i/' % self.id
+
+    class Meta:
+        verbose_name = 'Chemical'
+
+
+
+
+class SelectiveMarker( models.Model ):
+    """
+    Describes an Antibiotic or similar resistence marker
+    """
+
+    displayId = models.CharField('Component (ID)', max_length=20, unique=True, 
+                                 help_text='Unique identification')
+
+    name = models.CharField('Name', max_length=200, blank=True, 
+                            help_text='Descriptive name (e.g. AMP)')
+
+    description = models.TextField( 'Detailed description', blank=True)
+
+    def __unicode__(self):
+        return self.name
+
+##    def get_absolute_url(self):
+##        """Define standard URL for object.get_absolute_url access in templates """
+##        return APP_URL+'/selectivemarker/%i/' % self.id
+
+    class Meta:
+        ordering = ('name',)
+
+
+
+
+
+#class VectorDnaComponent(NucleicAcidComponent):
+#    """
+#    Description of vector backbone. So far identical to NucleicAcidComponent.
+#    """
+#
+#    #: [optional] link to resistence or similar marker
+#    marker = models.ManyToManyField(SelectiveMarker,
+#                                     verbose_name='selective marker(s)',
+#                                     null=True, blank=True)
+#
+#    class Meta(Component.Meta):
+#        pass
+#    
+#    def get_relative_url(self):
+#        """
+#        Define standard relative URL for object access in templates
+#        """
+#        return 'vectordnacomponent/%i/' % self.id
+#
+#    def related_samples(self):
+#        """
+#        """
+#        return self.vector_samples.all()
+
+
+
+class Document(models.Model):
+    docfile = models.FileField(upload_to='documents/BulkSamples/%Y/%m/%d')
+
+
+class SequenceAnnotation(models.Model):
+    """
+    Identify features and sub-components on a DNA or protein sequence.
+    """
+    #: uri should be constructed from #displayId if left empty
+    uri = models.URLField( blank=True, null=True, unique=False,
+                           help_text='Specify external URI or leave blank for local URI')
+
+    bioStart = models.PositiveIntegerField( 'From position', blank=True, null=True,
+                                            validators=[],
+                                            help_text='starting position counting from 1')
+
+    bioEnd = models.PositiveIntegerField( 'To position', blank=True, null=True,
+                                          validators=[],
+                                          help_text='End position counting from 1')
+
+    strand = models.CharField('Strand',max_length=1, blank=True, null=True,
+                              choices=(('+','+'),('-','-')) )
+
+    precedes = models.ManyToManyField( 'self', symmetrical=False,
+                                       null=True, blank=True )
+
+    subComponent = models.ForeignKey('Component', related_name ='subComponentOf')
+
+    componentAnnotated = models.ForeignKey('Component', related_name ='annotatedForComponent',null=True, blank=True)
+
+    # override Django object methods
+    def __unicode__(self):
+        return u'(%s - %s)(%s,%s)' % (self.subComponent, self.componentAnnotated,self.bioStart,self.bioEnd)
+    
+    def get_relative_url(self):
+        """
+        Define standard relative URL for object access in templates
+        """
+        return 'sequenceannotation/%i/' % self.id
+
+
+class Collection(models.Model):
+    """
+    Collection of parts
+    """
+    #: required ID
+    displayId = models.CharField('ID', max_length=20,
+                                 help_text='Identification; Unique within context.', 
+                                 unique=True)
+
+    #: optional short name
+    name = models.CharField('Name', max_length=50, blank=True, null=True,
+                            help_text='Descriptive name.')
+
+    #: required short description -- will be added as first line of description
+    #: in SBOL exports (where this field doesn't exist)
+    shortDescription = models.CharField( 'short Description', max_length=200,
+                                         help_text='Very short description for listings')
+
+    #: uri should be constructed from #displayId if left empty
+    uri = models.URLField( blank=True, null=True, unique=False,
+                           help_text='Specify external URI or leave blank for local URI')
+
+    #: optional long description
+    description = models.TextField( 'Detailed description', blank=True,
+                                    help_text='Use restructured text markup for links, lists and headlines.')
+
+    components = models.ManyToManyField( Component, null=True, blank=True,
+                                         verbose_name='parts' )
+
+
+    def __unicode__(self):
+        name = self.name if self.name else ''
+        return u'%s %s' % (self.displayId, name)
+
