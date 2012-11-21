@@ -39,9 +39,23 @@ from django.shortcuts import render_to_response
 ## Labrack imports
 import tyers_site.settings as S
 from tyers_site.labrack.models import *
+from tyers_site.labrack.models.sample import *
+
+
 from adminFilters import *
 from adminWidgets import *
 import importexport
+
+from labrack.models.generalmodels import Rack
+from labrack.models.component import ProteinComponentType
+from labrack.models.component import ProteinComponent
+from labrack.models.component import DnaComponent
+from labrack.models.component import DNAComponentType
+from labrack.models.component import Component
+from labrack.models.component import ChemicalComponent
+from labrack.models.generalmodels import SequenceAnnotation
+from labrack.models.generalmodels import Collection
+from labrack.models.generalmodels import Chassis
 
 
 
@@ -237,7 +251,8 @@ class ProteinComponentAdmin(ComponentAdmin):
     search_fields = ComponentAdmin.search_fields.__add__(('sequence',))
 
     raw_id_fields = ('componentType', 'variantOf',)
-
+     
+    
 
 
 class PeptideComponentAdmin(ProteinComponentAdmin):
@@ -759,16 +774,16 @@ admin.site.register(Container, ContainerAdmin)
 admin.site.register(Location, LocationAdmin)
 admin.site.register(Rack, RackAdmin)
 admin.site.register(SampleCollection, SampleCollectionAdmin)
-admin.site.register(Sample, SampleAdmin) 
+admin.site.register(Sample, SampleAdmin)
 admin.site.register(Unit, UnitAdmin) 
 #admin.site.register(CSVComponentType, ComponentTypeAdmin)
 admin.site.register(ProteinComponentType, ComponentTypeAdmin)
-admin.site.register(PeptideComponent, PeptideComponentAdmin)
+#admin.site.register(PeptideComponent, PeptideComponentAdmin)
 admin.site.register(ProteinComponent, ProteinComponentAdmin)
 admin.site.register(DnaComponent, DnaComponentAdmin)
 admin.site.register(DNAComponentType, ComponentTypeAdmin) 
 admin.site.register(Component, ComponentAdmin)
 admin.site.register(ChemicalComponent, ComponentAdmin)
-#admin.site.register(SequenceAnnotation, SequenceAnnotationAdmin)
+admin.site.register(SequenceAnnotation, SequenceAnnotationAdmin)
 admin.site.register(Chassis) 
-#admin.site.register(Collection)
+admin.site.register(Collection)

@@ -6,18 +6,18 @@ from tyers_site.labrack.models import CSVSample
 from tyers_site.labrack.models import Sample
 from tyers_site import settings
 from django.core.files.storage import FileSystemStorage
-from tyers_site.labrack.models import Container
-from tyers_site.labrack.models import DnaComponent
-from tyers_site.labrack.models import ChemicalComponent
-from tyers_site.labrack.models import PeptideComponent
-from tyers_site.labrack.models import ProteinComponent
-from tyers_site.labrack.models import SampleContent
-from tyers_site.labrack.models import Unit
+from labrack.models.generalmodels import Container
+from labrack.models.component import DnaComponent
+from labrack.models.component import ChemicalComponent
+from labrack.models.component import PeptideComponent
+from labrack.models.component import ProteinComponent
+from labrack.models.sample import SampleContent
+from labrack.models.unit import Unit
 from django.contrib.contenttypes.models import ContentType
 from django.contrib import messages
 import os
 
-from tyers_site.labrack.models import Document
+from labrack.models.generalmodels import Document
 from tyers_site.labrack.forms import DocumentForm
 
 def list(request):
