@@ -1,0 +1,136 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_modify adminmedia %}
+
+
+{% block after_field_sets %}
+
+<div class="module aligned">
+  <h2>Samples</h2>
+        <div class="description">
+          Note, clicking any of the links below will open a new window/tab!
+        </div>
+        
+        <p></p>
+        
+        {% if original %} 
+          <ul class="object-tools">
+            <li><a href="../../sample/add/?dna={{original.displayId}}" target="_blank">
+                Add Sample</a></li> 
+          </ul>          
+        {% endif %}
+        
+        {% if original and original.related_samples %}
+          <table cellspacing="0">
+            <thead>
+              <tr>
+                <th>ID</th><th>Type</th><th>dna</th><th>in vector</th><th>in cell</th>
+                <th>concentration</th>
+                <th>created</th><th>by</th><th>comments</th>
+              </tr>
+            </thead>
+            <tbody>
+        
+            {% for sample in original.related_samples %}
+        
+              <tr class="{% cycle 'row1' 'row2' %}">
+        
+                <td><b><a href="../../{{sample.get_relative_url}}" target="_blank">
+                      {{sample.showId}}</a></b></td>
+        
+                <td>{{sample.showSampleType}}</td>
+        
+                <td>{{sample.showDna|default:"--"}}
+                {% if sample.dnas|length > 1 %}
+                 (out of {{sample.dnas|length}})
+                {% endif %}
+                </td>
+        
+                <td>{% if sample.vector %}
+                      <a href="../../{{sample.vector.get_relative_url}}" target="_blank">
+                      {{sample.vector}}</a></td>
+                    {% else %}
+                          --</td>
+                    {% endif %}
+        
+                <td>{% if sample.chassis %}
+                      {{sample.showCellLink|safe}}
+                      
+                    {% else %}
+                          --</td>
+                    {% endif %}
+        
+                <td>{{sample.showConcentration}}</td>
+                <td>{{sample.creation_date|date:"d M Y"}}</td>
+                <td>{{sample.created_by}}</td>
+                <td>{{sample.showComment|default:""}}</td>
+        
+              </tr>
+        
+            {% endfor %}
+        
+            </tbody>
+          </table>
+          
+        {% else %}
+          <div class="description"><b>No Samples found for this item.</b></div>
+        {% endif %}
+        <p></p>
+</div>
+
+<div class="module aligned">
+  <h2>Annotations</h2>
+        <div class="description">
+          Note, clicking any of the links below will open a new window/tab!
+        </div>
+        
+        <p></p>
+        
+        {% if original %}
+          <ul class="object-tools">
+            <li><a href="../../sequenceannotation/add/?subComponent={{original.id}}" target="_blank">
+                Add Annotation</a></li> 
+          </ul>                  
+        {% endif %}
+        
+               
+        {% if original and original.related_annotations %}
+          <table cellspacing="0">
+            <thead>
+              <tr>
+                <th>ID</th><th>Start</th><th>End</th><th>strand</th><th>DNA</th>
+              </tr>
+            </thead>
+            <tbody>
+        
+            {% for sequenceannotation in original.related_annotations %}
+        
+              <tr class="{% cycle 'row1' 'row2' %}">
+        
+                <td><b><a href="../../{{sequenceannotation.get_relative_url}}" target="_blank">
+                      {{sequenceannotation.id}}</a></b></td><td>{{sequenceannotation.bioStart}}</td>   
+                      <td>{{sequenceannotation.bioEnd}}</td>
+                      <td>{% if sequenceannotation.strand == "-1" %}
+                      (-)</td>
+                    {% else %}
+                          (+)</td>
+                    {% endif %}
+                <td>{% if sequenceannotation.componentAnnotated %}
+                      <a href="../{{sequenceannotation.componentAnnotated.id}}" target="_blank">
+                      {{sequenceannotation.componentAnnotated}}</a></td>
+                    {% else %}
+                          --</td>
+                    {% endif %}
+              </tr>
+        
+            {% endfor %}
+        
+            </tbody>
+          </table>
+          
+        {% else %}
+          <div class="description"><b>No Sequence Annotations found for this item.</b></div>
+        {% endif %}
+        <p></p>
+</div>
+
+{% endblock %}

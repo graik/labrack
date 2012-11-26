@@ -1,5 +1,15 @@
 from django.db import models
 from permissionModel import PermissionModel
+from django.utils.safestring import mark_safe
+from django.utils.safestring import SafeUnicode 
+from tyers_site import settings   
+import os
+
+from Bio import SeqIO
+from Bio.Seq import Seq
+
+from tyers_site.labrack.models.generalmodels import SequenceAnnotation
+
 
 
 
@@ -182,11 +192,11 @@ class Component(PermissionModel):
         """
         """
         import labrack.models as M
-        
-        
+
+
         r = M.SampleContent.objects.filter( object_id=self.id ).order_by('bioStart')
         s = r.count()      
-        
+
         return s
 
     def number_related_annotations( self ):
@@ -505,3 +515,71 @@ class ChemicalComponent(Component):
         app_label = 'labrack'        
         verbose_name = 'Chemical'
 
+
+
+
+class Chassis(Component):
+    """
+    Description of a host system. Usually this will be a cell type or bacterial
+    strain.
+    """
+    componentType = models.ManyToManyField(ChassisComponentType, 
+                                           blank=True, null=True, 
+                                           verbose_name='Part type', 
+                                           help_text='Classification of this part.')   
+
+    def get_relative_url(self):
+        """
+        Define standard relative URL for object access in templates
+        """
+        return 'chassis/%i/' % self.id
+
+    def related_samples( self ):
+        """
+        """
+        return self.cell_samples.all()
+
+    class Meta:
+        app_label = 'labrack'           
+        verbose_name = 'Cell'
+
+
+
+class Collection(models.Model):
+    """
+    Collection of parts
+    """
+    #: required ID
+    displayId = models.CharField('ID', max_length=20,
+                                 help_text='Identification; Unique within context.', 
+                                 unique=True)
+
+    #: optional short name
+    name = models.CharField('Name', max_length=50, blank=True, null=True,
+                            help_text='Descriptive name.')
+
+    #: required short description -- will be added as first line of description
+    #: in SBOL exports (where this field doesn't exist)
+    shortDescription = models.CharField( 'short Description', max_length=200,
+                                         help_text='Very short description for listings')
+
+    #: uri should be constructed from #displayId if left empty
+    uri = models.URLField( blank=True, null=True, unique=False,
+                           help_text='Specify external URI or leave blank for local URI')
+
+    #: optional long description
+    description = models.TextField( 'Detailed description', blank=True,
+                                    help_text='Use restructured text markup for links, lists and headlines.')
+
+    components = models.ManyToManyField( Component, null=True, blank=True,
+                                         verbose_name='parts' )
+
+
+    def __unicode__(self):
+        name = self.name if self.name else ''
+        return u'%s %s' % (self.displayId, name)
+
+
+
+    class Meta:
+        app_label = 'labrack'    

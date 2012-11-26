@@ -1,0 +1,28 @@
+  
+ {% load i18n %}
+
+{% block title %}{{ title }} | {% trans 'LabRack Upload' %}{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">{% trans 'LabRack' %}</h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
+ 
+ 
+		<!-- List of uploaded documents -->
+		Upload your CSV File to add Samples(Only DNA Content is working for now)
+		<li><a href="/media/documents/BulkSamples/exampleSampleFull.csv">Example Document</a></li>
+		
+		<!-- Upload form. Note enctype attribute! -->
+		<form action="{% url list %}" method="post" enctype="multipart/form-data">
+			{% csrf_token %}
+			<p>{{ form.non_field_errors }}</p>
+			<p>{{ form.docfile.label_tag }} {{ form.docfile.help_text }}</p>
+			<p>
+				{{ form.docfile.errors }}
+				{{ form.docfile }}
+			</p>
+			<p><input type="submit" value="Upload" /></p>
+		</form>
+  

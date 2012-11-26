@@ -175,12 +175,6 @@ class Sample( PermissionModel ):
     modification_date = models.DateTimeField(auto_now=True)
 
 
-
-    class Meta:    
-        app_label = 'labrack' 
-        unique_together = ('displayId', 'container')
-        ordering = ('container', 'displayId')
-
     # custom properties (shortcuts)
     def _contentObjects( self, model=u'component' ):
         """
@@ -515,7 +509,11 @@ class Sample( PermissionModel ):
         return bool(self.reference_status)
 
     showComment.short_description = 'comments'
-#    
+    
+    class Meta:    
+        app_label = 'labrack' 
+        unique_together = ('displayId', 'container')
+        ordering = ('container', 'displayId')    
 ##    def get_sequence( self, recenter=0 ):
 ##        return self.dna.get_sequence( recenter=recenter )
 ##

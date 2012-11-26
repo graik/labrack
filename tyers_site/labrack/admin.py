@@ -22,7 +22,7 @@ from django.core.exceptions import ValidationError
 #from django.core.urlresolvers import reverse
 from django.contrib import admin
 from django.contrib import messages
-from django.contrib.admin.sites import site
+from django.contrib.admin.sites import site 
 from django.db.models import Q
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
@@ -42,6 +42,7 @@ from tyers_site.labrack.models import *
 from tyers_site.labrack.models.sample import *
 
 
+
 from adminFilters import *
 from adminWidgets import *
 import importexport
@@ -51,11 +52,12 @@ from labrack.models.component import ProteinComponentType
 from labrack.models.component import ProteinComponent
 from labrack.models.component import DnaComponent
 from labrack.models.component import DNAComponentType
+from labrack.models.component import PeptideComponent
 from labrack.models.component import Component
 from labrack.models.component import ChemicalComponent
 from labrack.models.generalmodels import SequenceAnnotation
 from labrack.models.generalmodels import Collection
-from labrack.models.generalmodels import Chassis
+from labrack.models.generalmodels import Chassis 
 
 
 
@@ -440,16 +442,19 @@ class RackAdmin(admin.ModelAdmin):
 class SampleContentInline(GenericCollectionTabularInline):
     
     extra = 1
+        
+        
+    import labrack.models as M
     
-    model = SampleContent
-       
-
+    model = M.SampleContent 
+    
 
 class SampleProvenanceInline(GenericCollectionTabularInline):
     extra = 1
     
     fk_name = 'sample'
-
+ 
+    
     model = SampleProvenance
 
     raw_id_fields = ('sample_source',)
@@ -528,7 +533,7 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
                                       ('aliquotNr',),
                                       ('preparation_date', 'status'),
                                       ('description'),
-##                                      'sampleCollection'
+                                      'sampleCollection'
                                       )
                                      )
                          }
@@ -537,6 +542,7 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
                  )
           
 
+    #inlines = [SampleContentInline, SampleProvenanceInline]
     inlines = [SampleContentInline, SampleProvenanceInline]
     
     list_display   = ('showId', 'location_url', 
@@ -771,9 +777,9 @@ admin.site.register(Rack, RackAdmin)
 admin.site.register(SampleCollection, SampleCollectionAdmin)
 admin.site.register(Sample, SampleAdmin)
 admin.site.register(Unit, UnitAdmin) 
-#admin.site.register(CSVComponentType, ComponentTypeAdmin)
+#admin.site.register(CSVComponentType, ComponentTypeAdmin) 
 admin.site.register(ProteinComponentType, ComponentTypeAdmin)
-#admin.site.register(PeptideComponent, PeptideComponentAdmin)
+admin.site.register(PeptideComponent, PeptideComponentAdmin)
 admin.site.register(ProteinComponent, ProteinComponentAdmin)
 admin.site.register(DnaComponent, DnaComponentAdmin)
 admin.site.register(DNAComponentType, ComponentTypeAdmin) 
