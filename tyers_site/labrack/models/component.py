@@ -166,7 +166,7 @@ class Component(PermissionModel):
 
 
         gb_features = ''
-        try:
+        try: 
             gb_file = settings.MEDIA_ROOT+"/"+os.path.normpath(self.GenBankfile.name)
             for gb_record in SeqIO.parse(open(gb_file,"r"), "genbank") :
                 # now do something with the record
@@ -253,7 +253,7 @@ class DnaComponent(Component):
     optimizedFor = models.ForeignKey( 'Chassis', blank=True, null=True )
 
 
-#myfield=forms.CharField( widget=forms.TextInput(attrs={'class':'disabled', 'readonly':'readonly'}))
+    #myfield=forms.CharField( widget=forms.TextInput(attrs={'class':'disabled', 'readonly':'readonly'}))
 
 
     componentType = models.ManyToManyField(DNAComponentType, 
@@ -401,7 +401,7 @@ class DnaComponent(Component):
         verbose_name = 'DNA part'
 
 
-
+ 
 
 
 class ProteinComponent(Component):

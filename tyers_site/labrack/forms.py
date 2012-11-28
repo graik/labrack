@@ -1,6 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from labrack.models.sample import DnaSample
+from labrack.models.generalmodels import Document
 from labrack.models.component import DnaComponent
 
 from django.forms.fields import DateField, ChoiceField, MultipleChoiceField
@@ -62,10 +63,13 @@ class DnaSampleForm(forms.ModelForm):
         instance = super(DnaSampleForm, self).save(commit=False)
         #instance.historyDescription = self.cleaned_data['genebank'] # etc
          
+         
+        
         if self.cleaned_data['dnaConstruct']==None:
             try:
-                dna2db = DnaComponent(displayId=self.cleaned_data['DNA_Display_ID'], sequence = self.cleaned_data['sequence'],status = self.cleaned_data['DNA_Status'], GenBankfile = None)
+                dna2db = DnaComponent(displayId=self.cleaned_data['DNA_Display_ID'], sequence = self.cleaned_data['sequence'],status = self.cleaned_data['DNA_Status'], GenBankfile = self.cleaned_data['genebank'])
                 dna2db.saveWithoutAnnotations()
+                dna2db.save()
                 instance.dnaConstruct = dna2db
             except:
                 commit=False
