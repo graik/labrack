@@ -1,6 +1,8 @@
 from django.db import models
 from permissionModel import PermissionModel
 from labrack.models.generalmodels import Container
+from labrack.models.component import DnaComponent
+from labrack.models.component import Chassis
 from labrack.models.generalmodels import ContentType
 from django.contrib.contenttypes import generic
 from labrack.models.unit import Unit
@@ -8,9 +10,9 @@ from labrack.models.unit import Unit
 
 from csvImporter.model import CsvModel
 from csvImporter import fields
- 
+
 from django.db.models import Q
- 
+
 
 from datetime import datetime
 
@@ -509,7 +511,7 @@ class Sample( PermissionModel ):
         return bool(self.reference_status)
 
     showComment.short_description = 'comments'
-    
+
     class Meta:    
         app_label = 'labrack' 
         unique_together = ('displayId', 'container')
@@ -519,8 +521,6 @@ class Sample( PermissionModel ):
 ##
 ##    def get_pretty_sequence( self, recenter=0 ):
 ##        return self.dna.get_pretty_sequence( recenter=recenter )
-
-
 
 class CSVSample(CsvModel):
     DisplayId = fields.CharField()
@@ -567,13 +567,6 @@ class CSVSample(CsvModel):
         has_header = True
 
 
-
-
-
-
-
-
-
 class SampleProvenance(models.Model):
     """
     Define the components that the sample is made of.
@@ -590,6 +583,37 @@ class SampleProvenance(models.Model):
                                          help_text='Brief description for tables\
                                          and listings', null=True, blank=True)
 
+
     class Meta:    
         app_label = 'labrack' 
 
+
+class DnaSample(Sample):
+    #, help ='Either select an existing DNA Construct or fill the dna description to create a new one'
+    dnaConstruct = models.ForeignKey(DnaComponent,verbose_name='DNA Construct', blank=True, null=True, related_name='dnaSample',help_text='Either select an existing DNA Construct or fill the dna description to create a new one')
+    inChassis = models.ForeignKey(Chassis, verbose_name='in Chassis', blank=True, null=True, related_name='chassisSample')
+    solvent = models.CharField('Buffer/Medium', max_length=100, blank=True)
+
+    concentration = models.FloatField('Concentration', null=True, blank=True)
+
+    concentrationUnit = models.ForeignKey(Unit, 
+                                          verbose_name='Concentration Unit',
+                                          related_name='concUnit', 
+                                          null=True, blank=True, 
+                                          limit_choices_to = {'unitType': 'concentration'})
+
+
+    derivedFrom = models.ForeignKey('DnaSample', verbose_name='Derived From', blank=True, null=True, related_name='derivedFromSample')
+
+    TYPE_CHOICES = (('parent', 'parent'), 
+                    ('mixture', 'mixture'),
+                    )
+    provenanceType = models.CharField( max_length=30, choices=TYPE_CHOICES, null=True, blank=True, 
+                                       default='') 
+    historyDescription = models.TextField( 'Description', null=True,blank=True)
+
+    
+    class Meta:
+        app_label = 'labrack'
+        verbose_name = 'DNA Sample'
+        abstract = False
