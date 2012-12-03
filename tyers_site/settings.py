@@ -145,6 +145,8 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     # Uncomment the next line to enable the admin user interface change grappelli:            
     # Uncomment the next line to enable the admin:
+    #'grappelli.dashboard',    
+    #'grappelli',    
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
@@ -163,6 +165,10 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "django.core.context_processors.i18n",
     'django.contrib.messages.context_processors.messages',
 )
+
+GRAPPELLI_INDEX_DASHBOARD = {
+    'tyers_site.admin.admin_site': 'tyers_site.dashboard.CustomIndexDashboard',
+}
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to

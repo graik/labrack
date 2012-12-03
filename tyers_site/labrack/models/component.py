@@ -320,9 +320,9 @@ class DnaComponent(Component):
         #cursor.execute("SELECT foo FROM bar WHERE baz = %s", [self.baz])
 
         cursor.execute("select count(*) as nbr from labrack_dnacomponent ")
-        row = cursor.fetchone()        
+        row = cursor.fetchone()
 
-        return row               
+        return row
 
     show_optimizedFor.short_description = 'optimized for'
     show_optimizedFor.admin_order_field = 'optimizedFor'
@@ -333,7 +333,31 @@ class DnaComponent(Component):
         super(DnaComponent, self).save(*args, **kwargs) # Call the "real" save() method.
         if self.GenBankfile:
             self.save_annotation()
+    
+    def related_seq( self ):
+        """
+        """
 
+
+        gb_features = ''
+        try: 
+            gb_file = settings.MEDIA_ROOT+"/"+os.path.normpath(self.GenBankfile.name)
+            for gb_record in SeqIO.parse(open(gb_file,"r"), "genbank") :
+                # now do something with the record
+                #gb_features += "Name %s, %i features" % (gb_record.name, len(gb_record.features))
+                gb_features += gb_record.seq.tostring()
+            return gb_features
+        except Exception:
+            return ''
+        
+    def saveSequenceWithoutAnnotations(self, *args, **kwargs):
+           #Saving the sequence 
+        super(DnaComponent, self).save(*args, **kwargs) # Call the "real" save() method.
+        if self.GenBankfile:
+            self.sequence = self.related_seq()
+        super(DnaComponent, self).save(*args, **kwargs) # Call the "real" save() method.
+               
+               
     def saveWithoutAnnotations(self, *args, **kwargs):
         #Saving the sequence
         #self.sequence = self.related_seq()

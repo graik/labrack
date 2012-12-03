@@ -170,7 +170,7 @@ class Sample( PermissionModel ):
 
     sampleCollection = models.ManyToManyField(SampleCollection, null=True, blank=True)
 
-    preparation_date = models.DateField(default=datetime.now())
+    preparation_date = models.DateField(default=datetime.now(), verbose_name="date")
 
     creation_date = models.DateTimeField(auto_now_add=True)
 
@@ -307,7 +307,7 @@ class Sample( PermissionModel ):
                 if sc.concentration else ''
 
             if amount or conc:
-                contentString += u' [%s %s]' % (amount, conc) 
+                contentString += u' [%s %s]' % (amount, conc)
 
         return contentString
 
@@ -591,6 +591,8 @@ class SampleProvenance(models.Model):
 class DnaSample(Sample):
     #, help ='Either select an existing DNA Construct or fill the dna description to create a new one'
     dnaConstruct = models.ForeignKey(DnaComponent,verbose_name='DNA Construct', blank=True, null=True, related_name='dnaSample',help_text='Either select an existing DNA Construct or fill the dna description to create a new one')
+    
+    
     inChassis = models.ForeignKey(Chassis, verbose_name='in Chassis', blank=True, null=True, related_name='chassisSample')
     solvent = models.CharField('Buffer/Medium', max_length=100, blank=True)
 
@@ -610,10 +612,65 @@ class DnaSample(Sample):
                     )
     provenanceType = models.CharField( max_length=30, choices=TYPE_CHOICES, null=True, blank=True, 
                                        default='') 
-    historyDescription = models.TextField( 'Description', null=True,blank=True)
+    historyDescription = models.TextField('Comment', null=True,blank=True)
 
     
     class Meta:
         app_label = 'labrack'
         verbose_name = 'DNA Sample'
         abstract = False
+        
+    def related_samples( self ):
+        """
+        """
+        
+        r = DnaSample.objects.filter( dnaConstruct = self.dnaConstruct.id ) 
+     
+        return r
+    
+    def get_relative_url(self):
+            """
+            Define standard relative URL for object access in templates
+            """
+            return 'dnasample/%i/' % self.id   
+        
+    def Content(self):
+        return self.dnaConstruct.formatedUrl();    
+    
+    def inCell(self):
+            return self.chassis.formatedUrl();   
+    
+    
+    
+class ChassisSample(Sample):
+    #, help ='Either select an existing DNA Construct or fill the dna description to create a new one'
+    chassis = models.ForeignKey(Chassis,verbose_name='Chassis', null=True, blank=True, related_name='Chassis')
+        
+    solvent = models.CharField('Buffer/Medium', max_length=100, blank=True)
+
+    conc = models.FloatField('Concentration', null=True, blank=True)
+
+    concUnit = models.ForeignKey(Unit, 
+                                          verbose_name='Concentration_Unit',
+                                          related_name='concU', 
+                                          null=True, blank=True, 
+                                          limit_choices_to = {'unitType': 'concentration'})
+
+    class Meta:
+        app_label = 'labrack'
+        verbose_name = 'Cell Sample'
+        abstract = False
+        
+    def related_samples( self ):
+        """
+        """
+        
+        r = ChassisSample.objects.filter( chassis = self.chassis.id ) 
+     
+        return r   
+    
+    def get_relative_url(self):
+            """
+            Define standard relative URL for object access in templates
+            """
+            return 'chassissample/%i/' % self.id      

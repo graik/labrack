@@ -13,7 +13,8 @@ urlpatterns = patterns('',
 
     # Uncomment the next line to enable the admin:
     #url(r'^labrack/', include('labrack.urls')),
-    #url(r'^admin/labrack/dnacomponent/(?P<Id>\d+)/$', index, name='index'),    
+    #url(r'^admin/labrack/dnacomponent/(?P<Id>\d+)/$', index, name='index'), 
+    url(r'^grappelli/', include('grappelli.urls')),
     url(r'^', include('labrack.urls')),    
     url(r'^admin/', include(admin.site.urls)),
     url(r'^media/(?P<path>.*)$', 'django.views.static.serve',{'document_root': settings.MEDIA_ROOT}),

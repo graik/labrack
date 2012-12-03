@@ -5,20 +5,14 @@
 {% block after_field_sets %}
 
 <div class="module aligned">
-  <h2>DNA Samples</h2>
+  <h2>Chassis Samples</h2>
         <div class="description">
           Note, clicking any of the links below will open a new window/tab!
         </div>
         
         <p></p>
         
-        {% if original %} 
-          <ul class="object-tools">
-            <li><a href="../../dnasample/add/?dna={{original.displayId}}" target="_blank">
-                Add DNA Sample</a></li> 
-          </ul>          
-        {% endif %}
-        
+          
         {% if original and original.related_samples %}
           <table cellspacing="0">
             <thead>

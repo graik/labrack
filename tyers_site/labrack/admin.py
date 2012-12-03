@@ -61,6 +61,7 @@ from labrack.models.generalmodels import Chassis
 
 
 from tyers_site.labrack.forms import DnaSampleForm
+from tyers_site.labrack.forms import ChassisSampleForm
 
 
 class PermissionAdmin():
@@ -453,8 +454,8 @@ class DnaConstructInline(GenericCollectionTabularInline):
     import labrack.models as M
 
     model = M.DnaComponent     
-    
-     
+
+
 
 class SampleProvenanceInline(GenericCollectionTabularInline):
     extra = 1
@@ -464,9 +465,9 @@ class SampleProvenanceInline(GenericCollectionTabularInline):
     model = SampleProvenance
 
     raw_id_fields = ('sample_source',)
-    
-    
- 
+
+
+
 
 class SampleForm(forms.ModelForm):
 
@@ -552,7 +553,7 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
     inlines = [SampleContentInline, SampleProvenanceInline]
 
     list_display   = ('showId', 'location_url', 
-                      'created_by', 'preparation_date', 'showSampleType', 
+                      'created_by', 'preparation_date', 
                       'showMainContent', 
                       'status','reference_status', 'showComment')
 
@@ -715,32 +716,32 @@ class DnaSampleAdmin(PermissionAdmin, admin.ModelAdmin):
 
     fieldsets = [
         (None, {
-            'fields' : ((('container', 'displayId',
-                          'reference_status'),
+            'fields' : ((('container', 'displayId'),
+                         ('reference_status','sampleCollection'),
                          ('aliquotNr',),
                          ('preparation_date', 'status'),
                          ('description'),
-                         'sampleCollection'
                          )
                         )
         }
          ), 
         ('DNA Content',{'fields':[('dnaConstruct','inChassis'),
-                              ('DNA_Display_ID','DNA_Status'),
-                              ('genebank','sequence'),
-                              ('concentration','concentrationUnit','solvent')]}),
+                                  ('DNA_Display_ID','DNA_Name','DNA_Status'),
+                                  ('genebank','sequence'),
+                                  ('concentration','concentrationUnit','solvent')],
+                        'description': 'Either select an existing DNA Construct or fill the dna description to create a new one'                    
+                        }),
         ('History',{'fields':[('derivedFrom','provenanceType'),
-                                      ('historyDescription',)]}),        
+                              ('historyDescription',)]}),        
     ]
 
 
     #inlines = [DnaConstructInline]
- 
+
 
     list_display   = ('showId', 'location_url', 
-                      'created_by', 'preparation_date', 'showSampleType', 
-                      'showMainContent', 
-                      'status','reference_status', 'showComment')
+                      'created_by', 'preparation_date','content_url', 'cell_url','concentraunit', 
+                      'isreference_status', 'showComment')
 
     list_display_links = ('showId',)
 
@@ -750,7 +751,7 @@ class DnaSampleAdmin(PermissionAdmin, admin.ModelAdmin):
 
     ordering       = ('container', 'displayId')
 
-    raw_id_fields = ('container',)
+    raw_id_fields = ('container','dnaConstruct','inChassis','sampleCollection',)
 
     save_as        = True
 
@@ -767,13 +768,47 @@ class DnaSampleAdmin(PermissionAdmin, admin.ModelAdmin):
     class Media:
         js = (S.MEDIA_URL + '/js/genericcollection.js', 
               S.MEDIA_URL + '/js/list_filter_collapse.js',)
-    
+
     def container_url(self, obj):
         url = obj.container.get_relative_url()
         return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.container.__unicode__()))
-    container_url.allow_tags = True
-    container_url.short_description = 'Container'
+   
+   
+    def content_url(self, obj):
+        url = obj.dnaConstruct.get_relative_url()
+        return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.dnaConstruct.__unicode__()))
+    content_url.allow_tags = True
+    content_url.short_description = 'Content'
+    def isreference_status(self, obj):
+        refStatus = ''
+        if obj.reference_status:
+            refStatus = 'Yes'
+        return refStatus
+        
+    def cell_url(self, obj):
+        urlink = ''
+        if (obj.inChassis <> None):
+            url = obj.inChassis.get_relative_url()
+            urlink = mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.inChassis.__unicode__()))      
+        return urlink
+    cell_url.allow_tags = True
+    cell_url.short_description = 'inCell'    
+    
+    def concentraunit(self,obj):
+        if obj.concentration == None:
+            conc = ''
+        else:
+            conc = str(obj.concentration)
+            
+        if obj.concentrationUnit == None:
+            concUnit = ''
+        else:
+            concUnit = str(obj.concentrationUnit)        
+        
+        return conc + ' '+ concUnit
 
+
+    
 
     def file_link(self):
         if self.file:
@@ -796,6 +831,166 @@ class DnaSampleAdmin(PermissionAdmin, admin.ModelAdmin):
                 kwargs['widget'] = VerboseManyToManyRawIdWidget(db_field.rel, site)
             return db_field.formfield(**kwargs)
         return super(DnaSampleAdmin, self).formfield_for_dbfield(db_field, **kwargs)
+
+
+    def location_url(self, obj):
+        url = obj.container.location.get_relative_url()
+        return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.container.location.__unicode__()))
+    location_url.allow_tags = True
+    location_url.short_description = 'Location'
+    location_url.allow_tags = True
+     
+
+
+    def make_csv(self, request, queryset):
+        return importexport.generate_csv(self, request, queryset, 
+                                         self.exportFields, 'Sample')
+
+    make_csv.short_description = 'Export as CSV'
+
+
+    def make_bad(self, request, queryset):
+        self.update_status(request, queryset, 'bad')
+
+    make_bad.short_description = 'Mark selected entries as bad'
+
+
+    def make_empty(self, request, queryset):
+        self.update_status(request, queryset, 'empty')
+
+    make_empty.short_description = 'Mark selected entries as empty'
+
+
+    def make_ok(self, request, queryset):
+        self.update_status(request, queryset, 'ok')
+
+
+    make_ok.short_description = 'Mark selected entries as ok'
+
+
+
+    def qr_code_img(self, obj):
+        data = obj.qr_code()
+        return mark_safe('<img src="http://chart.apis.google.com/chart?cht=qr&chs=55x55&chl=' + data + '" />')
+        #return mark_safe(data)
+    qr_code_img.allow_tags = True
+    qr_code_img.short_description = 'QR code'
+
+
+    def update_status(self, request, queryset, status):
+
+        i = 0
+
+        for obj in queryset:
+            if obj.writePermission(request.user):
+                obj.status = status
+                obj.save()
+                i += 1
+            else:
+                messages.error(request, '%s is not allowed to modify %s.'  
+                               % (request.user.username, obj))
+
+        self.message_user(request, '%i samples were set to %s'  
+                          % (i, status))
+
+
+
+
+class ChassisSampleAdmin(PermissionAdmin, admin.ModelAdmin):
+
+    form = ChassisSampleForm     
+
+    
+
+
+    #actions = ['make_csv', 'make_ok', 'make_empty', 'make_bad']
+
+    #date_hierarchy = 'preparation_date'
+
+    
+
+    fieldsets = [
+        (None, {
+            'fields' : ((('container', 'displayId'),
+                         ('reference_status','sampleCollection'),
+                         ('aliquotNr',),
+                         ('preparation_date', 'status'),
+                         ('description'),
+                         )
+                        )
+        }
+         ), 
+        ('Cell Content',{'fields':[('chassis'),
+                                  ('Chassis_Display_ID','Chassis_Name','Chassis_Description')],
+                        'description': 'Either select an existing Cell or fill the cell description to create a new one'                    
+                        }),]
+
+
+
+    #inlines = [DnaConstructInline]
+
+
+    list_display   = ('showId', 'location_url', 
+                      'created_by', 'preparation_date', 'showSampleType', 
+                      'showMainContent', 
+                      'status','reference_status', 'showComment')
+
+    list_display_links = ('showId',)
+
+    list_filter = ('created_by', ContainerListFilter, 'container__rack__current_location', 
+                   'status', SampleCollectionListFilter
+                   )
+
+    ordering       = ('container', 'displayId',)
+
+    raw_id_fields = ('container','sampleCollection','chassis')
+
+    save_as        = True
+
+    save_on_top = True
+
+    search_fields  = ('displayId', 'name', 'description', 
+                      'container__displayId', 
+                      'container__rack__current_location__displayId', 
+                      'container__rack__current_location__location__temperature', 
+                      'container__rack__current_location__location__room')
+
+
+
+    class Media:
+        js = (S.MEDIA_URL + '/js/genericcollection.js', 
+              S.MEDIA_URL + '/js/list_filter_collapse.js',)
+
+    def container_url(self, obj):
+        url = obj.container.get_relative_url()
+        return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.container.__unicode__()))
+    container_url.allow_tags = True
+    container_url.short_description = 'Container'
+
+
+
+
+    def file_link(self):
+        if self.file:
+            return "<a href='%s'>download</a>" % (self.attachment.url,)
+        else:
+            return "No attachment"
+
+    file_link.allow_tags = True
+
+
+    def formfield_for_dbfield(self, db_field, **kwargs):
+
+        if db_field.name in self.raw_id_fields:
+
+            kwargs.pop("request", None)
+            fType = db_field.rel.__class__.__name__
+            if fType == "ManyToOneRel":
+                kwargs['widget'] = VerboseForeignKeyRawIdWidget(db_field.rel, site)
+            elif fType == "ManyToManyRel":
+                kwargs['widget'] = VerboseManyToManyRawIdWidget(db_field.rel, site)
+            return db_field.formfield(**kwargs)
+        return super(ChassisSampleAdmin, self).formfield_for_dbfield(db_field, **kwargs)
 
 
     def location_url(self, obj):
@@ -855,6 +1050,8 @@ class DnaSampleAdmin(PermissionAdmin, admin.ModelAdmin):
 
         self.message_user(request, '%i samples were set to %s'  
                           % (i, status))
+
+
 
 
 
@@ -978,4 +1175,5 @@ admin.site.register(ChemicalComponent, ComponentAdmin)
 admin.site.register(SequenceAnnotation, SequenceAnnotationAdmin)
 admin.site.register(Chassis) 
 admin.site.register(Collection)
+admin.site.register(ChassisSample,ChassisSampleAdmin)
 admin.site.register(DnaSample,DnaSampleAdmin)
