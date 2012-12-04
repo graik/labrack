@@ -617,13 +617,9 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
                 kwargs['widget'] = VerboseManyToManyRawIdWidget(db_field.rel, site)
             return db_field.formfield(**kwargs)
         return super(SampleAdmin, self).formfield_for_dbfield(db_field, **kwargs)
-
-
-    def location_url(self, obj):
-        url = obj.container.location.get_relative_url()
-        return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.container.location.__unicode__()))
-    location_url.allow_tags = True
-    location_url.short_description = 'Location'
+ 
+    
+     
 
 
     def make_csv(self, request, queryset):
@@ -651,7 +647,14 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
 
     make_ok.short_description = 'Mark selected entries as ok'
 
-
+    def location_url(self, obj):
+        con = obj.container
+        rac = con.rack
+        locat = rac.current_location
+        url = locat.get_relative_url()
+        return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.container.rack.current_location.__unicode__()))
+    location_url.allow_tags = True
+    location_url.short_description = 'Location'    
 
     def qr_code_img(self, obj):
         data = obj.qr_code()
@@ -774,16 +777,23 @@ class DnaSampleAdmin(PermissionAdmin, admin.ModelAdmin):
         js = (S.MEDIA_URL + '/js/genericcollection.js', 
               S.MEDIA_URL + '/js/list_filter_collapse.js',)
 
-    def container_url(self, obj):
-        url = obj.container.get_relative_url()
-        return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.container.__unicode__()))
    
     def isreference_status(self, obj):
         refStatus = ''
         if obj.reference_status:
            refStatus = 'Yes'
         return refStatus
-    isreference_status.short_description = 'Reference'   
+    isreference_status.short_description = 'Reference'  
+    
+    def location_url(self, obj):
+        con = obj.container
+        rac = con.rack
+        locat = rac.current_location
+        url = locat.get_relative_url()
+        return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.container.rack.current_location.__unicode__()))
+    location_url.allow_tags = True
+    location_url.short_description = 'Location'      
+    
     def content_url(self, obj):
         url = obj.dnaConstruct.get_relative_url()
         return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.dnaConstruct.__unicode__()))
@@ -838,13 +848,6 @@ class DnaSampleAdmin(PermissionAdmin, admin.ModelAdmin):
             return db_field.formfield(**kwargs)
         return super(DnaSampleAdmin, self).formfield_for_dbfield(db_field, **kwargs)
 
-
-    def location_url(self, obj):
-        url = obj.container.location.get_relative_url()
-        return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.container.location.__unicode__()))
-    location_url.allow_tags = True
-    location_url.short_description = 'Location'
-    location_url.allow_tags = True
      
 
 
@@ -1008,10 +1011,13 @@ class ChassisSampleAdmin(PermissionAdmin, admin.ModelAdmin):
 
 
     def location_url(self, obj):
-        url = obj.container.location.get_relative_url()
-        return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.container.location.__unicode__()))
+        con = obj.container
+        rac = con.rack
+        locat = rac.current_location
+        url = locat.get_relative_url()
+        return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.container.rack.current_location.__unicode__()))
     location_url.allow_tags = True
-    location_url.short_description = 'Location'
+    location_url.short_description = 'Location'   
 
 
     def make_csv(self, request, queryset):
