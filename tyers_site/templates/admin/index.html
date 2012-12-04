@@ -1,0 +1,186 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_static %}
+
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static "admin/css/dashboard.css" %}" />{% endblock %}
+
+{% block coltype %}colMS{% endblock %}
+
+{% block bodyclass %}dashboard{% endblock %}
+
+{% block breadcrumbs %}{% endblock %}
+
+{% block content %}
+    <div class="module">
+            <table summary="Models available in the Labrack application.">
+            <caption><a href="" class="section">Manage Content/Sequences</a></caption>
+            
+                <tr>
+                
+                    <th scope="row"><a href="/admin/labrack/dnacomponent/">DNA parts</a></th>
+                
+    
+                
+                    <td><a href="/admin/labrack/dnacomponent/add/" class="addlink">Add</a></td>
+                
+    
+                
+                    <td><a href="/admin/labrack/dnacomponent/" class="changelink">Change</a></td>
+                
+                </tr>
+                <tr>
+                
+                    <th scope="row"><a href="/admin/labrack/chassis/">Cells</a></th>
+                
+    
+                
+                    <td><a href="/admin/labrack/chassis/add/" class="addlink">Add</a></td>
+                
+    
+                
+                    <td><a href="/admin/labrack/chassis/" class="changelink">Change</a></td>
+                
+                </tr>
+            </table>
+            </div>
+                
+   
+  <br />
+  
+  <div class="module">
+            <table summary="Models available in the Labrack application.">
+            <caption><a href="" class="section">Manage Samples</a></caption>
+            
+                <tr>
+                
+                    <th scope="row"><a href="/admin/labrack/dnasample/">DNA Samples</a></th>
+                
+    
+                
+                    <td><a href="/admin/labrack/dnasample/add/" class="addlink">Add</a></td>
+                
+    
+                
+                    <td><a href="/admin/labrack/dnasample/" class="changelink">Change</a></td>
+                
+                </tr>
+                <tr>
+                
+                    <th scope="row"><a href="/admin/labrack/chassissample/">Cell Samples</a></th>
+                
+    
+                
+                    <td><a href="/admin/labrack/chassissample/add/" class="addlink">Add</a></td>
+                
+    
+                
+                    <td><a href="/admin/labrack/chassissample/" class="changelink">Change</a></td>
+                
+                </tr>
+            </table>
+            </div>
+                
+  
+  <br />
+  
+  
+   <div class="module">
+            <table summary="Models available in the Labrack application.">
+            <caption><a href="" class="section">Others</a></caption>
+            
+                <tr>
+                
+                    <th scope="row"><a href="/admin/labrack/container/">Containers</a></th>
+                
+    
+                
+                    <td><a href="/admin/labrack/container/add/" class="addlink">Add</a></td>
+                
+    
+                
+                    <td><a href="/admin/labrack/container/" class="changelink">Change</a></td>
+                
+                </tr>
+                <tr>
+                
+                    <th scope="row"><a href="/admin/labrack/location/">Locations</a></th>
+                
+    
+                
+                    <td><a href="/admin/labrack/location/add/" class="addlink">Add</a></td>
+                
+    
+                
+                    <td><a href="/admin/labrack/location/" class="changelink">Change</a></td>
+                
+                </tr>
+                <tr>
+                
+                    <th scope="row"><a href="/admin/labrack/rack/">Racks</a></th>
+                
+    
+                
+                    <td><a href="/admin/labrack/rack/add/" class="addlink">Add</a></td>
+                
+    
+                
+                    <td><a href="/admin/labrack/rack/" class="changelink">Change</a></td>
+                
+                </tr>
+                <tr>
+                
+                    <th scope="row"><a href="/admin/labrack/unit/">Units</a></th>
+                
+    
+                
+                    <td><a href="/admin/labrack/unit/add/" class="addlink">Add</a></td>
+                
+    
+                
+                    <td><a href="/admin/labrack/unit/" class="changelink">Change</a></td>
+                
+                </tr>
+            </table>
+            </div>
+                
+ 
+  <br />
+
+{% if app_list %}
+
+{% else %}
+    <p>{% trans "You don't have permission to edit anything." %}</p>
+{% endif %}
+</div>
+{% endblock %}
+
+{% block sidebar %}
+<div id="content-related">
+    <div class="module" id="recent-actions-module">
+        <h2>{% trans 'Recent Actions' %}</h2>
+        <h3>{% trans 'My Actions' %}</h3>
+            {% load log %}
+            {% get_admin_log 10 as admin_log for_user user %}
+            {% if not admin_log %}
+            <p>{% trans 'None available' %}</p>
+            {% else %}
+            <ul class="actionlist">
+            {% for entry in admin_log %}
+            <li class="{% if entry.is_addition %}addlink{% endif %}{% if entry.is_change %}changelink{% endif %}{% if entry.is_deletion %}deletelink{% endif %}">
+                {% if entry.is_deletion or not entry.get_admin_url %}
+                    {{ entry.object_repr }}
+                {% else %}
+                    <a href="{{ entry.get_admin_url }}">{{ entry.object_repr }}</a>
+                {% endif %}
+                <br/>
+                {% if entry.content_type %}
+                    <span class="mini quiet">{% filter capfirst %}{% trans entry.content_type.name %}{% endfilter %}</span>
+                {% else %}
+                    <span class="mini quiet">{% trans 'Unknown content' %}</span>
+                {% endif %}
+            </li>
+            {% endfor %}
+            </ul>
+            {% endif %}
+    </div>
+</div>
+{% endblock %}
