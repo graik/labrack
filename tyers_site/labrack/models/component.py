@@ -7,8 +7,9 @@ import os
 
 from Bio import SeqIO
 from Bio.Seq import Seq
-
 from tyers_site.labrack.models.generalmodels import SequenceAnnotation
+ 
+ 
 
 
 
@@ -144,7 +145,8 @@ class Component(PermissionModel):
     def related_samples( self ):
         """
         """
-        r = SampleContent.objects.filter( object_id=self.id, 
+        import labrack.models as M
+        r = M.SampleContent.objects.filter( object_id=self.id, 
                                           content_type__model=self.__class__.__name__.lower() )
         s = [content.sample for content in r]
 
@@ -194,10 +196,11 @@ class Component(PermissionModel):
         import labrack.models as M
 
 
-        r = M.SampleContent.objects.filter( object_id=self.id ).order_by('bioStart')
+        r = M.DnaSample.objects.filter( dnaConstruct=self.id )
         s = r.count()      
 
         return s
+    number_related_samples.short_description = '# Samples'
 
     def number_related_annotations( self ):
         """
@@ -311,6 +314,18 @@ class DnaComponent(Component):
             return self.optimizedFor
         return u''
 
+    def related_dnaSamples(self):
+        """
+        """       
+        import labrack.models as M
+        
+        r = M.DnaSample.objects.filter(dnaConstruct=self.id)
+        
+        #r = labrack.models.sample.DnaSample.objects.filter(dnaConstruct=1)
+        
+        return r
+    
+    
     def show_parentSample(self):
         from django.db import connection, transaction
         cursor = connection.cursor()

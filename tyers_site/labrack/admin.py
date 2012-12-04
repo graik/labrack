@@ -589,7 +589,13 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
     container_url.allow_tags = True
     container_url.short_description = 'Container'
 
-
+    def isreference_status(self, obj):
+        refStatus = ''
+        if obj.reference_status:
+           refStatus = 'Yes'
+        return refStatus
+    isreference_status.short_description = 'Reference'
+    
     def file_link(self):
         if self.file:
             return "<a href='%s'>download</a>" % (self.attachment.url,)
@@ -718,8 +724,8 @@ class DnaSampleAdmin(PermissionAdmin, admin.ModelAdmin):
         (None, {
             'fields' : ((('container', 'displayId'),
                          ('reference_status','sampleCollection'),
-                         ('aliquotNr',),
                          ('preparation_date', 'status'),
+                         ('solvent','concentration','concentrationUnit','amount','amountUnit','aliquotNr',),
                          ('description'),
                          )
                         )
@@ -727,8 +733,7 @@ class DnaSampleAdmin(PermissionAdmin, admin.ModelAdmin):
          ), 
         ('DNA Content',{'fields':[('dnaConstruct','inChassis'),
                                   ('DNA_Display_ID','DNA_Name','DNA_Status'),
-                                  ('genebank','sequence'),
-                                  ('concentration','concentrationUnit','solvent')],
+                                  ('genebank','sequence')],
                         'description': 'Either select an existing DNA Construct or fill the dna description to create a new one'                    
                         }),
         ('History',{'fields':[('derivedFrom','provenanceType'),
@@ -741,7 +746,7 @@ class DnaSampleAdmin(PermissionAdmin, admin.ModelAdmin):
 
     list_display   = ('showId', 'location_url', 
                       'created_by', 'preparation_date','content_url', 'cell_url','concentraunit', 
-                      'isreference_status', 'showComment')
+                      'isreference_status','status', 'showComment')
 
     list_display_links = ('showId',)
 
@@ -773,17 +778,18 @@ class DnaSampleAdmin(PermissionAdmin, admin.ModelAdmin):
         url = obj.container.get_relative_url()
         return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.container.__unicode__()))
    
-   
+    def isreference_status(self, obj):
+        refStatus = ''
+        if obj.reference_status:
+           refStatus = 'Yes'
+        return refStatus
+    isreference_status.short_description = 'Reference'   
     def content_url(self, obj):
         url = obj.dnaConstruct.get_relative_url()
         return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.dnaConstruct.__unicode__()))
     content_url.allow_tags = True
     content_url.short_description = 'Content'
-    def isreference_status(self, obj):
-        refStatus = ''
-        if obj.reference_status:
-            refStatus = 'Yes'
-        return refStatus
+   
         
     def cell_url(self, obj):
         urlink = ''
@@ -913,8 +919,8 @@ class ChassisSampleAdmin(PermissionAdmin, admin.ModelAdmin):
         (None, {
             'fields' : ((('container', 'displayId'),
                          ('reference_status','sampleCollection'),
-                         ('aliquotNr',),
                          ('preparation_date', 'status'),
+                         ('solvent','concentration','concentrationUnit','amount','amountUnit','aliquotNr',),
                          ('description'),
                          )
                         )
@@ -923,7 +929,10 @@ class ChassisSampleAdmin(PermissionAdmin, admin.ModelAdmin):
         ('Cell Content',{'fields':[('chassis'),
                                   ('Chassis_Display_ID','Chassis_Name','Chassis_Description')],
                         'description': 'Either select an existing Cell or fill the cell description to create a new one'                    
-                        }),]
+                        }),
+        ('History',{'fields':[('derivedFrom','provenanceType'),
+                              ('historyDescription',)]}),
+    ]
 
 
 
@@ -932,8 +941,8 @@ class ChassisSampleAdmin(PermissionAdmin, admin.ModelAdmin):
 
     list_display   = ('showId', 'location_url', 
                       'created_by', 'preparation_date', 'showSampleType', 
-                      'showMainContent', 
-                      'status','reference_status', 'showComment')
+                      'showMainContent', 'isreference_status',
+                      'status', 'showComment')
 
     list_display_links = ('showId',)
 
@@ -967,7 +976,12 @@ class ChassisSampleAdmin(PermissionAdmin, admin.ModelAdmin):
     container_url.allow_tags = True
     container_url.short_description = 'Container'
 
-
+    def isreference_status(self, obj):
+        refStatus = ''
+        if obj.reference_status:
+           refStatus = 'Yes'
+        return refStatus
+    isreference_status.short_description = 'Reference'
 
 
     def file_link(self):

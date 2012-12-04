@@ -32,7 +32,10 @@ class DnaSampleForm(forms.ModelForm):
             )
     
     DNA_Status = forms.ChoiceField(FAVORITE_COLORS_CHOICES,required=False)    
-      
+    
+    description = forms.CharField(widget=forms.TextInput(attrs={'size':'80'}))
+    
+     
     
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request', None)
@@ -96,7 +99,7 @@ class ChassisSampleForm(forms.ModelForm):
    
     Chassis_Display_ID = forms.CharField(required=False,label="Display ID")
     Chassis_Name = forms.CharField(required=False,label="Name")  
-    Chassis_Description = forms.CharField(widget=forms.Textarea,required=False,label="Description")
-
+    #Chassis_Description = forms.CharField(widget=forms.Textarea,required=False,label="Description")
+    Chassis_Description = forms.CharField(widget=forms.TextInput(attrs={'size':'80'}))
     class Meta:
         model = ChassisSample        

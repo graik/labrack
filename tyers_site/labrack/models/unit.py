@@ -12,7 +12,6 @@ class Unit(models.Model):
                  ('concentration','concentration'),
                  ('number','number'),
                  ('other','other'))
-
     name = models.CharField(max_length=10)
 
     conversion = models.FloatField('Conversion Factor', blank=True, null=True,

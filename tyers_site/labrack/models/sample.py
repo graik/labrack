@@ -177,6 +177,32 @@ class Sample( PermissionModel ):
     modification_date = models.DateTimeField(auto_now=True)
 
 
+    solvent = models.CharField('Buffer/Medium', max_length=100, blank=True)
+
+    concentration = models.FloatField('Concentration', null=True, blank=True)
+
+    concentrationUnit = models.ForeignKey(Unit, 
+                                          verbose_name='Concentration Unit',
+                                          related_name='concUnit', 
+                                          null=True, blank=True, 
+                                          limit_choices_to = {'unitType': 'concentration'})    
+    
+    amount = models.FloatField('Amount', null=True, blank=True)
+    amountUnit = models.ForeignKey(Unit, 
+                                          verbose_name='Amount Unit',
+                                          related_name='amouUnit', 
+                                          null=True, blank=True, 
+                                          limit_choices_to = {'unitType': 'concentration'})
+    
+    derivedFrom = models.ForeignKey('self', verbose_name='Derived From', blank=True, null=True, related_name='derivedFromSample')
+
+    TYPE_CHOICES = (('parent', 'parent'), 
+                    ('mixture', 'mixture'),
+                    )
+    provenanceType = models.CharField( max_length=30, choices=TYPE_CHOICES, null=True, blank=True, 
+                                       default='') 
+    historyDescription = models.CharField('Comment', null=True,blank=True,max_length = 255)    
+
     # custom properties (shortcuts)
     def _contentObjects( self, model=u'component' ):
         """
@@ -263,7 +289,7 @@ class Sample( PermissionModel ):
         """
         Define standard relative URL for object access in templates
         """
-        return 'sample/%i/' % self.id
+        return 'dnasample/%i/' % self.id
 
 
     # custom display methods for web interface        
@@ -593,26 +619,7 @@ class DnaSample(Sample):
     dnaConstruct = models.ForeignKey(DnaComponent,verbose_name='DNA Construct', blank=True, null=True, related_name='dnaSample',help_text='Either select an existing DNA Construct or fill the dna description to create a new one')
     
     
-    inChassis = models.ForeignKey(Chassis, verbose_name='in Chassis', blank=True, null=True, related_name='chassisSample')
-    solvent = models.CharField('Buffer/Medium', max_length=100, blank=True)
-
-    concentration = models.FloatField('Concentration', null=True, blank=True)
-
-    concentrationUnit = models.ForeignKey(Unit, 
-                                          verbose_name='Concentration Unit',
-                                          related_name='concUnit', 
-                                          null=True, blank=True, 
-                                          limit_choices_to = {'unitType': 'concentration'})
-
-
-    derivedFrom = models.ForeignKey('DnaSample', verbose_name='Derived From', blank=True, null=True, related_name='derivedFromSample')
-
-    TYPE_CHOICES = (('parent', 'parent'), 
-                    ('mixture', 'mixture'),
-                    )
-    provenanceType = models.CharField( max_length=30, choices=TYPE_CHOICES, null=True, blank=True, 
-                                       default='') 
-    historyDescription = models.TextField('Comment', null=True,blank=True)
+    inChassis = models.ForeignKey(Chassis, verbose_name='in Cell', blank=True, null=True, related_name='chassisSample')
 
     
     class Meta:
@@ -644,18 +651,8 @@ class DnaSample(Sample):
     
 class ChassisSample(Sample):
     #, help ='Either select an existing DNA Construct or fill the dna description to create a new one'
-    chassis = models.ForeignKey(Chassis,verbose_name='Chassis', null=True, blank=True, related_name='Chassis')
+    chassis = models.ForeignKey(Chassis,verbose_name='Chassis', null=True, blank=True, related_name='Cell')
         
-    solvent = models.CharField('Buffer/Medium', max_length=100, blank=True)
-
-    conc = models.FloatField('Concentration', null=True, blank=True)
-
-    concUnit = models.ForeignKey(Unit, 
-                                          verbose_name='Concentration_Unit',
-                                          related_name='concU', 
-                                          null=True, blank=True, 
-                                          limit_choices_to = {'unitType': 'concentration'})
-
     class Meta:
         app_label = 'labrack'
         verbose_name = 'Cell Sample'
@@ -664,7 +661,6 @@ class ChassisSample(Sample):
     def related_samples( self ):
         """
         """
-        
         r = ChassisSample.objects.filter( chassis = self.chassis.id ) 
      
         return r   

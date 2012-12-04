@@ -11,14 +11,6 @@
         </div>
         
         <p></p>
-        
-        {% if original %} 
-          <ul class="object-tools">
-            <li><a href="../../dnasample/add/?dna={{original.displayId}}" target="_blank">
-                Add DNA Sample</a></li> 
-          </ul>          
-        {% endif %}
-        
         {% if original and original.related_samples %}
           <table cellspacing="0">
             <thead>
