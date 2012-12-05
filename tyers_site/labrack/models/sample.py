@@ -537,6 +537,20 @@ class Sample( PermissionModel ):
         return bool(self.reference_status)
 
     showComment.short_description = 'comments'
+    
+    def showConcentration(self):
+        if self.concentration == None:
+            conc = ''
+        else:
+            conc = str(self.concentration)
+            
+        if self.concentrationUnit == None:
+            concUnit = ''
+        else:
+            concUnit = str(self.concentrationUnit)        
+        
+        return conc + ' '+ concUnit              
+    showConcentration.short_description = 'concentration'        
 
     class Meta:    
         app_label = 'labrack' 
@@ -645,7 +659,7 @@ class DnaSample(Sample):
         return self.dnaConstruct.formatedUrl();    
     
     def inCell(self):
-            return self.chassis.formatedUrl();   
+            return self.inChassis.formatedUrl();   
     
     
     

@@ -903,8 +903,35 @@ class DnaSampleAdmin(PermissionAdmin, admin.ModelAdmin):
                           % (i, status))
 
 
+class ChassisAdmin(admin.ModelAdmin):
+    actions = ['make_csv']
+    """
+    exportFields = OrderedDict( [('Rack ID', 'displayId'),
+                                 ('Name', 'name'),
+                                 ('Current location','location_url'),
+
+                                 ])
+                                 """
+    list_display = ('displayId', 'name', 'status')    
+    fields = (('displayId', 'name','description'))
+
+    def container_url(self, obj):
+        url = obj.container.get_relative_url()
+        return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.container.__unicode__()))
+
+    def location_url(self, obj):
+        url = obj.current_location.get_relative_url()
+        return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.current_location.__unicode__()))
+    location_url.allow_tags = True
+
+    location_url.short_description = 'Location'              
 
 
+    def make_csv(self, request, queryset):
+        return importexport.generate_csv(self, request, queryset, 
+                                         self.exportFields, 'Rack')
+
+    make_csv.short_description = 'Export as CSV'
 class ChassisSampleAdmin(PermissionAdmin, admin.ModelAdmin):
 
     form = ChassisSampleForm     
@@ -1193,7 +1220,7 @@ admin.site.register(DNAComponentType, ComponentTypeAdmin)
 admin.site.register(Component, ComponentAdmin)
 admin.site.register(ChemicalComponent, ComponentAdmin)
 admin.site.register(SequenceAnnotation, SequenceAnnotationAdmin)
-admin.site.register(Chassis) 
+admin.site.register(Chassis,ChassisAdmin) 
 admin.site.register(Collection)
 admin.site.register(ChassisSample,ChassisSampleAdmin)
 admin.site.register(DnaSample,DnaSampleAdmin)

@@ -123,8 +123,6 @@ class Component(PermissionModel):
     modification_date = models.DateTimeField(auto_now=True, null=True)
 
 
-    GenBankfile = models.FileField(upload_to='documents/GenBank/%Y/%m/%d',blank=True,null=True)
-
 
 
     def formatedUrl(self):
@@ -267,7 +265,8 @@ class DnaComponent(Component):
     circular = models.BooleanField( 'Circular', default=False, 
                                     help_text='is the DNA Circular or not.')
 
-
+    
+    GenBankfile = models.FileField(upload_to='documents/GenBank/%Y/%m/%d',blank=True,null=True)
     def get_relative_url(self):
         """
         Define standard relative URL for object access in templates
@@ -457,7 +456,7 @@ class ProteinComponent(Component):
                                            verbose_name='Part type', 
                                            help_text='Classification of this part.')   
 
-
+    GenBankfile = models.FileField(upload_to='documents/GenBank/%Y/%m/%d',blank=True,null=True)
     def get_relative_url(self):
         """
         Define standard relative URL for object access in templates

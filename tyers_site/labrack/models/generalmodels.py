@@ -81,10 +81,18 @@ class Location(models.Model):
         return 'location/%i/' % self.id
 
 
+    def related_racks(self):
+        r = Rack.objects.filter( current_location = self.id )
+#        s = [content.sample for content in r]        
 
+        return r 
 
     class Meta:
         app_label = 'labrack'
+        
+          
+        
+        
 
 
 
@@ -104,6 +112,7 @@ class Rack(models.Model):
 
     def __unicode__(self):
         return u'%s' % (self.displayId)
+
 
     def related_containers( self ):
 
@@ -156,15 +165,27 @@ class Container( PermissionModel ):
     def __unicode__( self ):
         return "%s" % self.displayId
 
-    def related_samples( self ):
+    def related_dna_samples( self ):
         """
         """
 
-
-        r = Sample.objects.filter( container = self.id )
+        import labrack.models as M
+        
+        r = M.DnaSample.objects.filter(container=self.id)
 #        s = [content.sample for content in r]        
 
         return r
+    
+    def related_chassis_samples( self ):
+        """
+        """
+
+        import labrack.models as M
+        
+        r = M.ChassisSample.objects.filter(container=self.id)
+#        s = [content.sample for content in r]        
+
+        return r    
 
     def get_relative_url(self):
         """
