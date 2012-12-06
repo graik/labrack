@@ -563,48 +563,53 @@ class Sample( PermissionModel ):
 ##        return self.dna.get_pretty_sequence( recenter=recenter )
 
 class CSVSample(CsvModel):
-    DisplayId = fields.CharField()
-    name = fields.CharField()
     container = fields.CharField()
-    status = fields.IntegerField()
-
-    PreparationDate = fields.CharField()
-    NumberOfAliquots = fields.CharField()
+    DisplayId = fields.CharField()
+    #name = fields.CharField()
     isReference = fields.CharField()
-    Description	= fields.CharField()
     SampleCollection = fields.CharField()
+    PreparationDate = fields.CharField()
+    status = fields.IntegerField()
+    
+    SolventBuffer = fields.CharField()
+    Concentration = fields.CharField()
+    Concentration_Unit = fields.CharField()
+    Amount = fields.CharField()
+    Amount_Unit = fields.CharField()
+    NumberOfAliquots = fields.CharField()
+    Description	= fields.CharField()
 
-    Chemical_DisplayID = fields.CharField()
-    Chemical_SolventBuffer = fields.CharField()
-    Chemical_Concentration = fields.CharField()
-    Chemical_Concentration_Unit = fields.CharField()
-    Chemical_Amount = fields.CharField()
-    Chemical_Amount_Unit = fields.CharField()
-
-    DNA_DisplayID = fields.CharField()
-    DNA_SolventBuffer = fields.CharField()
-    DNA_Concentration = fields.CharField()
-    DNA_Concentration_Unit = fields.CharField()
-    DNA_Amount = fields.CharField()
-    DNA_Amount_Unit = fields.CharField()
-
-    Peptide_DisplayID = fields.CharField()
-    Peptide_SolventBuffer = fields.CharField()
-    Peptide_Concentration = fields.CharField()
-    Peptide_Concentration_Unit = fields.CharField()
-    Peptide_Amount = fields.CharField()
-    Peptide_Amount_Unit = fields.CharField()
-
-    Protein_DisplayID = fields.CharField()
-    Protein_SolventBuffer = fields.CharField()
-    Protein_Concentration = fields.CharField()
-    Protein_Concentration_Unit = fields.CharField()
-    Protein_Amount = fields.CharField()
-    Protein_Amount_Unit = fields.CharField()
+    DNA_Construct = fields.CharField()
+    inCell = fields.CharField()
 
     class Meta: 
         delimiter = ";"
         has_header = True
+        
+        
+class CSVChassisSample(CsvModel):
+    container = fields.CharField()
+    DisplayId = fields.CharField()
+    #name = fields.CharField()
+    isReference = fields.CharField()
+    SampleCollection = fields.CharField()
+    PreparationDate = fields.CharField()
+    status = fields.IntegerField()
+    
+    SolventBuffer = fields.CharField()
+    Concentration = fields.CharField()
+    Concentration_Unit = fields.CharField()
+    Amount = fields.CharField()
+    Amount_Unit = fields.CharField()
+    NumberOfAliquots = fields.CharField()
+    Description	= fields.CharField()
+
+    #DNA_Construct = fields.CharField()
+    inCell = fields.CharField()
+
+    class Meta: 
+        delimiter = ";"
+        has_header = True        
 
 
 class SampleProvenance(models.Model):

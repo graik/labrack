@@ -14,12 +14,12 @@
         
         {% if original %} 
           <ul class="object-tools">
-            <li><a href="../../container/add/?rack={{original.id}}" target="_blank">
+            <li><a href="../../rack/add/?current_location={{original.id}}" target="_blank">
                 Add Container</a></li> 
           </ul>          
         {% endif %}
         
-        {% if original and original.related_containers %}
+        {% if original and original.related_racks %}
           <table cellspacing="0">
             <thead>
               <tr>
@@ -28,7 +28,7 @@
             </thead>
             <tbody>
         
-            {% for container in original.related_containers %}
+            {% for container in original.related_racks %}
         
               <tr class="{% cycle 'row1' 'row2' %}">
         
@@ -45,7 +45,7 @@
           </table>
           
         {% else %}
-          <div class="description"><b>No Container found for this item.</b></div>
+          <div class="description"><b>No Rack found for this item.</b></div>
         {% endif %}
         <p></p>
 </div>
