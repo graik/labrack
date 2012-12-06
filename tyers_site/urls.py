@@ -2,7 +2,7 @@ from django.conf.urls.defaults import patterns, include, url
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
-from labrack.views import dnalist,celllist
+from labrack.views import dnalist,celllist,cellonlylist
 admin.autodiscover()
 import settings
 
@@ -16,7 +16,8 @@ urlpatterns = patterns('',
     #url(r'^labrack/', include('labrack.urls')),
     #url(r'^admin/labrack/dnacomponent/(?P<Id>\d+)/$', index, name='index'), 
     #url(r'^grappelli/', include('grappelli.urls')),
-    #url(r'^', include('labrack.urls')),    
+    #url(r'^', include('labrack.urls')),
+    url(r'^cellonlylist/$', cellonlylist, name='cellonlylist'),
     url(r'^dnalist/$', dnalist, name='dnalist'),
     url(r'^celllist/$', celllist, name='celllist'),
     url(r'^admin/', include(admin.site.urls)),

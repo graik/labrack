@@ -18,7 +18,7 @@
     <div class="module">
 		
 		<!-- Upload form. Note enctype attribute! -->
-		<form action="{% url dnalist %}" method="post" enctype="multipart/form-data">
+		<form action="{% url cellonlylist %}" method="post" enctype="multipart/form-data">
 			{% csrf_token %}
 			<p>{{ form.non_field_errors }}</p>
 			<p>{{ form.docfile.label_tag }} {{ form.docfile.help_text }}</p>
@@ -30,7 +30,7 @@
 		</form>
 		
 		<div class="breadcrumbs">
-			<P align="right"><a href="/media/documents/DemoDnaSampleFull.csv">(view Demo file)</a></p>
+			<P align="right"><a href="/media/documents/DemoCellFull.csv">(view Demo file)</a></p>
 		</div>
  </div>
 {% endblock %}

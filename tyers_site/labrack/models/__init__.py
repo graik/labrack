@@ -3,6 +3,7 @@ from labrack.models.unit import Unit
 from labrack.models.sample import SampleContent
 from labrack.models.sample import CSVSample
 from labrack.models.sample import CSVChassisSample
+from labrack.models.sample import CSVCell
 from labrack.models.sample import DnaSample
 from labrack.models.sample import ChassisSample
 from labrack.models.generalmodels import Location

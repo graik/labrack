@@ -586,7 +586,15 @@ class CSVSample(CsvModel):
         delimiter = ";"
         has_header = True
         
-        
+class CSVCell(CsvModel):
+    DisplayId = fields.CharField()
+    Name = fields.CharField()
+    Description	= fields.CharField()
+    
+    class Meta:
+        has_header = True
+        delimiter = ";"
+    
 class CSVChassisSample(CsvModel):
     container = fields.CharField()
     DisplayId = fields.CharField()

@@ -4,6 +4,7 @@ from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
 from tyers_site.labrack.models import CSVSample
 from tyers_site.labrack.models import CSVChassisSample
+from tyers_site.labrack.models import CSVCell
 from tyers_site.labrack.models import Sample
 from tyers_site.labrack.models import Chassis
 from tyers_site.labrack.models import DnaSample
@@ -19,6 +20,8 @@ from labrack.models.sample import SampleContent
 from labrack.models.unit import Unit
 from django.contrib.contenttypes.models import ContentType
 from django.contrib import messages
+
+ 
 import os
 
 from labrack.models.generalmodels import Document
@@ -171,11 +174,19 @@ def dnalist(request):
                                 emLine = each_line.inCell.strip()
                                 if (emLine != ''):
                                         sample2db.inChassis = Chassis.objects.get(displayId=emLine)
-                                sample2db.save()
+                                
+                                try:
+                                        sample2db.save()
+                                        messages.add_message(request, messages.INFO, each_line.DisplayId + ' was added.')
+                                except Exception,err:
+                                        messages.add_message(request, messages.ERROR, each_line.DisplayId + ' was not added!!!.    ' + repr(err) )                                         
+                                
                                                                      
 
                                     # Redirect to the document list after POST
                         #return HttpResponseRedirect(reverse('labrack.views.list'))
+                        
+                        
                         return HttpResponseRedirect('/admin/labrack/dnasample/')
         else:
                 form = DocumentForm() # A empty, unbound form
@@ -235,7 +246,14 @@ def celllist(request):
                                 emLine = each_line.inCell.strip()
                                 if (emLine != ''):
                                         sample2db.chassis = Chassis.objects.get(displayId=emLine)
-                                sample2db.save()
+                                
+                                try:
+                                        sample2db.save()
+                                        messages.add_message(request, messages.INFO, each_line.DisplayId + ' was added.')
+                                except Exception,err:
+                                        messages.add_message(request, messages.ERROR, each_line.DisplayId + ' was not added!!!.    ' + repr(err) )                                         
+                                
+                                
                                                                      
 
                                     # Redirect to the document list after POST
@@ -251,6 +269,56 @@ def celllist(request):
        
         return render_to_response(
                 'admin/labrack/chassissample/celllist.html',
+                {'documents': documents, 'form': form},
+                context_instance=RequestContext(request)
+        )
+        
+def cellonlylist(request):
+        # Handle file upload
+        if request.method == 'POST':
+                form = DocumentForm(request.POST, request.FILES)
+                if form.is_valid():
+                        newdoc = Document(docfile = request.FILES['docfile'])
+                        newdoc.save()
+                        s = request.FILES['docfile']
+                        p = newdoc.docfile.url
+                        gb_file = settings.MEDIA_ROOT+os.path.normpath(newdoc.docfile.url)
+                        gb_file2 = settings.TEMPLATE_DIRS+os.path.normpath(newdoc.docfile.url)
+                        try:
+                                myCSVSsample = CSVCell.import_data(data = open(gb_file2))                                
+                        except Exception:
+                                print "Oops!  That was no valid number.  Try again..." 
+                        #break                
+                        #create a new sample for each line
+                        for each_line in myCSVSsample:
+                                if (each_line.DisplayId != 'DisplayId'):
+                                        displayId = each_line.DisplayId
+                                        name = each_line.Name
+                                        description	= each_line.Description                                                            
+                                                                     
+        
+                                        sample2db = Chassis(displayId=displayId,name=name,description=description)
+                                        try:
+                                                sample2db.save()
+                                                messages.add_message(request, messages.INFO, displayId + ' was added.')
+                                        except Exception,err:
+                                                messages.add_message(request, messages.ERROR, displayId + ' was not added!!!.    ' + repr(err) )                                         
+                                                                     
+
+                                    # Redirect to the document list after POST
+                        #return HttpResponseRedirect(reverse('labrack.views.list'))
+ 
+                        return HttpResponseRedirect('/admin/labrack/chassis/')
+        else:
+                form = DocumentForm() # A empty, unbound form
+
+        # Load documents for the list page
+        documents = Document.objects.all()
+
+        # Render list page with the documents and the form
+       
+        return render_to_response(
+                'admin/labrack/chassis/cellonlylist.html',
                 {'documents': documents, 'form': form},
                 context_instance=RequestContext(request)
         )
