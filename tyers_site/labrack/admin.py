@@ -52,6 +52,7 @@ from labrack.models.component import ProteinComponentType
 from labrack.models.component import ProteinComponent
 from labrack.models.component import DnaComponent
 from labrack.models.component import DNAComponentType
+from labrack.models.component import ChassisComponentType
 from labrack.models.component import PeptideComponent
 from labrack.models.component import Component
 from labrack.models.component import ChemicalComponent
@@ -165,7 +166,6 @@ class ComponentAdmin(PermissionAdmin, admin.ModelAdmin):
                                  ('URI','uri'),
                                  ('Description','description'),
                                  ('Status','status'),
-                                 ('is Abstract','abstract'),
                                  ('Created by','created_by'),
                                  ('registered at','creation_date'),
                                  ('modified at','modification_date'),
@@ -185,7 +185,7 @@ class ComponentAdmin(PermissionAdmin, admin.ModelAdmin):
         }
          ),
         ('Details', {
-            'fields' : (('variantOf', 'abstract'),
+            'fields' : (('variantOf'),
                         ('description',)),
 
         }
@@ -194,10 +194,10 @@ class ComponentAdmin(PermissionAdmin, admin.ModelAdmin):
 
 
 
-    list_display = ('displayId', 'name', 'created_by', 'abstract', 'status', 
+    list_display = ('displayId', 'name', 'created_by', 'status', 
                     'showComment', )
 
-    list_filter = ('status', 'abstract', 'created_by')
+    list_filter = ('status', 'created_by')
 
 
     ordering = ('displayId',)
@@ -417,7 +417,7 @@ class RackAdmin(admin.ModelAdmin):
                                  ])
     list_display = ('displayId', 'name', 'location_url', 
                     )    
-    fields = (('displayId', 'name','current_location'))
+    fields = (('displayId', 'name'),'current_location')
 
     def container_url(self, obj):
         url = obj.container.get_relative_url()
@@ -903,7 +903,7 @@ class DnaSampleAdmin(PermissionAdmin, admin.ModelAdmin):
                           % (i, status))
 
 
-class ChassisAdmin(admin.ModelAdmin):
+class ChassisAdmin(ComponentAdmin):
     actions = ['make_csv']
     """
     exportFields = OrderedDict( [('Rack ID', 'displayId'),
@@ -912,8 +912,22 @@ class ChassisAdmin(admin.ModelAdmin):
 
                                  ])
                                  """
-    list_display = ('displayId', 'name', 'status')    
-    fields = (('displayId', 'name','description'))
+    
+    
+
+    
+    fieldsets = ComponentAdmin.fieldsets.__add__(\
+            ((None, {
+                'fields': ('componentType',),
+            }
+              ),)
+        )    
+    list_filter = ComponentAdmin.list_filter.__add__(('componentType',))
+     
+    raw_id_fields = ('componentType', 'variantOf',)
+    
+    
+   
 
     def container_url(self, obj):
         url = obj.container.get_relative_url()
@@ -942,6 +956,9 @@ class ChassisSampleAdmin(PermissionAdmin, admin.ModelAdmin):
     #actions = ['make_csv', 'make_ok', 'make_empty', 'make_bad']
 
     #date_hierarchy = 'preparation_date'
+
+    
+
 
     
 
@@ -1221,6 +1238,7 @@ admin.site.register(Component, ComponentAdmin)
 admin.site.register(ChemicalComponent, ComponentAdmin)
 admin.site.register(SequenceAnnotation, SequenceAnnotationAdmin)
 admin.site.register(Chassis,ChassisAdmin) 
+admin.site.register(ChassisComponentType, ComponentTypeAdmin) 
 admin.site.register(Collection)
 admin.site.register(ChassisSample,ChassisSampleAdmin)
 admin.site.register(DnaSample,DnaSampleAdmin)

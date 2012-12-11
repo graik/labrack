@@ -6,8 +6,10 @@ from labrack.models.generalmodels import Document
 from labrack.models.component import DnaComponent
 
 from django.forms.fields import DateField, ChoiceField, MultipleChoiceField
-from django.forms.widgets import RadioSelect, CheckboxSelectMultiple
+#from django.forms.widgets import RadioSelect, CheckboxSelectMultiple
 from django.forms.extras.widgets import SelectDateWidget
+from django.forms.widgets import *
+
 
 from django.forms.forms import NON_FIELD_ERRORS
 
@@ -35,6 +37,9 @@ class DnaSampleForm(forms.ModelForm):
     
     description = forms.CharField(widget=forms.TextInput(attrs={'size':'80'}),required=False)
     
+    
+    Contact = forms.BooleanField(required=False, widget=CheckboxInput())
+    More = forms.BooleanField(required=False, widget=HiddenInput())    
      
     
     def __init__(self, *args, **kwargs):

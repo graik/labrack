@@ -1,9 +1,43 @@
 {% extends "admin/change_form.html" %}
 {% load i18n admin_modify adminmedia %}
 
+ 
+
+
+
 {% block after_field_sets %}
 
 <div class="module aligned">
+ 
+ 
+<form>
+<input type="radio" name="dna_input_type" value="dna_input" onclick="
+if (this.value=='dna_input') {
+  showHide_DNAConstructADDNEW('none');
+  } else {
+  document.getElementById('id_dnaConstruct').style.display='inline';
+  document.getElementById('lookup_id_dnaConstruct').style.display='inline'; 
+  }
+ return true;">Select from DB<br>
+<input type="radio" name="dna_input_type" value="add_new" onclick="
+if (this.value=='add_new') {
+  showHide_DNAConstructADDNEW('inline');
+  } else {
+  document.getElementById('id_dnaConstruct').style.display='none';
+  document.getElementById('lookup_id_dnaConstruct').style.display='none'; 
+  }
+ return true;">add new
+<input type="text" id="tb">
+</form> 
+ 
+<script type="text/javascript">
+function showHide_DNAConstructADDNEW(a)
+{
+  document.getElementById('id_dnaConstruct').style.display=a;
+  document.getElementById('lookup_id_dnaConstruct').style.display=a;
+  
+}
+</script>
   <h2>DNA Samples</h2>
         <div class="description">
           Note, clicking any of the links below will open a new window/tab!

@@ -115,8 +115,8 @@ class Component(PermissionModel):
                                         verbose_name='Variant of', 
                                         help_text='Specify part(s) this part is derived from, if any.' )
 
-    abstract = models.BooleanField( 'Abstract Part', default=False, 
-                                    help_text='Entry only serves as container to organize related parts.')
+    #abstract = models.BooleanField( 'Abstract Part', default=False, 
+    #                                help_text='Entry only serves as container to organize related parts.')
 
     creation_date = models.DateTimeField(auto_now_add=True, null=True)
 
