@@ -194,13 +194,8 @@ class Sample( PermissionModel ):
                                           null=True, blank=True, 
                                           limit_choices_to = {'unitType': 'concentration'})
     
-    derivedFrom = models.ForeignKey('self', verbose_name='Derived From', blank=True, null=True, related_name='derivedFromSample')
-
-    TYPE_CHOICES = (('parent', 'parent'), 
-                    ('mixture', 'mixture'),
-                    )
-    provenanceType = models.CharField( max_length=30, choices=TYPE_CHOICES, null=True, blank=True, 
-                                       default='') 
+    
+    
     historyDescription = models.CharField('Comment', null=True,blank=True,max_length = 255)    
 
     # custom properties (shortcuts)
@@ -648,7 +643,13 @@ class DnaSample(Sample):
     
     inChassis = models.ForeignKey(Chassis, verbose_name='in Cell', blank=True, null=True, related_name='chassisSample')
 
-    
+    derivedFrom = models.ForeignKey('self', verbose_name='Derived From', blank=True, null=True, related_name='derivedFromSample')
+
+    TYPE_CHOICES = (('parent', 'parent'), 
+                    ('mixture', 'mixture'),
+                    )
+    provenanceType = models.CharField( max_length=30, choices=TYPE_CHOICES, null=True, blank=True, 
+                                       default='')     
     class Meta:
         app_label = 'labrack'
         verbose_name = 'DNA Sample'
@@ -674,12 +675,79 @@ class DnaSample(Sample):
     def inCell(self):
             return self.inChassis.formatedUrl();   
     
+
+
+
+class PlasmidSample(Sample):
+    
+    #plasmid_dnaConstruct = models.ForeignKey(DnaComponent,verbose_name='DNA Construct', blank=True, null=True, related_name='dna_Sample',help_text='Either select an existing DNA Construct or fill the dna description to create a new one')
     
     
+    plasmid_inChassis = models.ForeignKey(Chassis, verbose_name='in Cell', blank=True, null=True, related_name='chassis_Sample')
+
+    plasmid_derivedFrom = models.ForeignKey('self', verbose_name='Derived From', blank=True, null=True, related_name='derivedFromSample')
+
+    TYPE_CHOICES = (('parent', 'parent'), 
+                    ('mixture', 'mixture'),
+                    )
+    plasmid_provenanceType = models.CharField( max_length=30, choices=TYPE_CHOICES, null=True, blank=True, 
+                                       default='')     
+
+
+    SEQUENCED_CHOICES = (('verified', 'verified'),('unknown', 'unknown'),)
+    plasmid_sequenced = models.CharField( max_length=30, choices=SEQUENCED_CHOICES, null=True, blank=True, 
+                                       default='')     
+    
+    Cloning_CHOICES = (('Gibson Assembly', 'Gibson Assembly'),('others', 'others'),)
+    plasmid_cloning_method = models.CharField( max_length=30, choices=Cloning_CHOICES, null=True, blank=True, 
+                                           default='')       
+    
+    
+    is_vector_backbone = models.BooleanField('This sequence is a vector Backbone',default=False,
+                                               help_text='mark plasmid as vector backbone')    
+
+
+    GenBankfile = models.FileField(upload_to='documents/GenBank/%Y/%m/%d',blank=True,null=True)
+
+    sequence_text = models.TextField('Sequence', blank=True)
+
+    class Meta:
+        app_label = 'labrack'
+        verbose_name = 'Plasmid Sample'
+        abstract = False
+        
+    def related_samples( self ):
+        """
+        """
+        
+        r = DnaSample.objects.filter( dnaConstruct = self.dnaConstruct.id ) 
+     
+        return r
+    
+    def get_relative_url(self):
+            """
+            Define standard relative URL for object access in templates
+            """
+            return 'dnasample/%i/' % self.id   
+        
+    def Content(self):
+        return self.dnaConstruct.formatedUrl();    
+    
+    def inCell(self):
+            return self.inChassis.formatedUrl();   
+
+
 class ChassisSample(Sample):
     #, help ='Either select an existing DNA Construct or fill the dna description to create a new one'
-    chassis = models.ForeignKey(Chassis,verbose_name='Chassis', null=True, blank=True, related_name='Cell')
-        
+    chassis = models.ForeignKey(Chassis,verbose_name='Cell', null=True, blank=True, related_name='Cell')
+    
+    derivedFrom = models.ForeignKey('self', verbose_name='Derived From', blank=True, null=True, related_name='derivedFromSample')
+
+    TYPE_CHOICES = (('parent', 'parent'), 
+                    ('mixture', 'mixture'),
+                    )
+    provenanceType = models.CharField( max_length=30, choices=TYPE_CHOICES, null=True, blank=True, 
+                                       default='')     
     class Meta:
         app_label = 'labrack'
         verbose_name = 'Cell Sample'

@@ -1,0 +1,427 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_modify adminmedia %}
+
+
+{% block after_field_sets %}
+<link rel="stylesheet" type="text/css" href="/media/js/fileuploader/fileuploader.css">
+<script type="text/javascript" src="/media/js/fileuploader/fileuploader.js"></script> 	
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+<script src="/media/scribl/Scribl.1.1.3.min.js" ></script>
+<script type="text/javascript" src="/media/scribl/examples/js/dragscrollable.js"></script>
+
+
+
+
+<script language=javascript type='text/javascript'>
+
+			 
+       var txtContent;
+
+      window.onload = function()
+      {
+         uploadTheFile();
+         checkContent = document.getElementById("id_is_vector_backbone");
+         checkContent.onchange = checkHandler;
+         
+          
+         textContent = document.getElementById("id_sequence_text");  
+         textContent.oninput=sequenceHandler;
+		 
+		 savebutton = document.getElementsByName("_save");
+ 		 savebutton[0].onclick = retrieveAndFeedDataHandler;
+		 savebutton[1].onclick = retrieveAndFeedDataHandler;
+		 
+		 //hide attrb1
+		 document.getElementById("id_Plasmid_attribute1").hidden="true";
+		 
+		 HideShowElement('backbone_db','visible');
+		 HideShowElement('backbone_genbank','hidden');
+		 
+ 
+    };
+
+   function retrieveAndFeedDataHandler(e)
+   {
+		textContent = document.getElementById("id_Plasmid_attribute1");
+		textContent.value = getBackboneDataBlockFromDB();
+   }
+   
+   function getBackboneDataBlockFromDB(){
+			   
+		input = document.getElementById("input");
+		idname = input.value;
+   
+		//	var myJSONObject = {"bindings": [
+		//		 {"ircEvent": "PRIVMSG", "method": "newURI", "regex": "^http://.*"},
+		//		 {"ircEvent": "PRIVMSG", "method": "deleteURI", "regex": "^delete.*"},
+		//		 {"ircEvent": "PRIVMSG", "method": "randomURI", "regex": "^random.*"}
+		//	 ]
+		//};
+		// var myJSONText = JSON.stringify(myObject);
+		// return '{"idVector":"'+idname+'"}';
+		return idname;
+   }
+   
+   function checkHandler(e)
+   {
+		if (document.getElementById("id_is_vector_backbone").checked) {
+					hidediv();
+					HideShowElement('backbone_db','hidden');
+					HideShowElement('backbone_genbank','hidden');
+				 }
+				 else {
+					showdiv();
+					if (document.getElementById("radiodb").checked){
+						HideShowElement('backbone_db','visible');
+						HideShowElement('backbone_genbank','hidden');
+					} else {
+						HideShowElement('backbone_db','hidden');
+						HideShowElement('backbone_genbank','visible');
+					};
+
+					 
+		}
+   }
+   
+   function sequenceHandler(e)
+   {
+		send_request();
+		alert('the vector and insert list has been updated!');        
+         
+   }
+			 
+function HideShowElement(elementName,status) {
+	if (document.getElementById) { // DOM3 = IE5, NS6
+	document.getElementById(elementName).style.visibility = status;
+	}
+}
+
+
+function hidediv() {
+	if (document.getElementById) { // DOM3 = IE5, NS6
+	document.getElementById('hideShow').style.visibility = 'hidden';
+	}
+	else {
+		if (document.layers) { // Netscape 4
+			document.hideShow.visibility = 'hidden';
+		}
+		else { // IE 4
+			document.all.hideShow.style.visibility = 'hidden';
+		}
+	}
+}
+
+function showdiv() {
+	if (document.getElementById) { // DOM3 = IE5, NS6
+		document.getElementById('hideShow').style.visibility = 'visible';
+	}
+	else {
+			if (document.layers) { // Netscape 4
+			document.hideShow.visibility = 'visible';
+			}
+			else { // IE 4
+			document.all.hideShow.style.visibility = 'visible';
+			}
+	}
+}
+</script> 
+<script type="text/javascript">
+
+
+
+function selected_dnaBackbone(){
+    var datalist = document.getElementById("datalist");
+    var input = document.getElementById("input");
+    
+    update_dnaBackbone(input.value);
+}
+
+// get the information regarding the DNA Backbone vector from the server
+function update_dnaBackbone(selectedItem){
+    $.get("/get_dna_info/"+selectedItem+"/", function(data){
+       var values = data.list_dnas;
+        var jsonObject = eval(values);
+        $("#vectorName").html(jsonObject[0].name);
+        $("#vectorDescription").html(jsonObject[0].description);
+        //$("#idExtra").html(data.extra_values);
+    });
+}
+ 
+// send the request to the server with the sequence to retrieve all the annotation or vectors in the database
+function send_request(){
+t = this.document.getElementById("id_sequence_text").value;
+$.get("/test/"+t+"/", function(data){
+var jsonObject = eval(data.list_dnas);
+var arrayOfObjects = jsonObject;
+    //alert(data.list_dnas); 
+    var dataList = $("#datalist");
+     $("#input").html("");
+    dataList.empty();
+    if(arrayOfObjects.length) {
+    for(var i=0, len=arrayOfObjects.length; i<len; i++) {
+    var opt = $("<option></option>").attr({
+            "id"   : arrayOfObjects[i].id,
+            "value": arrayOfObjects[i].displayid,
+            "label": arrayOfObjects[i].displayid
+            });
+            dataList.append(opt);
+		 	}
+            }
+            
+    
+    var jsonInsertObject = eval(data.extra_values);
+    var arrayOfInsertObjects = jsonInsertObject;
+             if(arrayOfInsertObjects.length) {
+            for(var i=0, len=arrayOfInsertObjects.length; i<len; i++) {
+				addRowToAnnotationTable(1,'',arrayOfInsertObjects[i].id,arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].description,'0',arrayOfInsertObjects[i].coverage);
+               }
+            }
+            
+            $("#idListDNA").html(data.list_dnas);
+            $("#idExtra").html(data.extra_values);
+        
+        });
+    }
+
+function addRowToAnnotationTable(tableNumber,content1,content2,content3,content4,content5,content6)
+{
+         if (!document.getElementsByTagName) return;
+         tabBody=document.getElementsByTagName("TBODY").item(tableNumber);
+         row=document.createElement("TR");
+         cell1 = document.createElement("TD");
+         cell2 = document.createElement("TD");
+         cell3 = document.createElement("TD");
+         cell4 = document.createElement("TD");
+         cell5 = document.createElement("TD");
+         cell6 = document.createElement("TD");
+         checkboxnode1= document.createElement('input');
+                checkboxnode1.type = 'checkbox';
+         
+         textnode2=document.createTextNode(content2);
+         textnode3=document.createTextNode(content3);
+         textnode4=document.createTextNode(content4);
+         textnode5=document.createTextNode(content5);
+         textnode6=document.createTextNode(content6);
+         
+         cell1.appendChild(checkboxnode1);
+         cell2.appendChild(textnode2);
+         cell3.appendChild(textnode3);
+         cell4.appendChild(textnode4);
+         cell5.appendChild(textnode5);
+         cell6.appendChild(textnode6);
+         row.appendChild(cell1);
+         row.appendChild(cell2);
+         row.appendChild(cell3);
+         row.appendChild(cell4);
+         row.appendChild(cell5);
+         row.appendChild(cell6);
+         tabBody.appendChild(row);
+
+
+}
+ 
+function buildChartGeneBank(){
+	var canvas = document.getElementById('canvas');
+	canvas.width = canvas.width;
+	chart1 = new Scribl(canvas, 800);
+	return chart1
+}
+
+// method used to draw the different annotation on the genbank file 
+// providing json object of annotation and the chart where to draw 
+
+function drawGenBank(jsontext,chart){
+    var jsonInsertObject = eval(jsontext);
+    var arrayOfInsertObjects = jsonInsertObject;
+
+            if(arrayOfInsertObjects.length) {
+                for(var i=0, len=arrayOfInsertObjects.length; i<len; i++) {
+                 
+                   
+					var start = parseInt(arrayOfInsertObjects[i].startPos,10);
+					var end = parseInt(arrayOfInsertObjects[i].endPos,10);
+					var strand = parseInt(arrayOfInsertObjects[i].strandValue,10);
+					var strandStr = '';
+					if (strand==-1) {strandStr='-';} else {strandStr='+';}
+					//alert(strandStr);
+					var gene = chart1.addGene( start,    end , strandStr);
+					gene.name = arrayOfInsertObjects[i].id;
+					
+                }
+            }
+	//chart.scrollable = true;
+	//chart.scrollValues = [200000, 250000];
+	chart.draw();
+}
+
+function buildGenBankTable(jsontext){
+    var jsonInsertObject = eval(jsontext);
+    var arrayOfInsertObjects = jsonInsertObject;
+    var sequence = '';
+            if(arrayOfInsertObjects.length) {
+                for(var i=0, len=arrayOfInsertObjects.length; i<len; i++) {
+                if (sequence=='') { 
+                //call sequence change with the full sequence as a value
+                    sequence = arrayOfInsertObjects[i].sequence;
+                    document.getElementById("id_sequence_text").value = sequence;
+                    send_request();
+                    }
+                    //alert(arrayOfInsertObjects[i].sequence);
+                    addRowToAnnotationTable(2,'',arrayOfInsertObjects[i].id,arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].description,'0',arrayOfInsertObjects[i].coverage);
+ 					
+                }
+            }
+}
+
+function uploadTheFile(){
+    var uploader = new qq.FileUploader( {
+        action: "{% url ajax_upload %}",
+        element: $('#file-uploader')[0],
+        multiple: false,
+        onComplete: function( id, fileName, responseJSON ) {
+        //alert(responseJSON.test);
+        buildGenBankTable(responseJSON.test);
+		
+		drawGenBank(responseJSON.test,buildChartGeneBank());
+        
+		if( responseJSON.success ){
+            //alert( "success!" ) ;
+            }
+		else
+            alert( "upload failed!" ) ;
+        },
+        onAllComplete: function( uploads ) {
+          // uploads is an array of maps
+          // the maps look like this: { file: FileObject, response: JSONServerResponse }
+          //alert( "All complete!" ) ;
+        },
+        params: {
+          'csrf_token': '{{ csrf_token }}',
+          'csrf_name': 'csrfmiddlewaretoken',
+          'csrf_xname': 'X-CSRFToken',
+        },
+      } ) ;
+      
+  }
+</script>
+
+
+
+</head>
+<body>
+<div id="file-uploader">      
+    <noscript> 
+		<p>Please enable JavaScript to use file uploader.</p>
+    </noscript>        
+</div>
+<div id="hideShow">
+<fieldset class="module aligned ">
+    <h2></h2>
+
+
+<canvas id="canvas" width="800" height="200"
+style="border:1px solid #000000;">
+</canvas> 
+     
+<h2>Specify vector backbone</h2>
+ 
+
+<div class="form-row">
+            
+				<div class="myradio">
+				    <label><input id="radiodb" type="radio" name="group1" value="database" onchange="HideShowElement('backbone_db','visible');HideShowElement('backbone_genbank','hidden');" checked> Vector from Database</label>
+					<label><input id="radiogb" type="radio" name="group1" value="file" onchange="HideShowElement('backbone_db','hidden');HideShowElement('backbone_genbank','visible');"> Vector from Genbank file</label><BR><BR><BR>
+					<p class="help">choose the vector from the database or from the genbank file.</p><BR>
+				</div>
+<div class="form-row">
+					<div id="backbone_db"> 
+						<div class="field-box">
+								<label for="id_backbone_id">ID:</label>
+									<input id = "input" list = "datalist" type = "text" onChange="selected_dnaBackbone();" style="width:30;"/>
+										<datalist id = "datalist">
+											<option value = ""></option>
+												</datalist>
+						</div>
+					
+						<div class="field-box">
+								<label for="id_backbone_name" class="inline">Name:</label>
+									<input type="text" name="id_backbone_name" readonly id="id_backbone_name" />
+						</div>
+						
+						<div class="field-box">
+								<label for="id_backbone_selectionmarkers" class="inline">Selection markers(s):</label>
+									<input type="text" name="id_backbone_selectionmarkers" readonly id="id_backbone_selectionmarkers" />
+						</div>
+						
+						<div class="field-box">
+								<label for="id_backbone_description" class="inline">Description:</label>
+									<input type="text" name="id_backbone_description" readonly id="id_backbone_description" />
+						</div>
+					</div> 
+				</div>				
+				<div class="form-row">
+					<div id="backbone_genbank"> 
+						<div class="field-box">
+								<label for="id_backbone_gen_id">ID:</label>
+									<input id="id_backbone_gen_id" type="text" class="vTextField" name="id_backbone_gen_id" maxlength="100" />
+						</div>
+					
+						<div class="field-box">
+								<label for="id_backbone_gen_name" class="inline">Name:</label>
+									<input type="text" name="id_backbone_gen_name" id="id_backbone_gen_name" />
+						</div>
+						
+						<div class="field-box">
+								<label for="id_backbone_gen_selectionmarkers" class="inline">Selection markers(s):</label>
+									<input type="text" name="id_backbone_gen_selectionmarkers" id="id_backbone_gen_selectionmarkers" />
+						</div>
+						
+						<div class="field-box">
+								<label for="id_backbone_gen_description" class="inline">Description:</label>
+									<input type="text" name="id_backbone_gen_description" id="id_backbone_gen_description"/>
+						</div>
+					</div>
+				</div>
+ 				
+			 
+</div>
+
+
+<BR><BR>
+<table border="1">
+<CAPTION><EM>Specify insert annotations</EM></CAPTION>
+	<TBODY>
+		<tr>
+		<th></th>
+		<th>ID</th>
+		<th>Name</th>
+		<th>Description</th>
+		<th>To</th>
+		<th>Coverage(%)</th>
+		</tr>
+		<tr>
+	</TBODY>
+
+<BR><BR><BR>
+<table border="1">
+<CAPTION><EM>Specify insert genbank annotations</EM></CAPTION>
+<TBODY>
+<tr>
+<th></th>
+<th>ID</th>
+<th>Name</th>
+<th>Description</th>
+<th>To</th>
+<th>Coverage(%)</th>
+</tr>
+<tr>
+</TBODY>
+</table>
+
+
+
+</fieldset>
+ 
+</div> 
+
+{% endblock %}

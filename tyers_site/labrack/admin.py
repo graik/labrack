@@ -63,6 +63,7 @@ from labrack.models.generalmodels import Chassis
 
 from tyers_site.labrack.forms import DnaSampleForm
 from tyers_site.labrack.forms import ChassisSampleForm
+from tyers_site.labrack.forms import PlasmidSampleForm
 
 
 class PermissionAdmin():
@@ -196,16 +197,11 @@ class ComponentAdmin(PermissionAdmin, admin.ModelAdmin):
 
     list_display = ('displayId', 'name', 'created_by', 'status', 
                     'showComment', )
-
     list_filter = ('status', 'created_by')
-
 
     ordering = ('displayId',)
 
     search_fields = ('displayId', 'name', 'description')
-
-
-
 
 
     def formfield_for_dbfield(self, db_field, **kwargs):
@@ -278,23 +274,42 @@ class PeptideComponentAdmin(ProteinComponentAdmin):
 
 class DnaComponentAdmin(ComponentAdmin):
 
-    fieldsets = ComponentAdmin.fieldsets.__add__(\
-        ((None, {
-            'fields': ('componentType','GenBankfile',),
-        }
-          ),('DNA Details', 
-             {'fields': (('optimizedFor', 'translatesTo', 'circular'),
-                         ('sequence',),
-                         ),
-              'classes':('collapse',)
-              }
-             ),)
-    )
+
+    fieldsets = (
+            (None, {
+                'fields': (('displayId', 'name','status','componentType'),
+                           ('uri',))
+    
+            }
+             ),
+            ('Permission', {
+                'classes': ('collapse',),
+                'fields' : ((('owners'), ('group_read', 'group_write'))
+                            )
+            }
+             ),
+            ('Details', {
+                'fields' : (('variantOf'),
+                            ('description',),
+                            ('GenBankfile')),
+    
+            }
+             ),
+            ('DNA Details', 
+                         {'fields': (('optimizedFor', 'translatesTo', 'circular'),
+                                     ('sequence',),
+                                     ),
+                          'classes':('collapse',)
+                          }
+             ),            
+        )
+
+ 
 
 
     list_display = ComponentAdmin.list_display[:-2] + \
         ('show_optimizedFor', 'show_translatesTo', 'number_related_samples', 'size') + \
-        ComponentAdmin.list_display[-2:] 
+        ComponentAdmin.list_display[-2:]
 
     list_filter = ComponentAdmin.list_filter.__add__(('optimizedFor','componentType',))
 
@@ -909,7 +924,6 @@ class ChassisAdmin(ComponentAdmin):
     exportFields = OrderedDict( [('Rack ID', 'displayId'),
                                  ('Name', 'name'),
                                  ('Current location','location_url'),
-
                                  ])
                                  """
     
@@ -922,12 +936,27 @@ class ChassisAdmin(ComponentAdmin):
             }
               ),)
         )    
+    
+    list_display   = ('displayId', 'name','created_by', 'status', 'getVariantOf', 'getPartType', 'showComment')    
+
     list_filter = ComponentAdmin.list_filter.__add__(('componentType',))
      
     raw_id_fields = ('componentType', 'variantOf',)
     
     
-   
+    def getPartType(self, obj):
+        #vario = len(obj.variantOf.displayId
+        r = obj.componentType
+        s = ', '.join([a.name for a in r.all()])
+        return s
+    getPartType.short_description = 'Type'     
+    
+    def getVariantOf(self, obj):
+        #vario = len(obj.variantOf.displayId
+        r = obj.variantOf
+        s = ', '.join([a.displayId for a in r.all()])
+        return s
+    getVariantOf.short_description = 'Variant Of' 
 
     def container_url(self, obj):
         url = obj.container.get_relative_url()
@@ -948,9 +977,7 @@ class ChassisAdmin(ComponentAdmin):
     make_csv.short_description = 'Export as CSV'
 class ChassisSampleAdmin(PermissionAdmin, admin.ModelAdmin):
 
-    form = ChassisSampleForm     
-
-    
+    form = ChassisSampleForm    
 
 
     #actions = ['make_csv', 'make_ok', 'make_empty', 'make_bad']
@@ -1117,8 +1144,6 @@ class ChassisSampleAdmin(PermissionAdmin, admin.ModelAdmin):
 
 
 
-
-
 class UnitAdmin(admin.ModelAdmin):
 
     actions = ['make_csv']
@@ -1202,7 +1227,160 @@ class SampleCollectionAdmin(PermissionAdmin, admin.ModelAdmin):
     make_csv.short_description = 'Export as CSV'
 
 
+class PlasmidSampleAdmin(admin.ModelAdmin):
+    form = PlasmidSampleForm    
 
+
+    #actions = ['make_csv', 'make_ok', 'make_empty', 'make_bad']
+
+    #date_hierarchy = 'preparation_date'
+
+    
+
+
+    fieldsets = [
+        (None, {
+            'fields' : ((('container', 'displayId'),
+                         ('reference_status','sampleCollection'),
+                         ('preparation_date', 'status','plasmid_sequenced'),
+                         ('solvent','concentration','concentrationUnit'),
+                         ('amount','amountUnit','aliquotNr',),
+                         ('description'),
+                         ('plasmid_cloning_method'),
+                         ('Plasmid_attribute1'),
+                         )
+                        )
+        }
+         ), 
+        ('DNA Content',{'fields':[('is_vector_backbone'),
+                                  ('GenBankfile','sequence_text')],            
+                        }),
+       
+    ]
+
+
+
+    #inlines = [DnaConstructInline]
+
+
+    list_display   = ('showId', 'location_url', 
+                      'created_by', 'preparation_date', 'showSampleType', 
+                      'showMainContent', 'isreference_status',
+                      'status', 'showComment')
+
+    list_display_links = ('showId',)
+
+    list_filter = ('created_by', ContainerListFilter, 'container__rack__current_location', 
+                   'status', SampleCollectionListFilter
+                   )
+
+    ordering       = ('container', 'displayId',)
+
+    raw_id_fields = ('container','sampleCollection','plasmid_inChassis')
+
+    save_as        = True
+
+    save_on_top = True
+
+    search_fields  = ('displayId', 'name', 'description', 
+                      'container__displayId', 
+                      'container__rack__current_location__displayId', 
+                      'container__rack__current_location__location__temperature', 
+                      'container__rack__current_location__location__room')
+
+
+
+    
+
+    class Media:
+        js = (S.MEDIA_URL + '/js/genericcollection.js', 
+              S.MEDIA_URL + '/js/list_filter_collapse.js',)
+
+    def container_url(self, obj):
+        url = obj.container.get_relative_url()
+        return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.container.__unicode__()))
+    container_url.allow_tags = True
+    container_url.short_description = 'Container'
+
+    def isreference_status(self, obj):
+        refStatus = ''
+        if obj.reference_status:
+           refStatus = 'Yes'
+        return refStatus
+    isreference_status.short_description = 'Reference'
+
+
+    def file_link(self):
+        if self.file:
+            return "<a href='%s'>download</a>" % (self.attachment.url,)
+        else:
+            return "No attachment"
+
+    file_link.allow_tags = True
+
+
+
+
+    def location_url(self, obj):
+        con = obj.container
+        rac = con.rack
+        locat = rac.current_location
+        url = locat.get_relative_url()
+        return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.container.rack.current_location.__unicode__()))
+    location_url.allow_tags = True
+    location_url.short_description = 'Location'   
+
+
+    def make_csv(self, request, queryset):
+        return importexport.generate_csv(self, request, queryset, 
+                                         self.exportFields, 'Sample')
+
+    make_csv.short_description = 'Export as CSV'
+
+
+    def make_bad(self, request, queryset):
+        self.update_status(request, queryset, 'bad')
+
+    make_bad.short_description = 'Mark selected entries as bad'
+
+
+    def make_empty(self, request, queryset):
+        self.update_status(request, queryset, 'empty')
+
+    make_empty.short_description = 'Mark selected entries as empty'
+
+
+    def make_ok(self, request, queryset):
+        self.update_status(request, queryset, 'ok')
+
+
+    make_ok.short_description = 'Mark selected entries as ok'
+
+
+
+    def qr_code_img(self, obj):
+        data = obj.qr_code()
+        return mark_safe('<img src="http://chart.apis.google.com/chart?cht=qr&chs=55x55&chl=' + data + '" />')
+        #return mark_safe(data)
+    qr_code_img.allow_tags = True
+    qr_code_img.short_description = 'QR code'
+
+
+    def update_status(self, request, queryset, status):
+
+        i = 0
+
+        for obj in queryset:
+            if obj.writePermission(request.user):
+                obj.status = status
+                obj.save()
+                i += 1
+            else:
+                messages.error(request, '%s is not allowed to modify %s.'  
+                               % (request.user.username, obj))
+
+        self.message_user(request, '%i samples were set to %s'  
+                          % (i, status))
 
 
 class SequenceAnnotationAdmin(admin.ModelAdmin):
@@ -1242,3 +1420,4 @@ admin.site.register(ChassisComponentType, ComponentTypeAdmin)
 admin.site.register(Collection)
 admin.site.register(ChassisSample,ChassisSampleAdmin)
 admin.site.register(DnaSample,DnaSampleAdmin)
+admin.site.register(PlasmidSample,PlasmidSampleAdmin)

@@ -259,7 +259,7 @@ class DnaComponent(Component):
 
     componentType = models.ManyToManyField(DNAComponentType, 
                                            blank=True, null=True, 
-                                           verbose_name='Part type', 
+                                           verbose_name='Type', 
                                            help_text='Classification of this part.')    
 
     circular = models.BooleanField( 'Circular', default=False, 
@@ -343,7 +343,8 @@ class DnaComponent(Component):
 
     def save(self, *args, **kwargs):
         #Saving the sequence
-        self.sequence = self.related_seq()
+        if self.GenBankfile:
+            self.sequence = self.related_seq()
         super(DnaComponent, self).save(*args, **kwargs) # Call the "real" save() method.
         if self.GenBankfile:
             self.save_annotation()
@@ -376,7 +377,7 @@ class DnaComponent(Component):
         #Saving the sequence
         #self.sequence = self.related_seq()
         super(DnaComponent, self).save(*args, **kwargs) # Call the "real" save() method.
-
+        
     def save_annotation( self ):
         if (self.GenBankfile):
             gb_file = settings.MEDIA_ROOT+"/"+os.path.normpath(self.GenBankfile.name)
@@ -563,7 +564,7 @@ class Chassis(Component):
     """
     componentType = models.ManyToManyField(ChassisComponentType, 
                                            blank=True, null=True, 
-                                           verbose_name='Part type', 
+                                           verbose_name='Type', 
                                            help_text='Classification of this part.')   
 
     def get_relative_url(self):
@@ -621,3 +622,13 @@ class Collection(models.Model):
 
     class Meta:
         app_label = 'labrack'    
+        
+class Person(models.Model):
+    name = models.CharField(max_length=80)
+    birthday = models.DateField()
+    def __unicode__(self):
+        return u"%s was born in %s" % (self.name, self.birthday.strftime("%B of %Y"))
+    def as_dict(self):
+        return {'name':self.name, 'birthday':self.birthday.strftime("%B of %Y")}
+    class Meta:
+         app_label = 'labrack'      

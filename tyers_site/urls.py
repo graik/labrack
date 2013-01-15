@@ -2,8 +2,9 @@ from django.conf.urls.defaults import patterns, include, url
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
-from labrack.views import dnalist,celllist,cellonlylist
+from labrack.views import ajax_upload,upload_page,get_dna_info,dnalist,celllist,cellonlylist,contact,success,plasmidlist,search_dna_parts
 admin.autodiscover()
+from labrack.models.component import Person 
 import settings
 
 urlpatterns = patterns('',
@@ -17,7 +18,14 @@ urlpatterns = patterns('',
     #url(r'^admin/labrack/dnacomponent/(?P<Id>\d+)/$', index, name='index'), 
     #url(r'^grappelli/', include('grappelli.urls')),
     #url(r'^', include('labrack.urls')),
+    url( r'ajax_upload/$', ajax_upload, name="ajax_upload" ),
+    url( r'/project/$', upload_page, name="upload_page" ),    
+    url(r'^get_dna_info/(?P<text_value>.*)/$',get_dna_info,name='get_dna_info'),      
+    url(r'^test/(?P<sequence_text>.*)/$',search_dna_parts,name='search_dna_parts'),  
+    url(r'^contact/$', contact, name='contact'),
+    url(r'^success/$', success, name='success'),    
     url(r'^cellonlylist/$', cellonlylist, name='cellonlylist'),
+    url(r'^plasmidlist/$', plasmidlist, name='plasmidlist'),
     url(r'^dnalist/$', dnalist, name='dnalist'),
     url(r'^celllist/$', celllist, name='celllist'),
     url(r'^admin/', include(admin.site.urls)),
