@@ -60,16 +60,21 @@
 		var json_ele = {"data": [
 				 {"db_data": ""+is_db_data+"", "name": ""+db_data_displayid+"", "description": ""},
 				 {"gb_data": ""+is_gb_data+"", "name": ""+gb_data_displayid+"", "description": ""+gb_data_description+""}
-				 ]
+				 ]				 
+		};
+		
+		var json_ele2 = {"selected_annot": [
+				  {"db_checked": ""+selectallchecked_db()+""},
+				  {"gb_checked": ""+selectallchecked_gb()+""}
+				 ]				 
 		};
 		
 		textContent.value = JSON.stringify(json_ele);
-		textContent2.value = 'testing';
+		textContent2.value = JSON.stringify(json_ele2);
 		
-		alert('list all the check box ine the document');
 
-		selectallchecked('gb_checkbox');
-		selectallchecked('db_checkbox');
+		//selectallchecked_gb();
+		//selectallchecked_db();
    }
    
    
@@ -210,20 +215,42 @@ function emptyRowsTable(tableNumber){
 
  
 
-function selectallchecked(fieldName){
- //var fieldName='gb_checkbox';
-   var i=document.getElementsByName(fieldName).length;
+function selectallchecked_db(){
+ var fieldName='db_checkbox';
+  var i=document.getElementsByName(fieldName).length;
+  var e=document.getElementsByName(fieldName);
+  var name=new Array();
+  var value=new Array();
+  var jsonObj = []; //declare array
+  
+	var j=0;
+	 for(var k=0;k<i;k++)
+	{
+	   if(e[k].checked==true){
+		  
+			jsonObj.push({id: e[k].id});
+			 
+		  }    
+	}
+	 
+	return JSON.stringify(jsonObj);
+  
+}
+
+function selectallchecked_gb(){
+ var fieldName='gb_checkbox';
+  var i=document.getElementsByName(fieldName).length;
   var e=document.getElementsByName(fieldName);
   var name=new Array();
   var value=new Array();
   
-  var j=0;
-   for(var k=0;k<i;k++)
-  {
-     if(e[k].checked==true){
-		alert(e[k].id);
-		}    
-  }
+	var j=0;
+	 for(var k=0;k<i;k++)
+	{
+	   if(e[k].checked==true){
+		  //alert(e[k].id);
+		  }    
+	}
   
 }
 
@@ -240,6 +267,45 @@ function getTypeDropdownlistType(){
 		}				
 		return textnode 
 }
+function feedTypeDropdownlist(){
+ 	var el = document.getElementById('newfragment_type_id');
+  		if (typeof jsonObjectPartTypes !== "undefined") {
+			if(jsonObjectPartTypes.length) {
+				for(var i=0, len=jsonObjectPartTypes.length; i<len; i++) {				 
+					
+				        var opt = document.createElement("option");
+        
+						// Add an Option object to Drop Down/List Box
+				        document.getElementById("newfragment_type_id").options.add(opt);
+
+						// Assign text and value to Option object
+						opt.text = jsonObjectPartTypes[i].name;
+						opt.value = jsonObjectPartTypes[i].name;
+				   }
+				}
+		}				
+}
+
+function feedOptimizwedForDropdownlist(){
+ 	var el = document.getElementById('newfragment_optimizedfor_id');
+  		if (typeof jsonObjectPartTypes !== "undefined") {
+			if(jsonObjectPartTypes.length) {
+				for(var i=0, len=jsonObjectOptimizedFor.length; i<len; i++) {				 
+					
+				        var opt = document.createElement("option");
+        
+						// Add an Option object to Drop Down/List Box
+				        document.getElementById("newfragment_optimizedfor_id").options.add(opt);
+
+						// Assign text and value to Option object
+						opt.text = jsonObjectOptimizedFor[i].name;
+						opt.value = jsonObjectOptimizedFor[i].name;
+				   }
+				}
+		}				
+}
+ 
+ 
 
 function getTypeDropdownlistOptimizedFor(){
 //alert('populating getTypeDropdownlistOptimizedFor');
@@ -392,6 +458,11 @@ function buildGenBankTable(jsontext){
     var arrayOfInsertObjects = jsonInsertObject;
     var sequence = '';
 	document.getElementById("id_sequence_text").value = '';
+	
+	// update parttype and optimizedFor dropdownlist in new fragment
+	feedTypeDropdownlist();
+	feedOptimizwedForDropdownlist();
+	//
  	emptyRowsTable(1);
             if(arrayOfInsertObjects.length) {
                 for(var i=0, len=arrayOfInsertObjects.length; i<len; i++) {
@@ -564,6 +635,49 @@ style="border:1px solid #000000;">
 
 </fieldset>
  
+ 
+<BR>
+<fieldset class="module aligned ">
+    <h2>new fragment :</h2>
+<div class="form-row">
+					<div id="newfragment_annotation"> 
+						<div class="field-box">
+								<label for="newfragment_gen_id" class="inline">Name:</label>
+									<input type="text" name="newfragment_gen_id" id="newfragment_gen_id" />
+						</div>						
+						<div class="field-box">
+								<label for="newfragment_optimizedfor_id">Species:</label>
+								<SELECT id = "newfragment_optimizedfor_id" NAME="newfragment_optimizedfor_id">
+								</SELECT>
+						</div>
+					
+						<div class="field-box">
+								<label for="newfragment_name" class="inline">Name:</label>
+									<input type="text" name="newfragment_name" id="newfragment_name" />
+						</div>
+						
+						<div class="field-box">
+								<label for="newfragment_type_id">Type:</label>
+								<SELECT id = "newfragment_type_id" NAME="newfragment_type_id"></SELECT>
+						</div>
+						
+						<div class="field-box">
+								<label for="newfragment_description" class="inline">Description:</label>
+									<input type="text" name="newfragment_description" id="newfragment_description"/>
+						</div>
+						
+						<div class="field-box">
+								<label for="newfragment_sequence">Sequence:</label>
+ 									      <label for="id_sequence_text" class="inline">Sequence:</label>                        
+										  <textarea id="newfragment_sequence" rows="5" cols="20" name="newfragment_sequence" class="vLargeTextField"></textarea>
+						</div>
+					</div>
 </div> 
+</fieldset> 
+ 
+</div>
+
+
+ 
 
 {% endblock %}

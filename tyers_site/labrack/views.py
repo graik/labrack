@@ -474,7 +474,9 @@ def search_dna_parts(request, sequence_text):
                         fisrtPeace = len(sequence)
                         secondpeace = len(sequence_text)
                         rslt = fisrtPeace/float(secondpeace)
-                        coverage = str(round(rslt*100, 1) )
+                        firstposition = sequence_text.find(sequence)
+                        lastposition = firstposition+len(sequence)
+                        coverage = str(firstposition)+'-'+str(lastposition)
                         description = dnapart.description
                         if (dnapart.optimizedFor!=None):
                                 optimizedFor_name = dnapart.optimizedFor.name
