@@ -1243,11 +1243,9 @@ class PlasmidSampleAdmin(admin.ModelAdmin):
             'fields' : ((('container', 'displayId'),
                          ('reference_status','sampleCollection'),
                          ('preparation_date', 'status','plasmid_sequenced'),
-                         ('solvent','concentration','concentrationUnit'),
-                         ('amount','amountUnit','aliquotNr',),
+                         ('solvent','concentration','concentrationUnit','amount','amountUnit','aliquotNr',),
                          ('description'),
-                         ('plasmid_cloning_method'),
-                         ('Plasmid_attribute1'),
+                         ('plasmid_cloning_method','Plasmid_attribute1','Plasmid_attribute2'),
                          )
                         )
         }

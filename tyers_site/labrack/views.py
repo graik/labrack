@@ -18,6 +18,7 @@ from labrack.models.component import Component
 from labrack.models.component import ChemicalComponent
 from labrack.models.component import PeptideComponent
 from labrack.models.component import ProteinComponent
+from labrack.models.component import DNAComponentType
 from labrack.models.sample import SampleContent
 from labrack.models.unit import Unit
 from django.contrib.contenttypes.models import ContentType
@@ -435,7 +436,7 @@ class HybridDetailView(JSONResponseMixin, SingleObjectTemplateResponseMixin, Bas
 
 
 def search_dna_parts(request, sequence_text):   
-        message = {"list_dnas": "", "extra_values": ""}
+        message = {"list_dnas": "", "extra_values": "","parttypes_values": "","optimizedfor_values": ""}
         if request.is_ajax():
                 #cell = get_object_or_404(DnaComponent, sequence='MVSKGEELFTGVVPILVELDGDVN')
                 #cell = get_object_or_404(DnaComponent, sequence=cell_id)
@@ -475,14 +476,53 @@ def search_dna_parts(request, sequence_text):
                         rslt = fisrtPeace/float(secondpeace)
                         coverage = str(round(rslt*100, 1) )
                         description = dnapart.description
-                        if json_Insertobject == '':
-                                json_Insertobject = '{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'","coverage":"'+coverage+'"}'
+                        if (dnapart.optimizedFor!=None):
+                                optimizedFor_name = dnapart.optimizedFor.name
                         else:
-                                json_Insertobject = json_Insertobject+',{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'","coverage":"'+coverage+'"}'
+                                optimizedFor_name = ''
+                        if (dnapart.componentType!=None):
+                                componentType_name  = ''
+                                for cpType in dnapart.componentType.all():
+                                        if (componentType_name==''):
+                                                componentType_name = componentType_name+cpType.name
+                                        else:
+                                                componentType_name = componentType_name+','+cpType.name
+                        else:
+                                componentType_name = ''                        
+                        if json_Insertobject == '':
+                                json_Insertobject = '{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'","coverage":"'+coverage+'","optimizedFor_name":"'+optimizedFor_name+'","componentType_name":"'+componentType_name+'"}' 
+                        else:
+                                json_Insertobject = json_Insertobject+',{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'","coverage":"'+coverage+'","optimizedFor_name":"'+optimizedFor_name+'","componentType_name":"'+componentType_name+'"}' 
                 json_Insertobject = '['+json_Insertobject+']'          
 
 
                 message['extra_values'] = json_Insertobject
+                
+                #paret retrieving all partTypes
+                dnapartstypesAll = DNAComponentType.objects.all()
+                json_dnaparttype = ''
+                for dnaparttype in dnapartstypesAll :
+                        id = dnaparttype.id
+                        name = dnaparttype.name  
+                        if json_dnaparttype == '':
+                                json_dnaparttype = '{ "id":"'+str(id)+'","name":"'+name+'"}'
+                        else:
+                                json_dnaparttype = json_dnaparttype+',{ "id":"'+str(id)+'","name":"'+name+'"}'
+                json_dnaparttype = '['+json_dnaparttype+']' 
+                message['parttypes_values'] = json_dnaparttype
+                
+                #paret retrieving all partTypes
+                chassisOptimizedAll = Chassis.objects.all()
+                json_chassisOptimizedAll = ''
+                for chas in chassisOptimizedAll :
+                        id = chas.id
+                        name = chas.name  
+                        if json_chassisOptimizedAll == '':
+                                json_chassisOptimizedAll = '{ "id":"'+str(id)+'","name":"'+name+'"}'
+                        else:
+                                json_chassisOptimizedAll = json_chassisOptimizedAll+',{ "id":"'+str(id)+'","name":"'+name+'"}'
+                json_chassisOptimizedAll = '['+json_chassisOptimizedAll+']' 
+                message['optimizedfor_values'] = json_chassisOptimizedAll                
         else:
                 message = "You're the lying type, I can just tell."
         json = simplejson.dumps(message)

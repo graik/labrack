@@ -4,18 +4,18 @@
 
 {% block after_field_sets %}
 <link rel="stylesheet" type="text/css" href="/media/js/fileuploader/fileuploader.css">
-<script type="text/javascript" src="/media/js/fileuploader/fileuploader.js"></script> 	
+<script type="text/javascript" src="/media/js/fileuploader/fileuploader.js"></script> 
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
 <script src="/media/scribl/Scribl.1.1.3.min.js" ></script>
 <script type="text/javascript" src="/media/scribl/examples/js/dragscrollable.js"></script>
-
-
 
 
 <script language=javascript type='text/javascript'>
 
 			 
        var txtContent;
+	   var jsonObjectPartTypes;
+	   var jsonObjectOptimizedFor;
 
       window.onload = function()
       {
@@ -33,9 +33,13 @@
 		 
 		 //hide attrb1
 		 document.getElementById("id_Plasmid_attribute1").hidden="true";
+		 document.getElementById("id_Plasmid_attribute2").hidden="true";
 		 
 		 HideShowElement('backbone_db','visible');
 		 HideShowElement('backbone_genbank','hidden');
+		 
+		 // reason for calling is to populate parttype and optimized for
+		 send_request();
 		 
  
     };
@@ -43,24 +47,32 @@
    function retrieveAndFeedDataHandler(e)
    {
 		textContent = document.getElementById("id_Plasmid_attribute1");
-		textContent.value = getBackboneDataBlockFromDB();
+		textContent2 = document.getElementById("id_Plasmid_attribute2");
+
+		
+		is_db_data = document.getElementById("radiodb").checked;
+		db_data_displayid = document.getElementById("input").value;
+		is_gb_data = document.getElementById("radiogb").checked;
+		gb_data_displayid = document.getElementById("id_backbone_gen_name").value;
+		gb_data_description = document.getElementById("id_backbone_gen_description").value;
+
+
+		var json_ele = {"data": [
+				 {"db_data": ""+is_db_data+"", "name": ""+db_data_displayid+"", "description": ""},
+				 {"gb_data": ""+is_gb_data+"", "name": ""+gb_data_displayid+"", "description": ""+gb_data_description+""}
+				 ]
+		};
+		
+		textContent.value = JSON.stringify(json_ele);
+		textContent2.value = 'testing';
+		
+		alert('list all the check box ine the document');
+
+		selectallchecked('gb_checkbox');
+		selectallchecked('db_checkbox');
    }
    
-   function getBackboneDataBlockFromDB(){
-			   
-		input = document.getElementById("input");
-		idname = input.value;
    
-		//	var myJSONObject = {"bindings": [
-		//		 {"ircEvent": "PRIVMSG", "method": "newURI", "regex": "^http://.*"},
-		//		 {"ircEvent": "PRIVMSG", "method": "deleteURI", "regex": "^delete.*"},
-		//		 {"ircEvent": "PRIVMSG", "method": "randomURI", "regex": "^random.*"}
-		//	 ]
-		//};
-		// var myJSONText = JSON.stringify(myObject);
-		// return '{"idVector":"'+idname+'"}';
-		return idname;
-   }
    
    function checkHandler(e)
    {
@@ -126,8 +138,8 @@ function showdiv() {
 }
 </script> 
 <script type="text/javascript">
-
-
+//global  variables
+var arrayOfJSON_AnnotationsFile = null;
 
 function selected_dnaBackbone(){
     var datalist = document.getElementById("datalist");
@@ -151,6 +163,10 @@ function update_dnaBackbone(selectedItem){
 function send_request(){
 t = this.document.getElementById("id_sequence_text").value;
 $.get("/test/"+t+"/", function(data){
+// set parttypes objects
+jsonObjectPartTypes = eval(data.parttypes_values);
+jsonObjectOptimizedFor = eval(data.optimizedfor_values);
+ 
 var jsonObject = eval(data.list_dnas);
 var arrayOfObjects = jsonObject;
     //alert(data.list_dnas); 
@@ -168,12 +184,12 @@ var arrayOfObjects = jsonObject;
 		 	}
             }
             
-    
+    emptyRowsTable(0);
     var jsonInsertObject = eval(data.extra_values);
     var arrayOfInsertObjects = jsonInsertObject;
              if(arrayOfInsertObjects.length) {
             for(var i=0, len=arrayOfInsertObjects.length; i<len; i++) {
-				addRowToAnnotationTable(1,'',arrayOfInsertObjects[i].id,arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].description,'0',arrayOfInsertObjects[i].coverage);
+				addRowToAnnotationTable(0,'',arrayOfInsertObjects[i].id,arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].description,arrayOfInsertObjects[i].componentType_name,arrayOfInsertObjects[i].coverage,arrayOfInsertObjects[i].optimizedFor_name);
                }
             }
             
@@ -182,9 +198,74 @@ var arrayOfObjects = jsonObject;
         
         });
     }
+	
+// emtpy table genbank and database annotation 
+function emptyRowsTable(tableNumber){
+	var Parent = document.getElementsByTagName("TBODY").item(tableNumber);
+    while(Parent.hasChildNodes()  & Parent.getElementsByTagName('tr').length>2)
+    {
+		Parent.removeChild(Parent.lastChild);
+    }
+}
 
-function addRowToAnnotationTable(tableNumber,content1,content2,content3,content4,content5,content6)
+ 
+
+function selectallchecked(fieldName){
+ //var fieldName='gb_checkbox';
+   var i=document.getElementsByName(fieldName).length;
+  var e=document.getElementsByName(fieldName);
+  var name=new Array();
+  var value=new Array();
+  
+  var j=0;
+   for(var k=0;k<i;k++)
+  {
+     if(e[k].checked==true){
+		alert(e[k].id);
+		}    
+  }
+  
+}
+
+function getTypeDropdownlistType(){
+//alert('populating getTypeDropdownlistType');
+		 var textnode = document.createElement('select');
+          textnode.setAttribute('name','parttype_select');
+ 		if (typeof jsonObjectPartTypes !== "undefined") {
+			if(jsonObjectPartTypes.length) {
+				for(var i=0, len=jsonObjectPartTypes.length; i<len; i++) {
+					textnode.options[i] = new Option(jsonObjectPartTypes[i].name, 'value',jsonObjectPartTypes[i].name);               
+				   }
+				}
+		}				
+		return textnode 
+}
+
+function getTypeDropdownlistOptimizedFor(){
+//alert('populating getTypeDropdownlistOptimizedFor');
+		  var textnode = document.createElement('select');
+          textnode.setAttribute('name','optimizedfor_select');
+  		if (typeof jsonObjectOptimizedFor !== "undefined") {
+			if(jsonObjectOptimizedFor.length) {
+				for(var i=0, len=jsonObjectOptimizedFor.length; i<len; i++) {
+					textnode.options[i] = new Option(jsonObjectOptimizedFor[i].name, 'value',jsonObjectOptimizedFor[i].name);               
+				   }
+				}  
+		}
+		return textnode 
+}
+
+function addRowToAnnotationTable(tableNumber,content1,content2,content3,content4,content5,content6,content7)
 {
+		var prefix = 'db_';
+		var readonlyattr = true;
+		 if (tableNumber==0){
+			prefix = 'db_';
+			readonlyattr = true;
+		 }else{
+			prefix = 'gb_';
+			readonlyattr = false;
+		 }
          if (!document.getElementsByTagName) return;
          tabBody=document.getElementsByTagName("TBODY").item(tableNumber);
          row=document.createElement("TR");
@@ -194,14 +275,47 @@ function addRowToAnnotationTable(tableNumber,content1,content2,content3,content4
          cell4 = document.createElement("TD");
          cell5 = document.createElement("TD");
          cell6 = document.createElement("TD");
+		 cell7 = document.createElement("TD");
+		 
          checkboxnode1= document.createElement('input');
-                checkboxnode1.type = 'checkbox';
-         
-         textnode2=document.createTextNode(content2);
-         textnode3=document.createTextNode(content3);
-         textnode4=document.createTextNode(content4);
-         textnode5=document.createTextNode(content5);
+		 checkboxnode1.type = 'checkbox';
+		 checkboxnode1.id = content2;
+		 checkboxnode1.name = prefix+'checkbox';
+		 
+		 textnode2= document.createElement('input');
+		 textnode2.type = 'text';	
+		 textnode2.value = content2;
+		 textnode2.readOnly = readonlyattr;
+ 		 
+         //textnode2=document.createTextNode(content2);
+         //textnode3=document.createTextNode(content3);
+		 textnode3= document.createElement('input');
+		 textnode3.type = 'text';	
+		 textnode3.value = content3;
+		 textnode3.readOnly = readonlyattr;
+		 
+         //textnode4=document.createTextNode(content4);
+		 textnode4= document.createElement('input');
+		 textnode4.type = 'text';	
+		 textnode4.value = content4;
+		 textnode4.readOnly = readonlyattr;
+		 
+         //textnode5=document.createTextNode(content5);
+		 if (tableNumber==0){
+		 textnode5=document.createTextNode(content5);}
+		 else{
+		 textnode5 = getTypeDropdownlistType();}
+		   
+		 
+		 
          textnode6=document.createTextNode(content6);
+		 
+		 
+		  
+		 if (tableNumber==0){
+		 textnode7=document.createTextNode(content7);}
+		 else{
+		 textnode7=getTypeDropdownlistOptimizedFor();}
          
          cell1.appendChild(checkboxnode1);
          cell2.appendChild(textnode2);
@@ -209,12 +323,16 @@ function addRowToAnnotationTable(tableNumber,content1,content2,content3,content4
          cell4.appendChild(textnode4);
          cell5.appendChild(textnode5);
          cell6.appendChild(textnode6);
+		 cell7.appendChild(textnode7);
+
          row.appendChild(cell1);
          row.appendChild(cell2);
          row.appendChild(cell3);
          row.appendChild(cell4);
          row.appendChild(cell5);
          row.appendChild(cell6);
+		 row.appendChild(cell7);
+
          tabBody.appendChild(row);
 
 
@@ -253,11 +371,28 @@ function drawGenBank(jsontext,chart){
 	//chart.scrollValues = [200000, 250000];
 	chart.draw();
 }
+function setJSON_genbankFile(jsontext) {
+	var jsonInsertObject = eval(jsontext);
+	arrayOfJSON_AnnotationsFile = jsonInsertObject;
+}
+
+function updateJSON_accordingto_genbankFileSelection() {
+ 	var index = document.getElementById('datalist_gen').selectedIndex;
+		document.getElementById('id_backbone_gen_name').value = arrayOfJSON_AnnotationsFile[index].displayid;
+		document.getElementById('id_backbone_gen_description').value = arrayOfJSON_AnnotationsFile[index].description;
+
+
+}
+
+ 
 
 function buildGenBankTable(jsontext){
     var jsonInsertObject = eval(jsontext);
+	setJSON_genbankFile(jsonInsertObject);
     var arrayOfInsertObjects = jsonInsertObject;
     var sequence = '';
+	document.getElementById("id_sequence_text").value = '';
+ 	emptyRowsTable(1);
             if(arrayOfInsertObjects.length) {
                 for(var i=0, len=arrayOfInsertObjects.length; i<len; i++) {
                 if (sequence=='') { 
@@ -266,9 +401,17 @@ function buildGenBankTable(jsontext){
                     document.getElementById("id_sequence_text").value = sequence;
                     send_request();
                     }
-                    //alert(arrayOfInsertObjects[i].sequence);
-                    addRowToAnnotationTable(2,'',arrayOfInsertObjects[i].id,arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].description,'0',arrayOfInsertObjects[i].coverage);
+                    //alert(arrayOfInsertObjects[i].sequence); 
+                    addRowToAnnotationTable(1,'',arrayOfInsertObjects[i].id,arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].description,arrayOfInsertObjects[i].componentType_name,arrayOfInsertObjects[i].coverage,'');
  					
+					var dataList_gen = document.getElementById("datalist_gen");
+					var optn = document.createElement("OPTION");
+					optn.text = arrayOfInsertObjects[i].displayid;
+					optn.value = arrayOfInsertObjects[i].displayid;
+					dataList_gen.options.add(optn);					
+
+							
+							 
                 }
             }
 }
@@ -363,7 +506,8 @@ style="border:1px solid #000000;">
 					<div id="backbone_genbank"> 
 						<div class="field-box">
 								<label for="id_backbone_gen_id">ID:</label>
-									<input id="id_backbone_gen_id" type="text" class="vTextField" name="id_backbone_gen_id" maxlength="100" />
+								<SELECT id = "datalist_gen" NAME="datalist_gen" onChange="updateJSON_accordingto_genbankFileSelection();">
+								</SELECT>
 						</div>
 					
 						<div class="field-box">
@@ -386,39 +530,37 @@ style="border:1px solid #000000;">
 			 
 </div>
 
+<h2>Specify insert annotations</h2>
 
-<BR><BR>
 <table border="1">
-<CAPTION><EM>Specify insert annotations</EM></CAPTION>
+<CAPTION><EM>From database</EM></CAPTION>
 	<TBODY>
 		<tr>
 		<th></th>
 		<th>ID</th>
 		<th>Name</th>
 		<th>Description</th>
-		<th>To</th>
-		<th>Coverage(%)</th>
+		<th>Type</th>
+		<th>Coverage</th>
+		<th>Optimized for</th>
 		</tr>
-		<tr>
 	</TBODY>
 
-<BR><BR><BR>
+<BR><BR>
 <table border="1">
-<CAPTION><EM>Specify insert genbank annotations</EM></CAPTION>
-<TBODY>
-<tr>
-<th></th>
-<th>ID</th>
-<th>Name</th>
-<th>Description</th>
-<th>To</th>
-<th>Coverage(%)</th>
-</tr>
-<tr>
-</TBODY>
+<CAPTION><EM>From genbank file</EM></CAPTION>
+	<TBODY>
+		<tr>
+				<th></th>
+				<th>ID</th>
+				<th>Name</th>
+				<th>Description</th>
+				<th>Type</th>
+				<th>Coverage</th>
+				<th>Optimized for</th>
+		</tr>
+	</TBODY>
 </table>
-
-
 
 </fieldset>
  

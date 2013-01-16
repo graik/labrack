@@ -11,6 +11,8 @@ from django.forms.fields import DateField, ChoiceField, MultipleChoiceField
 #from django.forms.widgets import RadioSelect, CheckboxSelectMultiple
 from django.forms.extras.widgets import SelectDateWidget
 from django.forms.widgets import *
+import django.utils.simplejson as json
+
 
 
 from django.forms.forms import NON_FIELD_ERRORS
@@ -118,13 +120,22 @@ class PlasmidSampleForm(forms.ModelForm):
     description = forms.CharField(widget=forms.TextInput(attrs={'size':'80'}),required=False)
 
 
-    Plasmid_attribute1 = forms.CharField(widget=forms.TextInput(attrs={'size':'800'}),required=False,label="attrb1")
+    Plasmid_attribute1 = forms.CharField(widget=forms.TextInput(attrs={'size':'1800'}),required=False,label="")
+    Plasmid_attribute2 = forms.CharField(widget=forms.TextInput(attrs={'size':'18800'}),required=False,label="")
 
     def save(self, commit=True):
         instance = super(PlasmidSampleForm, self).save(commit=False)
         #instance.historyDescription = self.cleaned_data['genebank'] # etc
 
-        vectorIdFromDB = self.cleaned_data['Plasmid_attribute1']
+        jsonFromWeb = self.cleaned_data['Plasmid_attribute1']
+        data = json.loads(jsonFromWeb)
+        is_db_data = data["data"][0]["db_data"]        
+        vectorIdFromDB = data["data"][0]["name"]
+
+        is_gb_data = data["data"][1]["gb_data"]        
+        vectorIdFromGB_name = data["data"][1]["name"]
+        vectorIdFromGB_description = data["data"][1]["description"]
+
 
         if self.cleaned_data['is_vector_backbone']==True:
             try:
@@ -140,22 +151,44 @@ class PlasmidSampleForm(forms.ModelForm):
             except (RuntimeError, TypeError, NameError):
                 commit=False
         else: # in case of annotations and vector
-            try:
-                dna2db = DnaComponent(displayId=self.cleaned_data['displayId'],description=self.cleaned_data['Plasmid_Description'], name =self.cleaned_data['Plasmid_Name'], sequence = self.cleaned_data['sequence_text'],status = self.cleaned_data['status'], GenBankfile = self.cleaned_data['GenBankfile'])
-                dna2db.save()
-                dnaVector = DnaComponent.objects.filter(displayId=vectorIdFromDB)
-                an2db = SequenceAnnotation(uri ='', bioStart = 1, bioEnd = 2, strand = '-', subComponent = dna2db, componentAnnotated = dnaVector)
-                an2db.save()
+            
+            if (is_db_data=='true'):
+                try:
+                    dna2db = DnaComponent(displayId=self.cleaned_data['displayId'],description=self.cleaned_data['Plasmid_Description'], name =self.cleaned_data['Plasmid_Name'], sequence = self.cleaned_data['sequence_text'],status = self.cleaned_data['status'], GenBankfile = self.cleaned_data['GenBankfile'])
+                    dna2db.save()
+                    dnaVector = DnaComponent.objects.filter(displayId=vectorIdFromDB)
+                    an2db = SequenceAnnotation(uri ='', bioStart = 1, bioEnd = 2, strand = '-', subComponent = dna2db, componentAnnotated = dnaVector)
+                    an2db.save()
 
-                #if (not DNAComponentType.objects.filter(name='Vector')):
-                #    subCtType = DNAComponentType(name = 'Vector')
-                #    subCtType.save()  
-                #subCtVectorType = DNAComponentType.objects.filter(name='Vector')
-                #dna2db.componentType = subCtVectorType
-                #dna2db.sequence = self.cleaned_data['sequence_text']
-                #dna2db.save()                
-            except (RuntimeError, TypeError, NameError):
-                commit=False            
+                    #if (not DNAComponentType.objects.filter(name='Vector')):
+                    #    subCtType = DNAComponentType(name = 'Vector')
+                    #    subCtType.save()  
+                    #subCtVectorType = DNAComponentType.objects.filter(name='Vector')
+                    #dna2db.componentType = subCtVectorType
+                    #dna2db.sequence = self.cleaned_data['sequence_text']
+                    #dna2db.save()                
+                except (RuntimeError, TypeError, NameError):
+                    commit=False
+            else:
+                try:
+                    dna2db = DnaComponent(displayId=self.cleaned_data['displayId'],description=self.cleaned_data['Plasmid_Description'], name =self.cleaned_data['Plasmid_Name'], sequence = self.cleaned_data['sequence_text'],status = self.cleaned_data['status'], GenBankfile = self.cleaned_data['GenBankfile'])
+                    dna2db.save()
+
+
+                    if (not DNAComponentType.objects.filter(name='Vector')):
+                        subCtType = DNAComponentType(name = 'Vector')
+                        subCtType.save()
+                    dnaVector2db = DnaComponent(displayId=self.cleaned_data['displayId']+'_Vector',description=self.cleaned_data['Plasmid_Description'], name =self.cleaned_data['Plasmid_Name'], sequence = self.cleaned_data['sequence_text'],status = self.cleaned_data['status'], GenBankfile = None)
+                    dnaVector2db.save()                    
+                    subCtVectorType = DNAComponentType.objects.filter(name='Vector')
+                    dnaVector2db.componentType = subCtVectorType
+                    dnaVector2db.sequence = self.cleaned_data['sequence_text']
+                    dnaVector2db.save()
+
+                    an2db = SequenceAnnotation(uri ='', bioStart = 1, bioEnd = 2, strand = '-', subComponent = dna2db, componentAnnotated = dnaVector2db)
+                    an2db.save()                    
+                except (RuntimeError, TypeError, NameError):
+                    commit=False                
 
 
 
