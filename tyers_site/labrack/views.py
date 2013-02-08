@@ -30,6 +30,7 @@ from django.middleware.csrf import get_token
 import os
 from Bio import SeqIO
 from Bio.Seq import Seq
+from Bio.Alphabet import IUPAC
 
 
 from django.views.generic.detail import BaseDetailView, \
@@ -165,7 +166,7 @@ def dnalist(request):
                         try:
                                 myCSVSsample = CSVSample.import_data(data = open(gb_file2))
                         except Exception:
-                                print "Oops!  That was no valid number.  Try again..." 
+                                print "Oops!  That was no valid number.  Try again..."
                         #break                
                         #create a new sample for each line
                         for each_line in myCSVSsample:
@@ -434,71 +435,76 @@ class HybridDetailView(JSONResponseMixin, SingleObjectTemplateResponseMixin, Bas
                 else:
                         return SingleObjectTemplateResponseMixin.render_to_response(self, context)
 
+def getVectorBySequence(sequence_text):#local function
+        dnapartsVectorAll = DnaComponent.objects.filter(componentType__name='Vector')
+        dnaparts = [dnapart for dnapart in DnaComponent.objects.all() if (dnapart in dnapartsVectorAll and dnapart.sequence is not None and dnapart.sequence != "" and dnapart.sequence in sequence_text)]
+        name = ''
+        data = serializers.serialize('json', dnaparts)
+        json_object = ''
+        for dnapart in dnaparts :
+                id = dnapart.id
+                name = dnapart.name
+                displayid = dnapart.displayId
+                sequence = dnapart.sequence
+                description = dnapart.description
+                if json_object == '':
+                        json_object = '{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'"}'
+                else:
+                        json_object = json_object+',{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'"}'
+                json_object = '['+json_object+']'
+        return json_object
+def getInsertDBAnnotationBySequence(sequence_text):#local function
+        dnapartsVectorAll = DnaComponent.objects.filter(componentType__name='Vector')
+        dnapartsInsertsAll = DnaComponent.objects.filter(componentType__name='Vector')
+        dnaparts = [dnapart for dnapart in DnaComponent.objects.all() if (dnapart not in dnapartsVectorAll and dnapart.sequence is not None and dnapart.sequence != "" and dnapart.sequence in sequence_text)]
+        name = ''
+        data = serializers.serialize('json', dnaparts)
+        json_Insertobject = ''
+        for dnapart in dnaparts :
+                id = dnapart.id
+                name = dnapart.name
+                displayid = dnapart.displayId
+                sequence = dnapart.sequence
+                fisrtPeace = len(sequence)
+                secondpeace = len(sequence_text)
+                rslt = fisrtPeace/float(secondpeace)
+                firstposition = sequence_text.find(sequence)
+                lastposition = firstposition+len(sequence)
+                coverage = str(firstposition)+'-'+str(lastposition)
+                description = dnapart.description
+                if (dnapart.optimizedFor!=None):
+                        optimizedFor_name = dnapart.optimizedFor.name
+                else:
+                        optimizedFor_name = ''
+                if (dnapart.componentType!=None):
+                        componentType_name  = ''
+                        for cpType in dnapart.componentType.all():
+                                if (componentType_name==''):
+                                        componentType_name = componentType_name+cpType.name
+                                else:
+                                        componentType_name = componentType_name+','+cpType.name
+                else:
+                        componentType_name = ''                        
+                if json_Insertobject == '':
+                        json_Insertobject = '{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'","coverage":"'+coverage+'","optimizedFor_name":"'+optimizedFor_name+'","componentType_name":"'+componentType_name+'"}' 
+                else:
+                        json_Insertobject = json_Insertobject+',{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'","coverage":"'+coverage+'","optimizedFor_name":"'+optimizedFor_name+'","componentType_name":"'+componentType_name+'"}' 
+        json_Insertobject = '['+json_Insertobject+']'
+        return json_Insertobject
 
 def search_dna_parts(request, sequence_text):   
-        message = {"list_dnas": "", "extra_values": "","parttypes_values": "","optimizedfor_values": ""}
+        message = {"list_dnas": "", "extra_values": "","parttypes_values": "","optimizedfor_values": "","reverse_list_dnas": "","reverse_extra_values": ""}
         if request.is_ajax():
-                #cell = get_object_or_404(DnaComponent, sequence='MVSKGEELFTGVVPILVELDGDVN')
-                #cell = get_object_or_404(DnaComponent, sequence=cell_id)
-                #dnaparts = DnaComponent.objects.filter(sequence=sequence_text)
-                #retrieve Vectors 100%matching
-                dnapartsVectorAll = DnaComponent.objects.filter(componentType__name='Vector')
-                dnaparts = [dnapart for dnapart in DnaComponent.objects.all() if (dnapart in dnapartsVectorAll and dnapart.sequence is not None and dnapart.sequence != "" and dnapart.sequence in sequence_text)]
-                name = ''
-                data = serializers.serialize('json', dnaparts)
-                json_object = ''
-                for dnapart in dnaparts :
-                        id = dnapart.id
-                        name = dnapart.name
-                        displayid = dnapart.displayId
-                        sequence = dnapart.sequence
-                        description = dnapart.description
-                        if json_object == '':
-                                json_object = '{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'"}'
-                        else:
-                                json_object = json_object+',{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'"}'
-                json_object = '['+json_object+']'
-                message['list_dnas'] = json_object
-
+                # calculate the reverse complement sequence
+                my_seq = Seq(sequence_text, IUPAC.unambiguous_dna)
+                revseq = my_seq.reverse_complement()                
+                
+                message['list_dnas'] = getVectorBySequence(sequence_text)
+                message['reverse_list_dnas'] = getVectorBySequence(revseq)
+                
                 #part for retriving potential Inserts
-                dnapartsInsertsAll = DnaComponent.objects.filter(componentType__name='Vector')
-                dnaparts = [dnapart for dnapart in DnaComponent.objects.all() if (dnapart not in dnapartsVectorAll and dnapart.sequence is not None and dnapart.sequence != "" and dnapart.sequence in sequence_text)]
-                name = ''
-                data = serializers.serialize('json', dnaparts)
-                json_Insertobject = ''
-                for dnapart in dnaparts :
-                        id = dnapart.id
-                        name = dnapart.name
-                        displayid = dnapart.displayId
-                        sequence = dnapart.sequence
-                        fisrtPeace = len(sequence)
-                        secondpeace = len(sequence_text)
-                        rslt = fisrtPeace/float(secondpeace)
-                        firstposition = sequence_text.find(sequence)
-                        lastposition = firstposition+len(sequence)
-                        coverage = str(firstposition)+'-'+str(lastposition)
-                        description = dnapart.description
-                        if (dnapart.optimizedFor!=None):
-                                optimizedFor_name = dnapart.optimizedFor.name
-                        else:
-                                optimizedFor_name = ''
-                        if (dnapart.componentType!=None):
-                                componentType_name  = ''
-                                for cpType in dnapart.componentType.all():
-                                        if (componentType_name==''):
-                                                componentType_name = componentType_name+cpType.name
-                                        else:
-                                                componentType_name = componentType_name+','+cpType.name
-                        else:
-                                componentType_name = ''                        
-                        if json_Insertobject == '':
-                                json_Insertobject = '{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'","coverage":"'+coverage+'","optimizedFor_name":"'+optimizedFor_name+'","componentType_name":"'+componentType_name+'"}' 
-                        else:
-                                json_Insertobject = json_Insertobject+',{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'","coverage":"'+coverage+'","optimizedFor_name":"'+optimizedFor_name+'","componentType_name":"'+componentType_name+'"}' 
-                json_Insertobject = '['+json_Insertobject+']'          
-
-
-                message['extra_values'] = json_Insertobject
+                message['extra_values'] = getInsertDBAnnotationBySequence(sequence_text)
+                message['reverse_extra_values'] = getInsertDBAnnotationBySequence(str(revseq))
                 
                 #paret retrieving all partTypes
                 dnapartstypesAll = DNAComponentType.objects.all()

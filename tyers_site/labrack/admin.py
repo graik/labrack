@@ -975,6 +975,8 @@ class ChassisAdmin(ComponentAdmin):
                                          self.exportFields, 'Rack')
 
     make_csv.short_description = 'Export as CSV'
+    
+    
 class ChassisSampleAdmin(PermissionAdmin, admin.ModelAdmin):
 
     form = ChassisSampleForm    
@@ -1228,6 +1230,7 @@ class SampleCollectionAdmin(PermissionAdmin, admin.ModelAdmin):
 
 
 class PlasmidSampleAdmin(admin.ModelAdmin):
+    
     form = PlasmidSampleForm    
 
 
@@ -1246,12 +1249,14 @@ class PlasmidSampleAdmin(admin.ModelAdmin):
                          ('solvent','concentration','concentrationUnit','amount','amountUnit','aliquotNr',),
                          ('description'),
                          ('plasmid_cloning_method','Plasmid_attribute1','Plasmid_attribute2'),
+                         ('plasmid_inChassis'),
                          )
                         )
         }
          ), 
-        ('DNA Content',{'fields':[('is_vector_backbone'),
-                                  ('GenBankfile','sequence_text')],            
+        ('DNA Content',{'fields':[('plasmid_dnaConstruct'),
+                                   ('GenBankfile'),
+                                   ('sequence_text')],            
                         }),
        
     ]
@@ -1274,8 +1279,9 @@ class PlasmidSampleAdmin(admin.ModelAdmin):
 
     ordering       = ('container', 'displayId',)
 
-    raw_id_fields = ('container','sampleCollection','plasmid_inChassis')
-
+    raw_id_fields = ('container','plasmid_dnaConstruct','sampleCollection','plasmid_inChassis')
+    
+    
     save_as        = True
 
     save_on_top = True

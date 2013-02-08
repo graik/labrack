@@ -649,7 +649,11 @@ class DnaSample(Sample):
                     ('mixture', 'mixture'),
                     )
     provenanceType = models.CharField( max_length=30, choices=TYPE_CHOICES, null=True, blank=True, 
-                                       default='')     
+                                       default='')   
+    
+    SEQUENCED_CHOICES = (('verified', 'verified'),('unknown', 'unknown'),)
+    dna_sequenced = models.CharField( max_length=30, choices=SEQUENCED_CHOICES, null=True, blank=True, 
+                                           default='')     
     class Meta:
         app_label = 'labrack'
         verbose_name = 'DNA Sample'
@@ -676,36 +680,35 @@ class DnaSample(Sample):
             return self.inChassis.formatedUrl();   
     
 
-
-
 class PlasmidSample(Sample):
     
-    #plasmid_dnaConstruct = models.ForeignKey(DnaComponent,verbose_name='DNA Construct', blank=True, null=True, related_name='dna_Sample',help_text='Either select an existing DNA Construct or fill the dna description to create a new one')
+    plasmid_dnaConstruct = models.ForeignKey(DnaComponent,verbose_name='DNA Construct', blank=True, null=True, related_name='dna_Sample',help_text='Either select an existing DNA Construct or fill the dna description to create a new one')
     
     
     plasmid_inChassis = models.ForeignKey(Chassis, verbose_name='in Cell', blank=True, null=True, related_name='chassis_Sample')
 
     plasmid_derivedFrom = models.ForeignKey('self', verbose_name='Derived From', blank=True, null=True, related_name='derivedFromSample')
 
-    TYPE_CHOICES = (('parent', 'parent'), 
+    TYPE_CHOICES = (('parent', 'parent'),
                     ('mixture', 'mixture'),
                     )
     plasmid_provenanceType = models.CharField( max_length=30, choices=TYPE_CHOICES, null=True, blank=True, 
-                                       default='')     
-
-
+                                       default='')
+    
     SEQUENCED_CHOICES = (('verified', 'verified'),('unknown', 'unknown'),)
     plasmid_sequenced = models.CharField( max_length=30, choices=SEQUENCED_CHOICES, null=True, blank=True, 
-                                       default='')     
+                                       default='')
     
     Cloning_CHOICES = (('Gibson Assembly', 'Gibson Assembly'),('others', 'others'),)
     plasmid_cloning_method = models.CharField( max_length=30, choices=Cloning_CHOICES, null=True, blank=True, 
                                            default='')       
     
     
-    is_vector_backbone = models.BooleanField('This sequence is a vector Backbone',default=False,
-                                               help_text='mark plasmid as vector backbone')    
+    #is_vector_backbone = models.BooleanField('This sequence is a vector Backbone',default=False,
+    #                                           help_text='mark the whole plasmid as vector backbone')    
 
+    #plasmid_dna_construct = models.ForeignKey(DnaComponent,verbose_name='DNAConstruct', blank=True, null=True, related_name='dnaSample',help_text='Either select an existing DNA Construct or fill the sequence dna description or choose a genebank file')
+    
 
     GenBankfile = models.FileField(upload_to='documents/GenBank/%Y/%m/%d',blank=True,null=True)
 
@@ -720,7 +723,7 @@ class PlasmidSample(Sample):
         """
         """
         
-        r = DnaSample.objects.filter( dnaConstruct = self.dnaConstruct.id ) 
+        r = PlasmidSample.objects.filter( plasmid_dnaConstruct = self.plasmid_dnaConstruct.id ) 
      
         return r
     
@@ -731,10 +734,14 @@ class PlasmidSample(Sample):
             return 'dnasample/%i/' % self.id   
         
     def Content(self):
-        return self.dnaConstruct.formatedUrl();    
+        return self.plasmid_dnaConstruct.formatedUrl();    
     
     def inCell(self):
-            return self.inChassis.formatedUrl();   
+            return self.plasmid_inChassis.formatedUrl();   
+        
+    
+
+
 
 
 class ChassisSample(Sample):
