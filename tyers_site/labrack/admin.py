@@ -61,9 +61,11 @@ from labrack.models.generalmodels import Collection
 from labrack.models.generalmodels import Chassis 
 
 
-from tyers_site.labrack.forms import DnaSampleForm
+#from tyers_site.labrack.forms import DnaSampleForm
 from tyers_site.labrack.forms import ChassisSampleForm
 from tyers_site.labrack.forms import PlasmidSampleForm
+from tyers_site.labrack.forms import DnaComponentForm
+from tyers_site.labrack.forms import DnaSampleForm
 
 
 class PermissionAdmin():
@@ -156,7 +158,8 @@ class PermissionAdmin():
 
 
 
-class ComponentAdmin(PermissionAdmin, admin.ModelAdmin):
+#class ComponentAdmin(PermissionAdmin, admin.ModelAdmin):
+class ComponentAdmin( admin.ModelAdmin):
 
 
     actions = ['make_csv']
@@ -177,12 +180,6 @@ class ComponentAdmin(PermissionAdmin, admin.ModelAdmin):
             'fields': (('displayId', 'name','status',),
                        ('uri',))
 
-        }
-         ),
-        ('Permission', {
-            'classes': ('collapse',),
-            'fields' : ((('owners'), ('group_read', 'group_write'))
-                        )
         }
          ),
         ('Details', {
@@ -273,18 +270,12 @@ class PeptideComponentAdmin(ProteinComponentAdmin):
 
 
 class DnaComponentAdmin(ComponentAdmin):
-
+    form = DnaComponentForm 
 
     fieldsets = (
             (None, {
                 'fields': (('displayId', 'name','status','componentType'),
-                           ('uri',))
-    
-            }
-             ),
-            ('Permission', {
-                'classes': ('collapse',),
-                'fields' : ((('owners'), ('group_read', 'group_write'))
+                           ('uri','Plasmid_attribute1','Plasmid_attribute2','Plasmid_attribute3')
                             )
             }
              ),
@@ -401,7 +392,7 @@ class LocationAdmin(admin.ModelAdmin):
                                  ('Last modified','modification_date'),
                                  ])
 
-    fields = (('displayId', 'name'), 'temperature', 'room')
+    fields = (('displayId', 'name'), 'temperature', 'room','description')
 
     list_display = ('displayId', 'name', 'temperature', 'room')
 
@@ -432,7 +423,7 @@ class RackAdmin(admin.ModelAdmin):
                                  ])
     list_display = ('displayId', 'name', 'location_url', 
                     )    
-    fields = (('displayId', 'name'),'current_location')
+    fields = (('displayId', 'name'),'current_location','description')
 
     def container_url(self, obj):
         url = obj.container.get_relative_url()
@@ -749,9 +740,8 @@ class DnaSampleAdmin(PermissionAdmin, admin.ModelAdmin):
                         )
         }
          ), 
-        ('DNA Content',{'fields':[('dnaConstruct','inChassis'),
-                                  ('DNA_Display_ID','DNA_Name','DNA_Status'),
-                                  ('genebank','sequence')],
+        ('DNA Content',{'fields':[('dnaConstruct','inChassis')
+                                  ],
                         'description': 'Either select an existing DNA Construct or fill the dna description to create a new one'                    
                         }),
         ('History',{'fields':[('derivedFrom','provenanceType'),

@@ -522,6 +522,7 @@ def search_dna_parts(request, sequence_text):
                 #paret retrieving all partTypes
                 chassisOptimizedAll = Chassis.objects.all()
                 json_chassisOptimizedAll = ''
+                json_chassisOptimizedAll = '{ "id":"","name":""}'
                 for chas in chassisOptimizedAll :
                         id = chas.id
                         name = chas.name  

@@ -94,8 +94,7 @@ class Component(PermissionModel):
                        ('under_construction', 'under construction'),
                        ('abandoned', 'abandoned'))
 
-    displayId = models.CharField('display ID', max_length=20, unique=True, 
-                                 help_text='Unique identification')
+    displayId = models.CharField('display ID', max_length=20, unique=True, help_text='Unique identification')
 
     name = models.CharField('Name', max_length=200, blank=True, 
                             help_text='Descriptive name (e.g. "TEV protease")')
@@ -346,8 +345,8 @@ class DnaComponent(Component):
         if self.GenBankfile:
             self.sequence = self.related_seq()
         super(DnaComponent, self).save(*args, **kwargs) # Call the "real" save() method.
-        if self.GenBankfile:
-            self.save_annotation()
+        #if self.GenBankfile:
+        #    self.save_annotation()
     
     def related_seq( self ):
         """

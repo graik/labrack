@@ -65,6 +65,8 @@ class Location(models.Model):
 
     modification_date = models.DateTimeField('Modified at', auto_now=True)
 
+    description = models.CharField( 'short Description', max_length=200,
+                                            help_text='Very short description for listings')    
 
     #rack = models.CharField('Rack', max_length=200, 
     #    blank=True, help_text='Informative name of rack')
@@ -109,6 +111,10 @@ class Rack(models.Model):
                             blank=True, help_text='Informative name of rack ex : R1-F1 for a rack named R1 that will not move from Fridge 1')
 
     current_location = models.ForeignKey( 'Location', blank=True, null=True )
+    
+    description = models.CharField( 'short Description', max_length=200,
+                                            help_text='Very short description for listings')    
+    
 
     def __unicode__(self):
         return u'%s' % (self.displayId)
