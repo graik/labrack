@@ -637,8 +637,8 @@ class SampleProvenance(models.Model):
 
 
 class DnaSample(Sample):
-    #, help ='Either select an existing DNA Construct or fill the dna description to create a new one'
-    dnaConstruct = models.ForeignKey(DnaComponent,verbose_name='DNA Construct', blank=True, null=True, related_name='dnaSample',help_text='Either select an existing DNA Construct or fill the dna description to create a new one')
+    #, help ='Select a DNA Construct'
+    dnaConstruct = models.ForeignKey(DnaComponent,verbose_name='DNA Construct', blank=True, null=True, related_name='dnaSample',help_text='Select a DNA Construct')
     
     
     inChassis = models.ForeignKey(Chassis, verbose_name='in Cell', blank=True, null=True, related_name='chassisSample')
@@ -663,7 +663,7 @@ class DnaSample(Sample):
         """
         """
         
-        r = DnaSample.objects.filter( dnaConstruct = self.dnaConstruct.id ) 
+        r = DnaSample.objects.filter( dnaConstruct = self.dnaConstruct.id ).exclude(id=self.id)
      
         return r
     
@@ -674,15 +674,17 @@ class DnaSample(Sample):
             return 'dnasample/%i/' % self.id   
         
     def Content(self):
-        return self.dnaConstruct.formatedUrl();    
+        if self.dnaConstruct:
+            return self.dnaConstruct.formatedUrl();    
     
     def inCell(self):
-            return self.inChassis.formatedUrl();   
+        if self.inChassis:
+            return self.inChassis.formatedUrl();
     
 
 class PlasmidSample(Sample):
     
-    plasmid_dnaConstruct = models.ForeignKey(DnaComponent,verbose_name='DNA Construct', blank=True, null=True, related_name='dna_Sample',help_text='Either select an existing DNA Construct or fill the dna description to create a new one')
+    plasmid_dnaConstruct = models.ForeignKey(DnaComponent,verbose_name='DNA Construct', blank=True, null=True, related_name='dna_Sample',help_text='Select a DNA Construct ')
     
     
     plasmid_inChassis = models.ForeignKey(Chassis, verbose_name='in Cell', blank=True, null=True, related_name='chassis_Sample')
@@ -763,7 +765,7 @@ class ChassisSample(Sample):
     def related_samples( self ):
         """
         """
-        r = ChassisSample.objects.filter( chassis = self.chassis.id ) 
+        r = ChassisSample.objects.filter( chassis = self.chassis.id ).exclude(id=self.id)
      
         return r   
     
@@ -771,4 +773,7 @@ class ChassisSample(Sample):
             """
             Define standard relative URL for object access in templates
             """
-            return 'chassissample/%i/' % self.id      
+            return 'chassissample/%i/' % self.id
+    def inCell(self):
+        if self.chassis:
+            return self.chassis.formatedUrl();          

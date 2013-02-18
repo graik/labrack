@@ -30,7 +30,7 @@ function showHide_DNAConstructADDNEW(a)
           <table cellspacing="0">
             <thead>
               <tr>
-                <th>ID</th><th>Type</th><th>dna</th><th>in vector</th><th>in cell</th>
+                <th>ID</th><th>dna</th><th>in cell</th>
                 <th>concentration</th>
                 <th>created</th><th>by</th><th>comments</th>
               </tr>
@@ -38,31 +38,13 @@ function showHide_DNAConstructADDNEW(a)
             <tbody>
         
             {% for sample in original.related_samples %}
-        
               <tr class="{% cycle 'row1' 'row2' %}">
-        
                 <td><b><a href="../../{{sample.get_relative_url}}" target="_blank">
                       {{sample.showId}}</a></b></td>
-        
-                <td>{{sample.showSampleType}}</td>
-        
-                <td>{{sample.showDna|default:"--"}}
-                {% if sample.dnas|length > 1 %}
-                 (out of {{sample.dnas|length}})
-                {% endif %}
-                </td>
-        
-                <td>{% if sample.vector %}
-                      <a href="../../{{sample.vector.get_relative_url}}" target="_blank">
-                      {{sample.vector}}</a></td>
-                    {% else %}
-                          --</td>
-                    {% endif %}
-        
-                <td>{% if sample.chassis %}
-                      {{sample.showCellLink|safe}}
-                      
-                    {% else %}
+                <td>{{sample.Content|default:"--"}}</td>
+                <td>{% if sample.inCell %}
+                      {{sample.inCell|safe}}
+                      {% else %}
                           --</td>
                     {% endif %}
         

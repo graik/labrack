@@ -189,9 +189,7 @@ class ComponentAdmin( admin.ModelAdmin):
         }
          ),
     )
-
-
-
+    
     list_display = ('displayId', 'name', 'created_by', 'status', 
                     'showComment', )
     list_filter = ('status', 'created_by')
@@ -281,15 +279,15 @@ class DnaComponentAdmin(ComponentAdmin):
              ),
             ('Details', {
                 'fields' : (('variantOf'),
-                            ('description',),
-                            ('GenBankfile')),
+                            ('description',)),
     
             }
              ),
             ('DNA Details', 
                          {'fields': (('optimizedFor', 'translatesTo', 'circular'),
                                      ('sequence',),
-                                     ),
+                                     ('GenBankfile'),       ),
+                          
                           'classes':('collapse',)
                           }
              ),            
@@ -993,7 +991,8 @@ class ChassisSampleAdmin(PermissionAdmin, admin.ModelAdmin):
         }
          ), 
         ('Cell Content',{'fields':[('chassis'),
-                                  ('Chassis_Display_ID','Chassis_Name','Chassis_Description')],
+                                  #('Chassis_Display_ID','Chassis_Name','Chassis_Description')
+                                  ],
                         'description': 'Either select an existing Cell or fill the cell description to create a new one'                    
                         }),
         ('History',{'fields':[('derivedFrom','provenanceType'),

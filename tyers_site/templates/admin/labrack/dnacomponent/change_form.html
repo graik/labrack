@@ -39,7 +39,7 @@
 			 
 		  }
 		  for(var i = 0; i < divs.length; i++){
-		   if (divs[i].className=='form-row field-description') {
+		   if (divs[i].className=='form-row field-sequence') {
 			 
 				txt=document.createTextNode('');
 				divs[i].id = 'id_GenBankfile_loaded';
@@ -87,7 +87,8 @@
 		 HideShowElement('backbone_db','visible');
 		 HideShowElement('backbone_genbank','hidden');
 		 
- 
+		
+		
     };
 
 function selectallchecked_gb(){
@@ -208,7 +209,7 @@ function retrieveAndFeedDataHandler(e)
    function sequenceHandler(e)
    {
 		send_request();
-		alert('the vector and insert list has been updated!');
+		
    }
 			 
 function HideShowElement(elementName,status) {
@@ -270,6 +271,9 @@ function update_dnaBackbone(selectedItem){
 // send the request to the server with the sequence to retrieve all the annotation or vectors in the database
 function send_request(){
 t = this.document.getElementById("id_sequence").value;
+if ((t.length>0) & (t.match(/[ACTGactg]+/) != t)) {
+alert("Error : this not a DNA Sequence!");
+} 
 $.get("/test/"+t+"/", function(data){
 // set parttypes objects
 reverse_jsonObject = eval(data.reverse_list_dnas);
@@ -749,16 +753,17 @@ style="border:1px solid #000000;">
 									<input type="text" name="id_backbone_name" readonly id="id_backbone_name" />
 						</div>
 						
-						<div class="field-box">
-								<label for="id_backbone_selectionmarkers" class="inline">Selection markers(s):</label>
-									<input type="text" name="id_backbone_selectionmarkers" readonly id="id_backbone_selectionmarkers" />
-						</div>
 						
 						<div class="field-box">
 								<label for="id_backbone_description" class="inline">Description:</label>
 									<input type="text" name="id_backbone_description" readonly id="id_backbone_description" />
 						</div>
 						
+						<div class="field-box" style="visibility: hidden">
+								<label for="id_backbone_selectionmarkers" class="inline">Selection markers(s):</label>
+									<input type="text" name="id_backbone_selectionmarkers" readonly id="id_backbone_selectionmarkers"/>
+									
+						</div>
 						
 					</div> 
 				</div>				
@@ -775,9 +780,9 @@ style="border:1px solid #000000;">
 									<input type="text" name="id_backbone_gen_name" id="id_backbone_gen_name" />
 						</div>
 						
-						<div class="field-box">
+						<div class="field-box" style="visibility: hidden">
 								<label for="id_backbone_gen_selectionmarkers" class="inline">Selection markers(s):</label>
-									<input type="text" name="id_backbone_gen_selectionmarkers" id="id_backbone_gen_selectionmarkers" />
+									<input type="text" name="id_backbone_gen_selectionmarkers" id="id_backbone_gen_selectionmarkers" HIDDEN=TRUE />
 						</div>
 						
 						<div class="field-box">
@@ -793,6 +798,8 @@ style="border:1px solid #000000;">
  				
 			 
 </div>
+
+
 
 <fieldset class="module aligned collapse">
 
@@ -833,7 +840,61 @@ style="border:1px solid #000000;">
   
 </fieldset>
  
-
+<div class="module aligned">
+  <h2>Annotations</h2>
+        <div class="description">
+          Note, clicking any of the links below will open a new window/tab!
+        </div>
+        
+        <p></p>
+        
+        {% if original %}
+          <ul class="object-tools">
+            <li><a href="../../sequenceannotation/add/?subComponent={{original.id}}" target="_blank">
+                Add Annotation</a></li> 
+          </ul>                  
+        {% endif %}
+        
+               
+        {% if original and original.related_annotations %}
+          <table cellspacing="0">
+            <thead>
+              <tr>
+                <th>ID</th><th>Start</th><th>End</th><th>strand</th><th>DNA</th>
+              </tr>
+            </thead>
+            <tbody>
+        
+            {% for sequenceannotation in original.related_annotations %}
+        
+              <tr class="{% cycle 'row1' 'row2' %}">
+        
+                <td><b><a href="../../{{sequenceannotation.get_relative_url}}" target="_blank">
+                      {{sequenceannotation.id}}</a></b></td><td>{{sequenceannotation.bioStart}}</td>   
+                      <td>{{sequenceannotation.bioEnd}}</td>
+                      <td>{% if sequenceannotation.strand == "-1" %}
+                      (-)</td>
+                    {% else %}
+                          (+)</td>
+                    {% endif %}
+                <td>{% if sequenceannotation.componentAnnotated %}
+                      <a href="../{{sequenceannotation.componentAnnotated.id}}" target="_blank">
+                      {{sequenceannotation.componentAnnotated}}</a></td>
+                    {% else %}
+                          --</td>
+                    {% endif %}
+              </tr>
+        
+            {% endfor %}
+        
+            </tbody>
+          </table>
+          
+        {% else %}
+          <div class="description"><b>No Sequence Annotations found for this item.</b></div>
+        {% endif %}
+        <p></p>
+</div>
 <div class="module aligned">
   <h2>DNA Samples</h2>
         <div class="description">
@@ -907,61 +968,6 @@ style="border:1px solid #000000;">
         <p></p>
 </div>
 
-<div class="module aligned">
-  <h2>Annotations</h2>
-        <div class="description">
-          Note, clicking any of the links below will open a new window/tab!
-        </div>
-        
-        <p></p>
-        
-        {% if original %}
-          <ul class="object-tools">
-            <li><a href="../../sequenceannotation/add/?subComponent={{original.id}}" target="_blank">
-                Add Annotation</a></li> 
-          </ul>                  
-        {% endif %}
-        
-               
-        {% if original and original.related_annotations %}
-          <table cellspacing="0">
-            <thead>
-              <tr>
-                <th>ID</th><th>Start</th><th>End</th><th>strand</th><th>DNA</th>
-              </tr>
-            </thead>
-            <tbody>
-        
-            {% for sequenceannotation in original.related_annotations %}
-        
-              <tr class="{% cycle 'row1' 'row2' %}">
-        
-                <td><b><a href="../../{{sequenceannotation.get_relative_url}}" target="_blank">
-                      {{sequenceannotation.id}}</a></b></td><td>{{sequenceannotation.bioStart}}</td>   
-                      <td>{{sequenceannotation.bioEnd}}</td>
-                      <td>{% if sequenceannotation.strand == "-1" %}
-                      (-)</td>
-                    {% else %}
-                          (+)</td>
-                    {% endif %}
-                <td>{% if sequenceannotation.componentAnnotated %}
-                      <a href="../{{sequenceannotation.componentAnnotated.id}}" target="_blank">
-                      {{sequenceannotation.componentAnnotated}}</a></td>
-                    {% else %}
-                          --</td>
-                    {% endif %}
-              </tr>
-        
-            {% endfor %}
-        
-            </tbody>
-          </table>
-          
-        {% else %}
-          <div class="description"><b>No Sequence Annotations found for this item.</b></div>
-        {% endif %}
-        <p></p>
-</div>
 
 
 {% endblock %}
