@@ -169,7 +169,7 @@ class Container( PermissionModel ):
     # rack = models.ForeignKey(Rack, null=True, blank=True)
 
     def __unicode__( self ):
-        return "%s" % self.displayId
+        return "%s  ,%s, %s" % (self.displayId,self.rack,self.rack.current_location)
 
     def related_dna_samples( self ):
         """

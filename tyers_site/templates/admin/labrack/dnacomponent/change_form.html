@@ -1,7 +1,10 @@
 {% extends "admin/change_form.html" %}
+
 {% load i18n admin_modify adminmedia %}
 
+
 {% block after_field_sets %}
+
 
 
 <link rel="stylesheet" type="text/css" href="/media/js/fileuploader/fileuploader.css">
@@ -13,7 +16,6 @@
 
 <script language=javascript type='text/javascript'>
 
-			 
        var txtContent;
 	   var jsonObjectPartTypes;
 	   var jsonObjectOptimizedFor;
@@ -69,11 +71,10 @@
 		 //savebutton[1].onclick = retrieveAndFeedDataHandler;
 		 
 		 //hide attrb1
-		 document.getElementById("id_Plasmid_attribute1").hidden="true";
-		 document.getElementById("id_Plasmid_attribute2").hidden="true";
-		 document.getElementById("id_Plasmid_attribute3").hidden="true";
-
-
+		 document.getElementById("id_htmlAttribute1").hidden="true";
+		 document.getElementById("id_htmlAttribute2").hidden="true";
+		 document.getElementById("id_htmlAttribute3").hidden="true";
+		 document.getElementById("id_htmlAttribute1").innerHTML = "";
 		 
 		  
 		 
@@ -121,7 +122,7 @@ function selectallchecked_gb(){
 
 
 function repopulateCheckBox(){
-	test = '('+document.getElementById("id_Plasmid_attribute2").value+')';
+	test = '('+document.getElementById("id_htmlAttribute2").value+')';
 	if (test!='()') {
 			var myObject = eval(test);
 			test_db_checked = myObject.selected_annot[0].db_checked;
@@ -145,8 +146,8 @@ function repopulateCheckBox(){
 function retrieveAndFeedDataHandler(e)
    {
   
-		textContent = document.getElementById("id_Plasmid_attribute1");
-		textContent2 = document.getElementById("id_Plasmid_attribute2");
+		textContent = document.getElementById("id_htmlAttribute1");
+		textContent2 = document.getElementById("id_htmlAttribute2");
 
 		
 		is_db_data = document.getElementById("radiodb").checked;
@@ -267,7 +268,17 @@ function update_dnaBackbone(selectedItem){
         //$("#idExtra").html(data.extra_values);
     });
 }
- 
+
+function checkIfElementExistInJson(elem,jsonStruct){
+var jsonObject = jsonStruct;
+	for(var i=0, len=jsonObject.length; i<len; i++) {
+			if (jsonObject[i].displayid==elem) {
+				return true;
+				
+			} 
+	}
+	return false;
+}
 // send the request to the server with the sequence to retrieve all the annotation or vectors in the database
 function send_request(){
 t = this.document.getElementById("id_sequence").value;
@@ -284,10 +295,9 @@ jsonObjectOptimizedFor = eval(data.optimizedfor_values);
  
 var jsonObject = eval(data.list_dnas);
 	var arrayOfObjects = jsonObject;
-    //alert(data.list_dnas); 
-      $("#input").html("");
+    //alert(data.list_dnas);
+	$("#input").html("");
     //dataList.empty();
-	
 	
 	var dataList_gen = document.getElementById("datalist_gen");
 	//dataList_gen.options.length = 0;
@@ -299,14 +309,14 @@ var jsonObject = eval(data.list_dnas);
 	*/
     var dataList = document.getElementById("inputDataList");
 	dataList.options.length = 0;
-	var optn = document.createElement("OPTION");
+	/*var optn = document.createElement("OPTION");
 				optn.text = "";
 				optn.value = "";
 				optn.id = -999;
-				dataList.options.add(optn);
+				dataList.options.add(optn);*/
 				
     if(arrayOfObjects) {
-		for(var i=0, len=arrayOfObjects.length; i<len; i++) {
+		for(var i=1, len=arrayOfObjects.length; i<len; i++) {
  		var optn = document.createElement("OPTION");
 				optn.text = arrayOfObjects[i].displayid;
 				optn.value = arrayOfObjects[i].displayid;
@@ -319,11 +329,13 @@ var jsonObject = eval(data.list_dnas);
 					
 	if(reverse_jsonObject) {
 			for(var i=0, len=reverse_jsonObject.length; i<len; i++) {
- 		var optn = document.createElement("OPTION");
-				optn.text = reverse_jsonObject[i].displayid;
-				optn.value = reverse_jsonObject[i].displayid;
-				optn.id = reverse_jsonObject[i].id;
-				dataList.options.add(optn);
+				if (!checkIfElementExistInJson(reverse_jsonObject[i].displayid,arrayOfObjects)) {
+					var optn = document.createElement("OPTION");
+						optn.text = reverse_jsonObject[i].displayid;
+						optn.value = reverse_jsonObject[i].displayid;
+						optn.id = reverse_jsonObject[i].id;
+						dataList.options.add(optn);
+					}
 				}					
             }
             
@@ -593,7 +605,7 @@ function addRowToAnnotationTable(tableNumber,content1,content2,content3,content4
 function buildChartGeneBank(){
 	var canvas = document.getElementById('canvas');
 	canvas.width = canvas.width;
-	chart1 = new Scribl(canvas, 800);
+	chart1 = new Scribl(canvas, 400);
 	return chart1
 }
 
@@ -607,13 +619,19 @@ function drawGenBank(jsontext,chart){
             if(arrayOfInsertObjects.length) {
                 for(var i=0, len=arrayOfInsertObjects.length; i<len; i++) {
 					var start = parseInt(arrayOfInsertObjects[i].startPos,10);
-					var end = parseInt(arrayOfInsertObjects[i].endPos,10);
 					var strand = parseInt(arrayOfInsertObjects[i].strandValue,10);
 					var strandStr = '';
+					if (end==0) { end = 1;}
 					if (strand==-1) {strandStr='-';} else {strandStr='+';}
+					var end = parseInt(arrayOfInsertObjects[i].endPos,10) - start;
+					if (end==0) { end = 1;}
 					//alert(strandStr);
 					var gene = chart1.addGene( start,    end , strandStr);
 					gene.name = arrayOfInsertObjects[i].id;
+					
+					gene.onMouseover = gene.name+": Start:"+start+" Length:"+end;
+				    gene.onClick = function() {alert(gene.name);}
+					// 
                 }
             }
 	//chart.scrollable = true;
@@ -683,7 +701,7 @@ function uploadTheFile(){
 		//element: document.getElementById('id_GenBankfile'), 
 		multiple: false,
 		onComplete: function( id, fileName, responseJSON ) {
-		document.getElementById("id_Plasmid_attribute3").value = fileName
+		document.getElementById("id_htmlAttribute3").value = fileName
 		document.getElementById("id_GenBankfile_loaded").innerHTML += "<br>Last File :"+fileName
 		buildGenBankTable(responseJSON.test);
 		
@@ -790,7 +808,7 @@ style="border:1px solid #000000;">
 									<input type="text" name="id_backbone_gen_description" id="id_backbone_gen_description"/>
 						</div>
 						<div class="field-box">
-								<label for="id_backbone_gen_coverage" class="inline">Coverage:</label>
+								<label for="id_backbone_gen_coverage" class="inline">Position:</label>
 									<input type="text" name="id_backbone_gen_coverage" id="id_backbone_gen_coverage"/>
 						</div>
 					</div>
@@ -814,7 +832,7 @@ style="border:1px solid #000000;">
 		<th>Name</th>
 		<th>Description</th>
 		<th>Type</th>
-		<th>Coverage</th>
+		<th>Position</th>
 		<th>Optimized for</th>
 		</tr>
 	</TBODY>
@@ -829,7 +847,7 @@ style="border:1px solid #000000;">
 				<th>Name</th>
 				<th>Description</th>
 				<th>Type</th>
-				<th>Coverage</th>
+				<th>Position</th>
 				<th>Optimized for</th>
 		</tr>
 	</TBODY>

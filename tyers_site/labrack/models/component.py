@@ -1,5 +1,4 @@
 from django.db import models
-from permissionModel import PermissionModel
 from django.utils.safestring import mark_safe
 from django.utils.safestring import SafeUnicode 
 from tyers_site import settings   
@@ -8,6 +7,7 @@ import os
 from Bio import SeqIO
 from Bio.Seq import Seq
 from tyers_site.labrack.models.generalmodels import SequenceAnnotation
+from permissionModel import PermissionModel
  
  
 
@@ -84,7 +84,7 @@ class PeptideComponentType( ComponentType ):
 
 
 
-class Component(PermissionModel):
+class Component(PermissionModel,models.Model):
     """
     Abstract base class for cells, nucleic acids, proteins, and chemicals.
     """
@@ -205,8 +205,9 @@ class Component(PermissionModel):
         r = SequenceAnnotation.objects.filter( subComponent=self.id)
         s = r.count()
 
-        return s        
-
+        return s     
+    
+   
     def showComment( self ):
         """
         @return: str; truncated comment

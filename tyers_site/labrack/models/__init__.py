@@ -1,4 +1,3 @@
-from labrack.models.permissionModel import PermissionModel
 from labrack.models.unit import Unit 
 from labrack.models.sample import SampleContent
 from labrack.models.sample import CSVSample

@@ -154,12 +154,8 @@ class PermissionAdmin():
 
 
         return qs
-
-
-
-
 #class ComponentAdmin(PermissionAdmin, admin.ModelAdmin):
-class ComponentAdmin( admin.ModelAdmin):
+class ComponentAdmin( PermissionAdmin, admin.ModelAdmin):
 
 
     actions = ['make_csv']
@@ -267,7 +263,7 @@ class PeptideComponentAdmin(ProteinComponentAdmin):
 
 
 
-class DnaComponentAdmin(ComponentAdmin):
+class DnaComponentAdmin(PermissionAdmin, ComponentAdmin):
     form = DnaComponentForm 
 
     fieldsets = (
@@ -286,7 +282,8 @@ class DnaComponentAdmin(ComponentAdmin):
             ('DNA Details', 
                          {'fields': (('optimizedFor', 'translatesTo', 'circular'),
                                      ('sequence',),
-                                     ('GenBankfile'),),
+                                     ('GenBankfile'),       ),
+                          
                           'classes':('collapse',)
                           }
              ),            
@@ -331,12 +328,6 @@ class ContainerAdmin(PermissionAdmin, admin.ModelAdmin):
                         )
         }
          ),
-        ('Permission', {
-            'classes': ('collapse',),
-            'fields' : ((('owners'), ('group_read', 'group_write'))
-                        )
-        }
-         )
     )
 
 
@@ -377,7 +368,7 @@ class ContainerAdmin(PermissionAdmin, admin.ModelAdmin):
 
 
 
-class LocationAdmin(admin.ModelAdmin):
+class LocationAdmin(PermissionAdmin, admin.ModelAdmin):
 
     actions = ['make_csv']
 
@@ -409,7 +400,7 @@ class LocationAdmin(admin.ModelAdmin):
 
 
 
-class RackAdmin(admin.ModelAdmin):
+class RackAdmin(PermissionAdmin, admin.ModelAdmin):
 
     actions = ['make_csv']
 
@@ -498,7 +489,7 @@ class SampleForm(forms.ModelForm):
 
 
 
-class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
+class SampleAdmin( PermissionAdmin, admin.ModelAdmin):
 
     form = SampleForm     
 
@@ -656,7 +647,6 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
         locat = rac.current_location
         url = locat.get_relative_url()
         return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.container.rack.current_location.__unicode__()))
-        return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.container.rack))
     location_url.allow_tags = True
     location_url.short_description = 'Location'    
 
@@ -793,8 +783,7 @@ class DnaSampleAdmin(PermissionAdmin, admin.ModelAdmin):
         rac = con.rack
         locat = rac.current_location
         url = locat.get_relative_url()
-        #return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.container.rack.current_location.__unicode__()))
-        return mark_safe('<a href="%s/%s">%s, %s</a>' % (S.admin_root, url, obj.container.rack.__unicode__(),obj.container.rack.current_location.__unicode__()))
+        return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.container.rack.current_location.__unicode__()))
     location_url.allow_tags = True
     location_url.short_description = 'Location'      
     
@@ -907,7 +896,7 @@ class DnaSampleAdmin(PermissionAdmin, admin.ModelAdmin):
                           % (i, status))
 
 
-class ChassisAdmin(ComponentAdmin):
+class ChassisAdmin(PermissionAdmin, ComponentAdmin):
     actions = ['make_csv']
     """
     exportFields = OrderedDict( [('Rack ID', 'displayId'),
@@ -1039,7 +1028,6 @@ class ChassisSampleAdmin(PermissionAdmin, admin.ModelAdmin):
     def container_url(self, obj):
         url = obj.container.get_relative_url()
         return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.container.__unicode__()))
-        
     container_url.allow_tags = True
     container_url.short_description = 'Container'
 
@@ -1079,8 +1067,7 @@ class ChassisSampleAdmin(PermissionAdmin, admin.ModelAdmin):
         rac = con.rack
         locat = rac.current_location
         url = locat.get_relative_url()
-        #return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.container.rack.current_location.__unicode__()))
-        return mark_safe('<a href="%s/%s">%s, %s</a>' % (S.admin_root, url, obj.container.rack.__unicode__(),obj.container.rack.current_location.__unicode__()))
+        return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.container.rack.current_location.__unicode__()))
     location_url.allow_tags = True
     location_url.short_description = 'Location'   
 
@@ -1152,7 +1139,7 @@ class UnitAdmin(admin.ModelAdmin):
 
     def make_csv(self, request, queryset):
 
-        fields = OrderedDict([('Unit name', 'name'),
+        fields = OrderedDict( [('Unit name', 'name'),
                                ('Unit type', 'unitType'),
                                ])
 
@@ -1180,7 +1167,7 @@ class ComponentTypeAdmin(admin.ModelAdmin):
     search_fields = ('name',)
 
 
-class SampleCollectionAdmin(PermissionAdmin, admin.ModelAdmin):
+class SampleCollectionAdmin(admin.ModelAdmin):
 
     actions = ['make_csv']
 
@@ -1197,13 +1184,6 @@ class SampleCollectionAdmin(PermissionAdmin, admin.ModelAdmin):
                         )
         }
          ),
-        ('Permission', {
-            'classes': ('collapse',),
-            'fields' : (
-                (('owners'), ('group_read', 'group_write'))
-            )
-        }
-         )
     )
 
     list_display = ('name', 'created_by', 'creation_date')

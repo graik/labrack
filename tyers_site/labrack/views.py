@@ -451,7 +451,7 @@ def getVectorBySequence(sequence_text):#local function
                         json_object = '{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'"}'
                 else:
                         json_object = json_object+',{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'"}'
-                json_object = '['+json_object+']'
+        json_object = '['+json_object+']'
         return json_object
 def getInsertDBAnnotationBySequence(sequence_text):#local function
         dnapartsVectorAll = DnaComponent.objects.filter(componentType__name='Vector')
@@ -495,12 +495,16 @@ def getInsertDBAnnotationBySequence(sequence_text):#local function
 def search_dna_parts(request, sequence_text):   
         message = {"list_dnas": "", "extra_values": "","parttypes_values": "","optimizedfor_values": "","reverse_list_dnas": "","reverse_extra_values": ""}
         if request.is_ajax():
-                # calculate the reverse complement sequence
+                # calculate the reverse complement sequence and duplicate sequence for better Vector matching
+                sequence_textDuplicate = sequence_text + sequence_text
+                my_seqDuplicate = Seq(sequence_textDuplicate, IUPAC.unambiguous_dna)
+                revseqDuplicate = my_seqDuplicate.reverse_complement()                
+                
                 my_seq = Seq(sequence_text, IUPAC.unambiguous_dna)
                 revseq = my_seq.reverse_complement()                
                 
-                message['list_dnas'] = getVectorBySequence(sequence_text)
-                message['reverse_list_dnas'] = getVectorBySequence(revseq)
+                message['list_dnas'] = getVectorBySequence(sequence_textDuplicate)
+                message['reverse_list_dnas'] = getVectorBySequence(revseqDuplicate)
                 
                 #part for retriving potential Inserts
                 message['extra_values'] = getInsertDBAnnotationBySequence(sequence_text)
@@ -511,12 +515,12 @@ def search_dna_parts(request, sequence_text):
                 json_dnaparttype = ''
                 for dnaparttype in dnapartstypesAll :
                         id = dnaparttype.id
-                        name = dnaparttype.name  
+                        name = dnaparttype.name
                         if json_dnaparttype == '':
                                 json_dnaparttype = '{ "id":"'+str(id)+'","name":"'+name+'"}'
                         else:
                                 json_dnaparttype = json_dnaparttype+',{ "id":"'+str(id)+'","name":"'+name+'"}'
-                json_dnaparttype = '['+json_dnaparttype+']' 
+                json_dnaparttype = '['+json_dnaparttype+']'
                 message['parttypes_values'] = json_dnaparttype
                 
                 #paret retrieving all partTypes
@@ -525,12 +529,12 @@ def search_dna_parts(request, sequence_text):
                 json_chassisOptimizedAll = '{ "id":"","name":""}'
                 for chas in chassisOptimizedAll :
                         id = chas.id
-                        name = chas.name  
+                        name = chas.name
                         if json_chassisOptimizedAll == '':
                                 json_chassisOptimizedAll = '{ "id":"'+str(id)+'","name":"'+name+'"}'
                         else:
                                 json_chassisOptimizedAll = json_chassisOptimizedAll+',{ "id":"'+str(id)+'","name":"'+name+'"}'
-                json_chassisOptimizedAll = '['+json_chassisOptimizedAll+']' 
+                json_chassisOptimizedAll = '['+json_chassisOptimizedAll+']'
                 message['optimizedfor_values'] = json_chassisOptimizedAll                
         else:
                 message = "You're the lying type, I can just tell."
