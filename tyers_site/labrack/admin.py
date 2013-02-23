@@ -267,7 +267,7 @@ class PeptideComponentAdmin(ProteinComponentAdmin):
 
 
 
-class DnaComponentAdmin(ComponentAdmin):
+class DnaComponentAdmin(PermissionAdmin,ComponentAdmin):
     form = DnaComponentForm 
 
     fieldsets = (
@@ -377,7 +377,7 @@ class ContainerAdmin(PermissionAdmin, admin.ModelAdmin):
 
 
 
-class LocationAdmin(admin.ModelAdmin):
+class LocationAdmin(PermissionAdmin,admin.ModelAdmin):
 
     actions = ['make_csv']
 
@@ -409,7 +409,7 @@ class LocationAdmin(admin.ModelAdmin):
 
 
 
-class RackAdmin(admin.ModelAdmin):
+class RackAdmin(PermissionAdmin,admin.ModelAdmin):
 
     actions = ['make_csv']
 
@@ -907,7 +907,7 @@ class DnaSampleAdmin(PermissionAdmin, admin.ModelAdmin):
                           % (i, status))
 
 
-class ChassisAdmin(ComponentAdmin):
+class ChassisAdmin(PermissionAdmin,ComponentAdmin):
     actions = ['make_csv']
     """
     exportFields = OrderedDict( [('Rack ID', 'displayId'),
