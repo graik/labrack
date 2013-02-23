@@ -39,18 +39,18 @@ class DnaSampleForm(forms.ModelForm):
         super(DnaSampleForm, self).__init__(*args, **kwargs)
 
     def clean(self):
-        cleaned_data = super(DnaSampleForm, self).clean()
-        data_DNA_Construct = cleaned_data.get("dnaConstruct")
-        data_DNA_Display_ID = cleaned_data.get("DNA_Display_ID")
-        data_DNA_Name = cleaned_data.get("DNA_Name")
-        data_DNA_Description = cleaned_data.get("DNA_Description")
-        che = cleaned_data.get("inChassis")
-        if data_DNA_Display_ID=='':
+        cleanedData = super(DnaSampleForm, self).clean()
+        dataDnaConstruct = cleanedData.get("dnaConstruct")
+        dataDnaDisplayID = cleanedData.get("DNA_Display_ID")
+        dataDnaName = cleanedData.get("DNA_Name")
+        dataDnaDescription = cleanedData.get("DNA_Description")
+        che = cleanedData.get("inChassis")
+        if dataDnaDisplayID=='':
         
-            data_DNA_Display_ID=None
-        if (data_DNA_Construct==None and data_DNA_Display_ID==None):
+            dataDnaDisplayID=None
+        if (dataDnaConstruct==None and dataDnaDisplayID==None):
             raise forms.ValidationError("Either select an existing DNA Construct or fill the dna description to create a new one!")
-        return cleaned_data        
+        return cleanedData        
 
 
     def clean_DNA_Display_ID(self):
@@ -89,10 +89,10 @@ class DnaSampleForm(forms.ModelForm):
 
 class ChassisSampleForm(forms.ModelForm):
 
-    Chassis_Display_ID = forms.CharField(required=False,label="Display ID")
-    Chassis_Name = forms.CharField(required=False,label="Name")  
+    ChassisDisplayID = forms.CharField(required=False,label="Display ID")
+    ChassisName = forms.CharField(required=False,label="Name")  
     #Chassis_Description = forms.CharField(widget=forms.Textarea,required=False,label="Description")
-    Chassis_Description = forms.CharField(widget=forms.TextInput(attrs={'size':'80'}),required=False,label="Description")
+    ChassisDescription = forms.CharField(widget=forms.TextInput(attrs={'size':'80'}),required=False,label="Description")
 
     description = forms.CharField(widget=forms.TextInput(attrs={'size':'80'}),required=False)
     class Meta:
@@ -127,8 +127,8 @@ class DnaComponentForm(forms.ModelForm):
         data = json.loads(jsonFromWeb)
         
         
-        is_db_data = data["data"][0]["db_data"]
-	is_gb_data = data["data"][1]["gb_data"]
+        isDbData = data["data"][0]["db_data"]
+	isGbData = data["data"][1]["gb_data"]
 	
 		    
         
@@ -154,7 +154,7 @@ class DnaComponentForm(forms.ModelForm):
             subCtType.save()  
         subCtVectorType = DNAComponentType.objects.filter(name='Vector')	
 
-        is_gb_data = data["data"][1]["gb_data"]        
+        isGbData = data["data"][1]["gb_data"]        
         vectorIdFromGB_name = data["data"][1]["name"]
         vectorIdFromGB_description = data["data"][1]["description"]
 
@@ -183,7 +183,7 @@ class DnaComponentForm(forms.ModelForm):
 	instance.save()
             
         ### saving Vector annotation
-	if (is_db_data=='true' and  data["data"][0]["name"]!='') :
+	if (isDbData=='true' and  data["data"][0]["name"]!='') :
 	    vectorIdFromDB = data["data"][0]["name"]
 	    dnaVector = DnaComponent.objects.get(displayId=vectorIdFromDB)
 	    first = fullSequence.find(dnaVector.sequence)
@@ -192,7 +192,7 @@ class DnaComponentForm(forms.ModelForm):
             an2db = SequenceAnnotation(uri ='', bioStart = first, bioEnd = second, strand = '-', subComponent = instance, componentAnnotated = dnaVector)
             an2db.save()		    
 		
-	if (is_gb_data=='true' and  data["data"][1]["name"]!='') :
+	if (isGbData=='true' and  data["data"][1]["name"]!='') :
 	    coverage=data["data"][1]["coverage"]
 	    id=data["data"][1]["name"]
 	    coverage = coverage.split('-')
@@ -254,10 +254,13 @@ class DnaComponentForm(forms.ModelForm):
 			descrp=obj["text4"]
 			dnatype=obj["text5"]
 			optimizedfor=obj["text7"]
+			subCtVectorType = DNAComponentType.objects.filter(name=dnatype)	
 			
 			dnaAnnot = DnaComponent(displayId=id,description=descrp, name =name, sequence = seq)
 			dnaAnnot.save()
-			an2db = SequenceAnnPositionotation(uri ='', bioStart = first, bioEnd = secon, strand = '-', subComponent = instance, componentAnnotated = dnaAnnot)
+			dnaAnnot.componentType = subCtVectorType
+			dnaAnnot.save()			
+			an2db = SequenceAnnotation(uri ='', bioStart = first, bioEnd = secon, strand = '+', subComponent = instance, componentAnnotated = dnaAnnot)
 			an2db.save()
 			
 		

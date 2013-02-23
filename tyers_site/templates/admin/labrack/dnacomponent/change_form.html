@@ -17,6 +17,7 @@
 <script language=javascript type='text/javascript'>
 
        var txtContent;
+	   var currSelectedVectorSeq = '';
 	   var jsonObjectPartTypes;
 	   var jsonObjectOptimizedFor;
 
@@ -80,7 +81,7 @@
 		 
 		 
 		 // reason for calling is to populate parttype and optimized for
-		 send_request();
+		 send_request(true);
 		 
 		 
 		 repopulateCheckBox();
@@ -174,6 +175,8 @@ function retrieveAndFeedDataHandler(e)
 		textContent.value = JSON.stringify(json_ele);
 		textContent2.value = JSON.stringify(json_ele2);
 		
+	
+		
 
 		//selectallchecked_gb();
 		//selectallchecked_db();
@@ -209,7 +212,7 @@ function retrieveAndFeedDataHandler(e)
    
    function sequenceHandler(e)
    {
-		send_request();
+		send_request(true);
 		
    }
 			 
@@ -253,46 +256,45 @@ function showdiv() {
 var arrayOfJSON_AnnotationsFile = null;
 
 function selected_dnaBackbone(){
+	var fullsequence = this.document.getElementById("id_sequence").value;
     var input = document.getElementById("inputDataList");
-    
-    update_dnaBackbone(input.value);
+    update_dnaBackbone(input.value,fullsequence);
 }
 
 // get the information regarding the DNA Backbone vector from the server
-function update_dnaBackbone(selectedItem){
+function update_dnaBackbone(selectedItem,fullsequence){
     $.get("/get_dna_info/"+selectedItem+"/", function(data){
        var values = data.list_dnas;
         var jsonObject = eval(values);
         $("#vectorName").html(jsonObject[0].name);
         $("#vectorDescription").html(jsonObject[0].description);
         //$("#idExtra").html(data.extra_values);
+		
+		//update annot base on the vector sequence
+		currSelectedVectorSeq = jsonObject[0].sequence;
     });
+	send_request(false);
+	
 }
+
+
+ 
 
 function checkIfElementExistInJson(elem,jsonStruct){
 var jsonObject = jsonStruct;
 	for(var i=0, len=jsonObject.length; i<len; i++) {
 			if (jsonObject[i].displayid==elem) {
 				return true;
-				
-			} 
+			}
 	}
 	return false;
 }
-// send the request to the server with the sequence to retrieve all the annotation or vectors in the database
-function send_request(){
-t = this.document.getElementById("id_sequence").value;
-if ((t.length>0) & (t.match(/[ACTGactg]+/) != t)) {
-alert("Error : this not a DNA Sequence!");
-} 
-$.get("/test/"+t+"/", function(data){
-// set parttypes objects
+
+// Vector backbone section populating the list of vector that sequence are part of the main sequence
+function populateVectorBackbone(data){
 reverse_jsonObject = eval(data.reverse_list_dnas);
-reverse_jsonInsertObject = eval(data.reverse_extra_values);
  
-jsonObjectPartTypes = eval(data.parttypes_values);
-jsonObjectOptimizedFor = eval(data.optimizedfor_values);
- 
+
 var jsonObject = eval(data.list_dnas);
 	var arrayOfObjects = jsonObject;
     //alert(data.list_dnas);
@@ -309,19 +311,19 @@ var jsonObject = eval(data.list_dnas);
 	*/
     var dataList = document.getElementById("inputDataList");
 	dataList.options.length = 0;
-	/*var optn = document.createElement("OPTION");
+	var optn = document.createElement("OPTION");
 				optn.text = "";
 				optn.value = "";
 				optn.id = -999;
-				dataList.options.add(optn);*/
-				
+				dataList.options.add(optn);
     if(arrayOfObjects) {
-		for(var i=1, len=arrayOfObjects.length; i<len; i++) {
+		for(var i=0, len=arrayOfObjects.length; i<len; i++) {
  		var optn = document.createElement("OPTION");
 				optn.text = arrayOfObjects[i].displayid;
 				optn.value = arrayOfObjects[i].displayid;
 				optn.id = arrayOfObjects[i].id;
 				dataList.options.add(optn);
+				
 				}
             }
 			
@@ -336,28 +338,53 @@ var jsonObject = eval(data.list_dnas);
 						optn.id = reverse_jsonObject[i].id;
 						dataList.options.add(optn);
 					}
-				}					
+				}
             }
-            
+}
+
+// populate inserts part base on the main sequence and the vector selections
+function populateInserts(data){
+reverse_jsonInsertObject = eval(data.reverse_extra_values);
+jsonObjectPartTypes = eval(data.parttypes_values);
+jsonObjectOptimizedFor = eval(data.optimizedfor_values);
+
     emptyRowsTable(0);
     var jsonInsertObject = eval(data.extra_values);
     var arrayOfInsertObjects = jsonInsertObject;
 		if(arrayOfInsertObjects) {
             for(var i=0, len=arrayOfInsertObjects.length; i<len; i++) {
-				addRowToAnnotationTable(0,'',arrayOfInsertObjects[i].id,arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].description,arrayOfInsertObjects[i].componentType_name,arrayOfInsertObjects[i].coverage,arrayOfInsertObjects[i].optimizedFor_name);
+					addRowToAnnotationTable(0,'',arrayOfInsertObjects[i].id,arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].description,arrayOfInsertObjects[i].componentType_name,arrayOfInsertObjects[i].coverage,arrayOfInsertObjects[i].optimizedFor_name);
+
                }
 		}
 		
     var revarrayOfInsertObjects = reverse_jsonInsertObject;
 		if(revarrayOfInsertObjects) {
             for(var i=0, len=revarrayOfInsertObjects.length; i<len; i++) {
-				addRowToAnnotationTable(0,'',revarrayOfInsertObjects[i].id,revarrayOfInsertObjects[i].displayid,revarrayOfInsertObjects[i].description,revarrayOfInsertObjects[i].componentType_name,revarrayOfInsertObjects[i].coverage,revarrayOfInsertObjects[i].optimizedFor_name);
+				if (!checkIfElementExistInJson(revarrayOfInsertObjects[i].displayid,arrayOfInsertObjects)) {
+					addRowToAnnotationTable(0,'',revarrayOfInsertObjects[i].id,revarrayOfInsertObjects[i].displayid,revarrayOfInsertObjects[i].description,revarrayOfInsertObjects[i].componentType_name,revarrayOfInsertObjects[i].coverage,revarrayOfInsertObjects[i].optimizedFor_name);
+					}
                }
-            }	
-            
-       
+            }
+			
+}
+// send the request to the server with the sequence to retrieve all the annotation or vectors in the database
+function send_request(isUpdateVector){
+t = this.document.getElementById("id_sequence").value;
+a = currSelectedVectorSeq;
+if ((t.length>0) & (t.match(/[ACTGactg]+/) != t)) {
+alert("Error : this not a DNA Sequence!");
+return;
+}
+ta = t+"__"+a;
+$.get("/test/"+ta+"/", function(data){
+// set parttypes objects
+if (isUpdateVector) {populateVectorBackbone(data);}
+
+populateInserts(data);
+
         });
-    }
+}
 	
 // emtpy table genbank and database annotation 
 function emptyRowsTable(tableNumber){
@@ -649,6 +676,12 @@ function updateJSON_accordingto_genbankFileSelection() {
  		document.getElementById('id_backbone_gen_name').value = arrayOfJSON_AnnotationsFile[index].displayid;
 		document.getElementById('id_backbone_gen_description').value = arrayOfJSON_AnnotationsFile[index].description;
 		document.getElementById('id_backbone_gen_coverage').value = arrayOfJSON_AnnotationsFile[index].coverage;
+		
+		var fullsequence = this.document.getElementById("id_sequence").value;
+		n=arrayOfJSON_AnnotationsFile[index].coverage.split("-"); 
+		currSelectedVectorSeq = fullsequence.substring(n[0],n[1]);
+		send_request(false);
+
 }
 
  
@@ -680,7 +713,7 @@ function buildGenBankTable(jsontext){
                 //call sequence change with the full sequence as a value
                     sequence = arrayOfInsertObjects[i].sequence;
                     document.getElementById("id_sequence").value = sequence;
-                    send_request();
+                    send_request(true);
                     }
                     //alert(arrayOfInsertObjects[i].sequence); 
                     addRowToAnnotationTable(1,'',arrayOfInsertObjects[i].id,arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].description,arrayOfInsertObjects[i].componentType_name,arrayOfInsertObjects[i].coverage,'');			

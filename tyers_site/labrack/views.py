@@ -161,10 +161,10 @@ def dnalist(request):
                         newdoc.save()
                         s = request.FILES['docfile']
                         p = newdoc.docfile.url
-                        gb_file = settings.MEDIA_ROOT+os.path.normpath(newdoc.docfile.url)
-                        gb_file2 = settings.TEMPLATE_DIRS+os.path.normpath(newdoc.docfile.url)
+                        gbFile = settings.MEDIA_ROOT+os.path.normpath(newdoc.docfile.url)
+                        gbFile2 = settings.TEMPLATE_DIRS+os.path.normpath(newdoc.docfile.url)
                         try:
-                                myCSVSsample = CSVSample.import_data(data = open(gb_file2))
+                                myCSVSsample = CSVSample.import_data(data = open(gbFile2))
                         except Exception:
                                 print "Oops!  That was no valid number.  Try again..."
                         #break                
@@ -453,8 +453,9 @@ def getVectorBySequence(sequence_text):#local function
                         json_object = json_object+',{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'"}'
         json_object = '['+json_object+']'
         return json_object
+
 def getInsertDBAnnotationBySequence(sequence_text):#local function
-        dnapartsVectorAll = DnaComponent.objects.filter(componentType__name='Vector')
+        dnapartsVectorAll  = DnaComponent.objects.filter(componentType__name='Vector')
         dnapartsInsertsAll = DnaComponent.objects.filter(componentType__name='Vector')
         dnaparts = [dnapart for dnapart in DnaComponent.objects.all() if (dnapart not in dnapartsVectorAll and dnapart.sequence is not None and dnapart.sequence != "" and dnapart.sequence in sequence_text)]
         name = ''
@@ -492,7 +493,14 @@ def getInsertDBAnnotationBySequence(sequence_text):#local function
         json_Insertobject = '['+json_Insertobject+']'
         return json_Insertobject
 
-def search_dna_parts(request, sequence_text):   
+def search_dna_parts(request, sequence_text):
+        coo = sequence_text;
+        rs = sequence_text.split('__');
+        sequence_text = rs[0];
+        sequence_vector = rs[1];
+        seq_exceptVector = sequence_text.replace(sequence_vector, '')
+        
+        
         message = {"list_dnas": "", "extra_values": "","parttypes_values": "","optimizedfor_values": "","reverse_list_dnas": "","reverse_extra_values": ""}
         if request.is_ajax():
                 # calculate the reverse complement sequence and duplicate sequence for better Vector matching
@@ -501,14 +509,17 @@ def search_dna_parts(request, sequence_text):
                 revseqDuplicate = my_seqDuplicate.reverse_complement()                
                 
                 my_seq = Seq(sequence_text, IUPAC.unambiguous_dna)
-                revseq = my_seq.reverse_complement()                
+                revseq = my_seq.reverse_complement()
+                
+                my_seq_exceptVect = Seq(seq_exceptVector, IUPAC.unambiguous_dna)
+                revseq_exceptVect = my_seq_exceptVect.reverse_complement()
                 
                 message['list_dnas'] = getVectorBySequence(sequence_textDuplicate)
                 message['reverse_list_dnas'] = getVectorBySequence(revseqDuplicate)
                 
                 #part for retriving potential Inserts
-                message['extra_values'] = getInsertDBAnnotationBySequence(sequence_text)
-                message['reverse_extra_values'] = getInsertDBAnnotationBySequence(str(revseq))
+                message['extra_values'] = getInsertDBAnnotationBySequence(seq_exceptVector)
+                message['reverse_extra_values'] = getInsertDBAnnotationBySequence(str(revseq_exceptVect))
                 
                 #paret retrieving all partTypes
                 dnapartstypesAll = DNAComponentType.objects.all()
@@ -523,7 +534,7 @@ def search_dna_parts(request, sequence_text):
                 json_dnaparttype = '['+json_dnaparttype+']'
                 message['parttypes_values'] = json_dnaparttype
                 
-                #paret retrieving all partTypes
+                #paret retrieving all optimized for
                 chassisOptimizedAll = Chassis.objects.all()
                 json_chassisOptimizedAll = ''
                 json_chassisOptimizedAll = '{ "id":"","name":""}'
@@ -541,7 +552,7 @@ def search_dna_parts(request, sequence_text):
         json = simplejson.dumps(message)
         return HttpResponse(json, mimetype='application/json')
 
-
+                       
 
 def get_dna_info(request, text_value):
         message = {"list_dnas": "", "extra_values": ""}
