@@ -19,7 +19,7 @@
           </ul>          
         {% endif %}
         
-        {% if original and original.related_samples %}
+        {% if original and original.relatedChassisSamples %}
           <table cellspacing="0">
             <thead>
               <tr>
@@ -30,19 +30,16 @@
             </thead>
             <tbody>
         
-            {% for sample in original.related_samples %}
+            {% for sample in original.relatedChassisSamples %}
         
               <tr class="{% cycle 'row1' 'row2' %}">
         
                 <td><b><a href="../../{{sample.get_relative_url}}" target="_blank">
                       {{sample.showId}}</a></b></td>
         
-                <td>{{sample.showSampleType}}</td>
+                <td>Cell</td>
         
-                <td>{{sample.showDna|default:"--"}}
-                {% if sample.dnas|length > 1 %}
-                 (out of {{sample.dnas|length}})
-                {% endif %}
+                <td> 
                 </td>
         
                 <td>{% if sample.vector %}
@@ -52,12 +49,8 @@
                           --</td>
                     {% endif %}
         
-                <td>{% if sample.chassis %}
-                      {{sample.showCellLink|safe}}
-                      
-                    {% else %}
-                          --</td>
-                    {% endif %}
+                <td>{{original.name}}</td>
+                     
         
                 <td>{{sample.showConcentration}}</td>
                 <td>{{sample.creation_date|date:"d M Y"}}</td>
@@ -67,7 +60,44 @@
               </tr>
         
             {% endfor %}
+            
+            {% for sample in original.relatedDnaSamples %}
         
+              <tr class="{% cycle 'row1' 'row2' %}">
+        
+                <td><b><a href="../../{{sample.get_relative_url}}" target="_blank">
+                      {{sample.showId}}</a></b></td>
+        
+                <td>DNA Cell</td>
+        
+                <td>{% if sample.dnaConstruct %}
+                      <a href="../../{{sample.dnaConstruct.get_relative_url}}" target="_blank">
+                      {{sample.dnaConstruct}}</a></td>
+                    {% else %}
+                          --</td>
+                    {% endif %}               
+                
+                <td>{% if sample.dnaConstruct %}
+                      <a href="../../{{sample.dnaConstruct.getVector.get_relative_url}}" target="_blank">
+                      {{sample.dnaConstruct.getVector.name}}</a></td>
+                    {% else %}
+                          --</td>
+                    {% endif %} 
+                 
+        
+               
+        
+                <td>{{original.name}}</td>
+                     
+        
+                <td>{{sample.showConcentration}}</td>
+                <td>{{sample.creation_date|date:"d M Y"}}</td>
+                <td>{{sample.created_by}}</td>
+                <td>{{sample.showComment|default:""}}</td>
+        
+              </tr>
+        
+            {% endfor %}
             </tbody>
           </table>
           

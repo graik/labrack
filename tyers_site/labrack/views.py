@@ -435,7 +435,7 @@ class HybridDetailView(JSONResponseMixin, SingleObjectTemplateResponseMixin, Bas
                 else:
                         return SingleObjectTemplateResponseMixin.render_to_response(self, context)
 
-def getVectorBySequence(sequence_text):#local function
+def getVectorBySequence(sequence_text,strand):#local function
         dnapartsVectorAll = DnaComponent.objects.filter(componentType__name='Vector')
         dnaparts = [dnapart for dnapart in DnaComponent.objects.all() if (dnapart in dnapartsVectorAll and dnapart.sequence is not None and dnapart.sequence != "" and dnapart.sequence in sequence_text)]
         name = ''
@@ -448,13 +448,13 @@ def getVectorBySequence(sequence_text):#local function
                 sequence = dnapart.sequence
                 description = dnapart.description
                 if json_object == '':
-                        json_object = '{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'"}'
+                        json_object = '{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'","strand":"'+strand+'"}'
                 else:
-                        json_object = json_object+',{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'"}'
+                        json_object = json_object+',{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'","strand":"'+strand+'"}'
         json_object = '['+json_object+']'
         return json_object
 
-def getInsertDBAnnotationBySequence(sequence_text):#local function
+def getInsertDBAnnotationBySequence(sequence_text,strand):#local function
         dnapartsVectorAll  = DnaComponent.objects.filter(componentType__name='Vector')
         dnapartsInsertsAll = DnaComponent.objects.filter(componentType__name='Vector')
         dnaparts = [dnapart for dnapart in DnaComponent.objects.all() if (dnapart not in dnapartsVectorAll and dnapart.sequence is not None and dnapart.sequence != "" and dnapart.sequence in sequence_text)]
@@ -487,9 +487,9 @@ def getInsertDBAnnotationBySequence(sequence_text):#local function
                 else:
                         componentType_name = ''                        
                 if json_Insertobject == '':
-                        json_Insertobject = '{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'","coverage":"'+coverage+'","optimizedFor_name":"'+optimizedFor_name+'","componentType_name":"'+componentType_name+'"}' 
+                        json_Insertobject = '{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'","coverage":"'+coverage+'","optimizedFor_name":"'+optimizedFor_name+'","componentType_name":"'+componentType_name+'","strand":"'+strand+'"}' 
                 else:
-                        json_Insertobject = json_Insertobject+',{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'","coverage":"'+coverage+'","optimizedFor_name":"'+optimizedFor_name+'","componentType_name":"'+componentType_name+'"}' 
+                        json_Insertobject = json_Insertobject+',{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'","coverage":"'+coverage+'","optimizedFor_name":"'+optimizedFor_name+'","componentType_name":"'+componentType_name+'","strand":"'+strand+'"}' 
         json_Insertobject = '['+json_Insertobject+']'
         return json_Insertobject
 
@@ -514,12 +514,12 @@ def search_dna_parts(request, sequence_text):
                 my_seq_exceptVect = Seq(seq_exceptVector, IUPAC.unambiguous_dna)
                 revseq_exceptVect = my_seq_exceptVect.reverse_complement()
                 
-                message['list_dnas'] = getVectorBySequence(sequence_textDuplicate)
-                message['reverse_list_dnas'] = getVectorBySequence(revseqDuplicate)
+                message['list_dnas'] = getVectorBySequence(sequence_textDuplicate,'+')
+                message['reverse_list_dnas'] = getVectorBySequence(revseqDuplicate,'-')
                 
                 #part for retriving potential Inserts
-                message['extra_values'] = getInsertDBAnnotationBySequence(seq_exceptVector)
-                message['reverse_extra_values'] = getInsertDBAnnotationBySequence(str(revseq_exceptVect))
+                message['extra_values'] = getInsertDBAnnotationBySequence(seq_exceptVector,'+')
+                message['reverse_extra_values'] = getInsertDBAnnotationBySequence(str(revseq_exceptVect),'-')
                 
                 #paret retrieving all partTypes
                 dnapartstypesAll = DNAComponentType.objects.all()

@@ -8,8 +8,8 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from tyers_site.labrack.models.generalmodels import SequenceAnnotation
 from permissionModel import PermissionModel
- 
- 
+
+
 
 
 
@@ -128,7 +128,42 @@ class Component(PermissionModel,models.Model):
         name = self.name if self.name else ''
         return SafeUnicode("<a href='/admin/labrack/" +self.get_relative_url() \
                            + "'>" + self.displayId + ' - ' +  name + "</a>")
+    
+    def show_component_type(self):
+            """
+            """
+            ret = ""
+            comDna= DnaComponent.objects.get(id = self.id)
+            try:                       
+                for t in comDna.componentType.all():
+                    if ret=="":
+                        ret += t.name
+                    else:
+                        ret += ","+t.name
+            except Exception, err:
+                print err        
+            #s = [content.sequenceannotation for content in r]
+    
+            return ret   
+    show_component_type.short_description = 'Type'    
 
+    def show_DnaComponent_type(self):
+        """
+        """
+        ret = ""
+        comDna= DnaComponent.objects.get(id = self.id)
+        try:                       
+            for t in comDna.componentType.all():
+                if ret=="":
+                    ret += t.name
+                else:
+                    ret += ","+t.name
+        except Exception, err:
+            print err        
+        #s = [content.sequenceannotation for content in r]
+
+        return ret   
+    show_component_type.short_description = 'Type'    
 
     def __unicode__(self):
         name = self.name if self.name else ''
@@ -144,7 +179,7 @@ class Component(PermissionModel,models.Model):
         """
         import labrack.models as M
         r = M.SampleContent.objects.filter( object_id=self.id, 
-                                          content_type__model=self.__class__.__name__.lower() )
+                                            content_type__model=self.__class__.__name__.lower() )
         s = [content.sample for content in r]
 
         return s
@@ -206,8 +241,8 @@ class Component(PermissionModel,models.Model):
         s = r.count()
 
         return s     
-    
-   
+
+
     def showComment( self ):
         """
         @return: str; truncated comment
@@ -260,12 +295,12 @@ class DnaComponent(Component):
     componentType = models.ManyToManyField(DNAComponentType, 
                                            blank=True, null=True, 
                                            verbose_name='Type', 
-                                           help_text='Classification of this part.')    
+                                           help_text='Classification of this part.')
 
     circular = models.BooleanField( 'Circular', default=False, 
                                     help_text='is the DNA Circular or not.')
 
-    
+
     GenBankfile = models.FileField(upload_to='documents/GenBank/%Y/%m/%d',blank=True,null=True)
     def get_relative_url(self):
         """
@@ -312,41 +347,64 @@ class DnaComponent(Component):
         if self.optimizedFor:
             return self.optimizedFor
         return u''
-    
+
     def show_resistance(self):
+        """z
         """
-        """
-	ret = ""
+        ret = ""
         r = SequenceAnnotation.objects.filter( subComponent=self.id).order_by('bioStart')
-	try:                       
-	    for s in r:
-		com = s.componentAnnotated
-		comDna= DnaComponent.objects.get(id = com.id)
-		for t in comDna.componentType.all():
-		    if t.name == 'SelectionMarker':
-			if ret=="":
-			    ret += s.componentAnnotated.name
-			else:
-			    ret += ","+s.componentAnnotated.name
-	except Exception, err:
-	    print err        
+        try:                       
+            for s in r:
+                com = s.componentAnnotated
+                comDna= DnaComponent.objects.get(id = com.id)
+                for t in comDna.componentType.all():
+                    if t.name == 'SelectionMarker':
+                        if ret=="":
+                            ret += s.componentAnnotated.name
+                        else:
+                            ret += ","+s.componentAnnotated.name
+        except Exception, err:
+            print err        
         #s = [content.sequenceannotation for content in r]
 
         return ret   
-        
+    show_resistance.short_description = 'Resistance'
+    
+    
+    def getVector(self):
+        """z
+        """
+        ret = ""
+        r = SequenceAnnotation.objects.filter( subComponent=self.id).order_by('bioStart')
+        try:                       
+            for s in r:
+                com = s.componentAnnotated
+                comDna= DnaComponent.objects.get(id = com.id)
+                for t in comDna.componentType.all():
+                    if t.name == 'Vector':
+                        return s.componentAnnotated
+        except Exception, err:
+            print err        
+        #s = [content.sequenceannotation for content in r]
+
+        return ret   
+    getVector.short_description = 'Vector'    
+    
+     
+
 
     def related_dnaSamples(self):
         """
         """       
         import labrack.models as M
-        
+
         r = M.DnaSample.objects.filter(dnaConstruct=self.id)
-        
+
         #r = labrack.models.sample.DnaSample.objects.filter(dnaConstruct=1)
-        
+
         return r
-    
-    
+
+
     def show_parentSample(self):
         from django.db import connection, transaction
         cursor = connection.cursor()
@@ -370,7 +428,7 @@ class DnaComponent(Component):
         super(DnaComponent, self).save(*args, **kwargs) # Call the "real" save() method.
         #if self.GenBankfile:
         #    self.save_annotation()
-    
+
     def related_seq( self ):
         """
         """
@@ -386,20 +444,20 @@ class DnaComponent(Component):
             return gb_features
         except Exception:
             return ''
-        
+
     def saveSequenceWithoutAnnotations(self, *args, **kwargs):
-           #Saving the sequence 
+            #Saving the sequence 
         super(DnaComponent, self).save(*args, **kwargs) # Call the "real" save() method.
         if self.GenBankfile:
             self.sequence = self.related_seq()
         super(DnaComponent, self).save(*args, **kwargs) # Call the "real" save() method.
-               
-               
+
+
     def saveWithoutAnnotations(self, *args, **kwargs):
         #Saving the sequence
         #self.sequence = self.related_seq()
         super(DnaComponent, self).save(*args, **kwargs) # Call the "real" save() method.
-        
+
     def save_annotation( self ):
         if (self.GenBankfile):
             gb_file = settings.MEDIA_ROOT+"/"+os.path.normpath(self.GenBankfile.name)
@@ -462,7 +520,7 @@ class DnaComponent(Component):
         verbose_name = 'DNA part'
 
 
- 
+
 
 
 class ProteinComponent(Component):
@@ -595,10 +653,23 @@ class Chassis(Component):
         """
         return 'chassis/%i/' % self.id
 
-    def related_samples( self ):
+    def relatedChassisSamples( self ):
         """
         """
-        return self.cell_samples.all()
+        import labrack.models as M
+        r = M.ChassisSample.objects.filter(chassis=self.id)
+        return r
+    def relatedDnaSamples(self):
+        """
+        """       
+        import labrack.models as M
+
+        r = M.DnaSample.objects.filter(inChassis=self.id)
+
+        #r = labrack.models.sample.DnaSample.objects.filter(dnaConstruct=1)
+
+        return r       
+    
 
     class Meta:
         app_label = 'labrack'           
@@ -644,7 +715,7 @@ class Collection(models.Model):
 
     class Meta:
         app_label = 'labrack'    
-        
+
 class Person(models.Model):
     name = models.CharField(max_length=80)
     birthday = models.DateField()
@@ -653,4 +724,4 @@ class Person(models.Model):
     def as_dict(self):
         return {'name':self.name, 'birthday':self.birthday.strftime("%B of %Y")}
     class Meta:
-         app_label = 'labrack'      
+        app_label = 'labrack'      

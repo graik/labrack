@@ -911,7 +911,7 @@ style="border:1px solid #000000;">
           <table cellspacing="0">
             <thead>
               <tr>
-                <th>ID</th><th>Start</th><th>End</th><th>strand</th><th>DNA</th>
+                <th>ID</th><th>Start</th><th>End</th><th>strand</th><th>DNA</th><th>Type</th>
               </tr>
             </thead>
             <tbody>
@@ -931,6 +931,11 @@ style="border:1px solid #000000;">
                 <td>{% if sequenceannotation.componentAnnotated %}
                       <a href="../{{sequenceannotation.componentAnnotated.id}}" target="_blank">
                       {{sequenceannotation.componentAnnotated}}</a></td>
+                    {% else %}
+                          --</td>
+                    {% endif %}
+					<td>{% if sequenceannotation.componentAnnotated %}
+                      {{sequenceannotation.componentAnnotated.show_DnaComponent_type}}</td>
                     {% else %}
                           --</td>
                     {% endif %}
