@@ -296,7 +296,7 @@ class DnaComponentAdmin(PermissionAdmin,ComponentAdmin):
 
 
     list_display = ComponentAdmin.list_display[:-2] + \
-        ('show_optimizedFor', 'show_translatesTo', 'number_related_samples', 'size') + \
+        ('show_optimizedFor', 'show_translatesTo','show_resistance', 'number_related_samples', 'size') + \
         ComponentAdmin.list_display[-2:]
 
     list_filter = ComponentAdmin.list_filter.__add__(('optimizedFor','componentType',))
@@ -331,12 +331,6 @@ class ContainerAdmin(PermissionAdmin, admin.ModelAdmin):
                         )
         }
          ),
-        ('Permission', {
-            'classes': ('collapse',),
-            'fields' : ((('owners'), ('group_read', 'group_write'))
-                        )
-        }
-         )
     )
 
 

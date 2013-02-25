@@ -312,6 +312,28 @@ class DnaComponent(Component):
         if self.optimizedFor:
             return self.optimizedFor
         return u''
+    
+    def show_resistance(self):
+        """
+        """
+	ret = ""
+        r = SequenceAnnotation.objects.filter( subComponent=self.id).order_by('bioStart')
+	try:                       
+	    for s in r:
+		com = s.componentAnnotated
+		comDna= DnaComponent.objects.get(id = com.id)
+		for t in comDna.componentType.all():
+		    if t.name == 'SelectionMarker':
+			if ret=="":
+			    ret += s.componentAnnotated.name
+			else:
+			    ret += ","+s.componentAnnotated.name
+	except Exception, err:
+	    print err        
+        #s = [content.sequenceannotation for content in r]
+
+        return ret   
+        
 
     def related_dnaSamples(self):
         """

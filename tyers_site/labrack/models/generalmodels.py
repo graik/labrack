@@ -47,7 +47,7 @@ import urllib
 import tyers_site.settings as S
 
 
-class Location(models.Model):
+class Location(PermissionModel):
     """
     A location (fridge, freezer, shelf) where containers are stored
     """
@@ -100,7 +100,7 @@ class Location(models.Model):
 
 
 
-class Rack(models.Model):
+class Rack(PermissionModel):
     """
     A Rack (box) where containers are stored
     """
