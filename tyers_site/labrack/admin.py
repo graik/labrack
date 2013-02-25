@@ -334,7 +334,7 @@ class ContainerAdmin(PermissionAdmin, admin.ModelAdmin):
     )
 
 
-    list_display = ('displayId', 'name', 'containerType', 'rack_url',
+    list_display = ('displayId', 'name', 'containerType', 'rack_url','location_url',
                     'created_by')
 
     list_filter = ('containerType', 'rack__current_location__displayId', 
@@ -362,7 +362,15 @@ class ContainerAdmin(PermissionAdmin, admin.ModelAdmin):
 
     rack_url.allow_tags = True
 
-    rack_url.short_description = 'Rack'    
+    rack_url.short_description = 'Rack'   
+    
+    def location_url(self, obj):
+        url = obj.rack.current_location.get_relative_url()
+        return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.rack.current_location))
+
+    location_url.allow_tags = True
+
+    location_url.short_description = 'Location'     
 
 
     def make_csv(self, request, queryset):
