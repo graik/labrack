@@ -3,11 +3,15 @@ from django.utils.safestring import mark_safe
 from django.utils.safestring import SafeUnicode 
 from tyers_site import settings   
 import os
+ 
 
 from Bio import SeqIO
 from Bio.Seq import Seq
 from tyers_site.labrack.models.generalmodels import SequenceAnnotation
 from permissionModel import PermissionModel
+from django.core.exceptions import ValidationError
+
+
 
 
 
@@ -122,7 +126,7 @@ class Component(PermissionModel,models.Model):
     modification_date = models.DateTimeField(auto_now=True, null=True)
 
 
-
+    
 
     def formatedUrl(self):
         name = self.name if self.name else ''
@@ -194,6 +198,13 @@ class Component(PermissionModel,models.Model):
 
         return r    
 
+    def get_dna_relative_url(self):
+        """
+        Define standard relative URL for object access in templates
+        """
+        return 'dnacomponent/%i/' % self.id
+    
+    
     def related_seq( self ):
         """
         """
@@ -254,7 +265,6 @@ class Component(PermissionModel,models.Model):
         return unicode(self.description[:38] + '..')
     showComment.short_description = 'comment'
 
-
 #    def isavailable(self):
 #        return self.samples.count() > 0
 #    isavailable.short_description = 'available'
@@ -297,11 +307,14 @@ class DnaComponent(Component):
                                            verbose_name='Type', 
                                            help_text='Classification of this part.')
 
-    circular = models.BooleanField( 'Circular', default=False, 
+    circular = models.BooleanField( 'Circular', default=True, 
                                     help_text='is the DNA Circular or not.')
 
 
     GenBankfile = models.FileField(upload_to='documents/GenBank/%Y/%m/%d',blank=True,null=True)
+    
+    
+    
     def get_relative_url(self):
         """
         Define standard relative URL for object access in templates
@@ -314,25 +327,7 @@ class DnaComponent(Component):
             return len( self.sequence )
         return 0
 
-##    def isavailable_dna(self):
-##        """True if there is a DNA-only sample containing this NucleicAcidComponent"""
-##        return self.dna_samples.count() > 0
-##    isavailable_dna.short_description = 'DNA'
-##    isavailable_dna.boolean = True
 
-##    def isavailable_cells(self):
-##        """
-##        True if there is a cell stock (DNA + cells) sample for this 
-##        NucleicAcidComponent
-##        """
-##        samples = self.dna_samples.all()
-##
-##        for s in samples:
-##            if s.cell:
-##                return True
-##        return False
-##    isavailable_cells.short_description = 'Cells'
-##    isavailable_cells.boolean = True
 
     def show_translatesTo(self):
         """filter '(None)' display in admin table"""

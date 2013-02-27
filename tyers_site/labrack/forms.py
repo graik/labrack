@@ -8,6 +8,8 @@ from labrack.models.component import Component
 from labrack.models.component import DNAComponentType
 from labrack.models.generalmodels import SequenceAnnotation
 from django.core.files import File
+from django.core.exceptions import ValidationError
+
 
 from django.forms.fields import DateField, ChoiceField, MultipleChoiceField
 #from django.forms.widgets import RadioSelect, CheckboxSelectMultiple
@@ -16,6 +18,7 @@ from django.forms.widgets import *
 import django.utils.simplejson as json
 from tyers_site import settings
 import os
+import re
 
 import utilLabrack
 
@@ -106,13 +109,87 @@ class ChassisSampleForm(forms.ModelForm):
 
 class DnaComponentForm(forms.ModelForm):
 
-
+ 
 
     htmlAttribute1 = forms.CharField(widget=forms.TextInput(attrs={'size':'1800'}),required=False,label="")
     htmlAttribute2 = forms.CharField(widget=forms.TextInput(attrs={'size':'1800','hidden':'true'}),required=False,label="")
 
     htmlAttribute3 = forms.CharField(widget=forms.TextInput(attrs={'size':'1800','hidden':'true'}),required=False,label="")
+    
+    
+    def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request', None)
+        # Voila, now you can access request anywhere in your form methods by using self.request!
+        super(DnaComponentForm, self).__init__(*args, **kwargs)
+        
+    
+        
+    def clean(self):
+        # check if disp name is clean with pattern XXX1234X
+        dispId = self.cleaned_data['displayId']
+        compType = self.cleaned_data['componentType']
+        compTypeName = ''        
+        for s in compType:
+            if s.name =='Vector':
+                compTypeName = 'Vector'
+        
+            
+        regExp = r'^[a-zA-Z][a-zA-Z]\d\d\d\d[a-zA-Z]?$'
+        if (compTypeName=='Vector'):
+            regExp = r'^[vV]\d\d\d?$'
+            
+        if not(re.match(regExp, dispId)):
+            if (compTypeName=='Vector'):
+                raise forms.ValidationError("ID :"+dispId+" doesn't respect the vector pattern V123, example : v001 where v or V for Vector")              
+            raise forms.ValidationError("ID :"+dispId+" doesn't respect the pattern XX1234X, example : sb0001A where sb for initial and A for version")
+        
+        
+        cleanedData = super(DnaComponentForm, self).clean()
+        #settings.MEDIA_ROOT+"/"+os.path.normpath(self.GenBankfile.name)
+        #instance.historyDescription = self.cleaned_data['genebank'] # etc
 
+        #retrieve vector GB information
+        jsonFromWeb = self.cleaned_data['htmlAttribute1']
+        fullSequence = self.cleaned_data['sequence']
+        data = json.loads(jsonFromWeb)
+        isGbData = data["data"][1]["gb_data"]
+
+        vectorIdFromGB_name = data["data"][1]["name"]
+        vectorIdFromGB_description = data["data"][1]["description"]                
+        
+        #retrieve annot GB information
+        jsonFromWeb2 = self.cleaned_data['htmlAttribute2']
+        data2 = json.loads(jsonFromWeb2)
+        selectedAnnotFromGB = json.loads(data2["selected_annot"][1]["gb_checked"])
+        
+        
+        errorMessage = ""
+        errors = {}
+        # check if the name vector exist already in the DB
+        if (isGbData=='true' and  data["data"][1]["name"]!='') :
+            idName=data["data"][1]["name"]
+            if (DnaComponent.objects.filter(name=idName)):
+                errorMessage = "Please reload the GB file and choose another name for the Vector "+idName+" since it already exist in the DB!"
+                errors.setdefault('',[]).append(errorMessage)
+        
+        # check if the named annotation exist already in the DB
+        if (selectedAnnotFromGB):                
+                try:                       
+                    for obj in selectedAnnotFromGB:
+                        
+                        nameAnnot=obj["text3"]
+                        if (DnaComponent.objects.filter(name=nameAnnot)):
+                            errorMessage = "Please reload the GB file and choose another name for the Annotation "+nameAnnot+" since it already exist in the DB!"
+                            errors.setdefault('',[]).append(errorMessage)
+                            
+                      
+                except Exception, err:
+                    print err
+                    commit=False                                 
+        if  (len(errors)>0):
+            raise forms.ValidationError(errors)
+        
+        return cleanedData 
 
     def save(self, commit=True):
         instance = super(DnaComponentForm, self).save(commit=False)
@@ -135,7 +212,7 @@ class DnaComponentForm(forms.ModelForm):
 
 
         #var index = document.getElementById('datalist_gen').selectedIndex -1;
-        #alert(arrayOfJSON_AnnotationsFile[index].coverage);        
+        #alert(arrayOfJSON_AnnotationsFile[index].coverage);
 
 
         jsonFromWeb2 = self.cleaned_data['htmlAttribute2']
@@ -153,10 +230,10 @@ class DnaComponentForm(forms.ModelForm):
         #get the partytypeVector
         if (not DNAComponentType.objects.filter(name='Vector')):
             subCtType = DNAComponentType(name = 'Vector')
-            subCtType.save()  
-        subCtVectorType = DNAComponentType.objects.filter(name='Vector')	
+            subCtType.save()
+        subCtVectorType = DNAComponentType.objects.filter(name='Vector')
 
-        isGbData = data["data"][1]["gb_data"]        
+        isGbData = data["data"][1]["gb_data"]
         vectorIdFromGB_name = data["data"][1]["name"]
         vectorIdFromGB_description = data["data"][1]["description"]
 
@@ -196,6 +273,7 @@ class DnaComponentForm(forms.ModelForm):
             second = first + len(dnaVector.sequence)
             stra = utilLabrack.getStrand(fullSequence,dnaVector.sequence)
             an2db = SequenceAnnotation(uri ='', bioStart = first, bioEnd = second, strand = stra, subComponent = instance, componentAnnotated = dnaVector)
+            PermissionModel
             an2db.save()		    
 
         if (isGbData=='true' and  data["data"][1]["name"]!='') :
@@ -216,19 +294,6 @@ class DnaComponentForm(forms.ModelForm):
             an2db = SequenceAnnotation(uri ='', bioStart = first, bioEnd = secon, strand = stra, subComponent = instance, componentAnnotated = dnaAnnot)
             an2db.save()	
 
-
-        #if (is_gb_data=='true'):
-                    #try:
-                        #dna2db = DnaComponent(displayId=self.cleaned_data['displayId'],description=self.cleaned_data['description'], name =self.cleaned_data['name'], sequence = self.cleaned_data['sequence'],status = self.cleaned_data['status'], GenBankfile = self.cleaned_data['GenBankfile'])
-                        #dna2db.circular = True                    
-                        #dna2db.save()
-                        #dnaVector = DnaComponent.objects.get(displayId=vectorIdFromDB)
-                        #an2db = SequenceAnnotation(uri ='', bioStart = 1, bioEnd = 2, strand = '-', subComponent = dna2db, componentAnnotated = dnaVector)
-                        #an2db.save()
-
-                    #except Exception, err:
-                        #print err
-                        #commit=False          
         try:
             #if (dna2db is None):
                 #dna2db = DnaComponent(displayId=self.cleaned_data['displayId'],description=self.cleaned_data['description'], name =self.cleaned_data['name'], sequence = self.cleaned_data['sequence'],status = self.cleaned_data['status'], GenBankfile = self.cleaned_data['GenBankfile'])

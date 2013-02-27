@@ -167,7 +167,6 @@ class ComponentAdmin( admin.ModelAdmin):
 
     exportFields = OrderedDict( [('ID', 'displayId'),
                                  ('Name', 'name'),
-                                 ('URI','uri'),
                                  ('Description','description'),
                                  ('Status','status'),
                                  ('Created by','created_by'),
@@ -177,8 +176,7 @@ class ComponentAdmin( admin.ModelAdmin):
 
     fieldsets = (
         (None, {
-            'fields': (('displayId', 'name','status',),
-                       ('uri',))
+            'fields': (('displayId', 'name','status',))
 
         }
          ),
@@ -272,8 +270,8 @@ class DnaComponentAdmin(PermissionAdmin,ComponentAdmin):
 
     fieldsets = (
             (None, {
-                'fields': (('displayId', 'name','status','componentType'),
-                           ('uri','htmlAttribute1','htmlAttribute2','htmlAttribute3')
+                'fields': (('displayId', 'name','status'),
+                           ('componentType','htmlAttribute1','htmlAttribute2','htmlAttribute3')
                             )
             }
              ),
@@ -1168,14 +1166,14 @@ class ComponentTypeAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (None, {
-            'fields' : (('name','uri'),
+            'fields' : (('name'),
                         'subTypeOf',
                         )
         }
          ),
     )
 
-    list_display   = ('name', 'uri')
+    #list_display   = ('name','subTypeOf')
 
     ordering = ('name',)
 
@@ -1234,7 +1232,7 @@ class SequenceAnnotationAdmin(admin.ModelAdmin):
     #      ),)
     #)
 
-    search_fields = ComponentAdmin.search_fields.__add__(('uri',))
+    search_fields = ComponentAdmin.search_fields.__add__(('subComponent','componentAnnotated'))
 
 
 

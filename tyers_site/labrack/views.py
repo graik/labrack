@@ -297,6 +297,8 @@ def celllist(request):
                 context_instance=RequestContext(request)
         )
 
+ 
+
 def cellonlylist(request):
         # Handle file upload
         if request.method == 'POST':
@@ -471,25 +473,27 @@ def getInsertDBAnnotationBySequence(sequence_text,strand):#local function
                 rslt = fisrtPeace/float(secondpeace)
                 firstposition = sequence_text.find(sequence)
                 lastposition = firstposition+len(sequence)
-                coverage = str(firstposition)+'-'+str(lastposition)
-                description = dnapart.description
-                if (dnapart.optimizedFor!=None):
-                        optimizedFor_name = dnapart.optimizedFor.name
-                else:
-                        optimizedFor_name = ''
-                if (dnapart.componentType!=None):
-                        componentType_name  = ''
-                        for cpType in dnapart.componentType.all():
-                                if (componentType_name==''):
-                                        componentType_name = componentType_name+cpType.name
-                                else:
-                                        componentType_name = componentType_name+','+cpType.name
-                else:
-                        componentType_name = ''                        
-                if json_Insertobject == '':
-                        json_Insertobject = '{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'","coverage":"'+coverage+'","optimizedFor_name":"'+optimizedFor_name+'","componentType_name":"'+componentType_name+'","strand":"'+strand+'"}' 
-                else:
-                        json_Insertobject = json_Insertobject+',{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'","coverage":"'+coverage+'","optimizedFor_name":"'+optimizedFor_name+'","componentType_name":"'+componentType_name+'","strand":"'+strand+'"}' 
+                # remove case where sequence from DB is the same as the requested annotation to avoid annotating fragment by it self
+                if (sequence!=sequence_text):
+                        coverage = str(firstposition)+'-'+str(lastposition)
+                        description = dnapart.description
+                        if (dnapart.optimizedFor!=None):
+                                optimizedFor_name = dnapart.optimizedFor.name
+                        else:
+                                optimizedFor_name = ''
+                        if (dnapart.componentType!=None):
+                                componentType_name  = ''
+                                for cpType in dnapart.componentType.all():
+                                        if (componentType_name==''):
+                                                componentType_name = componentType_name+cpType.name
+                                        else:
+                                                componentType_name = componentType_name+','+cpType.name
+                        else:
+                                componentType_name = ''                        
+                        if json_Insertobject == '':
+                                json_Insertobject = '{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'","coverage":"'+coverage+'","optimizedFor_name":"'+optimizedFor_name+'","componentType_name":"'+componentType_name+'","strand":"'+strand+'"}' 
+                        else:
+                                json_Insertobject = json_Insertobject+',{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'","coverage":"'+coverage+'","optimizedFor_name":"'+optimizedFor_name+'","componentType_name":"'+componentType_name+'","strand":"'+strand+'"}' 
         json_Insertobject = '['+json_Insertobject+']'
         return json_Insertobject
 
