@@ -654,7 +654,24 @@ def ajax_upload( request ):
                 # let Ajax Upload know whether we saved it or not
                 import json
                 ret_json = { 'success': success, 'test':genbankjson,}
-                return HttpResponse( json.dumps( ret_json ) )
+                return HttpResponse(json.dumps(ret_json))
+
+def getGBDataFromFile(request, filePath):
+        #filename = filePath;
+        
+        #genbankjson = retrieveGenBankInfo(filename)
+        #import json
+        #print genbankjson
+        #ret_json = {'test':genbankjson,}
+        #print len(genbankjson)
+        #return HttpResponse(json.dumps(ret_json))
+        success = ''
+        genbankjson = retrieveGenBankInfo(filePath)
+                # let Ajax Upload know whether we saved it or not
+        import json
+        ret_json = { 'success': success, 'test':genbankjson,}
+        return HttpResponse(json.dumps(ret_json))        
+        
 
 def retrieveGenBankInfo(filename):
         gb_file = settings.MEDIA_ROOT+"/documents/GenBank/"+os.path.normpath(filename)

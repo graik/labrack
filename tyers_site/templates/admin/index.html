@@ -14,8 +14,11 @@
             <table summary="Models available in the Labrack application.">
             <caption><a href="" class="section">Manage Content/Sequences</a></caption>
             
-                <tr>
-                
+            
+            
+
+               <tr>
+                            
                     <th scope="row"><a href="/admin/labrack/dnacomponent/">DNA</a></th>
                 
     
@@ -176,7 +179,30 @@
                 </tr>
             </table>
             </div>
+            
+            
+            
+            {% if request.user.is_superuser and request.user.username == 'labrack'  %}
+                      <div class="module">
+            <table summary="Models available in the Labrack application.">
+            <caption><a href="" class="section">Auth</a></caption>
+ 
+                <tr>
                 
+                    <th scope="row"><a href="/admin/auth/user/">Users</a></th>
+                
+    
+                
+                    <td><a href="/admin/auth/user/add/" class="addlink">Add</a></td>
+                
+    
+                
+                    <td><a href="/admin/auth/user/" class="changelink">Change</a></td>
+                
+                </tr>
+                 </table>
+            </div>
+            {% endif %}    
  
   <br />
 

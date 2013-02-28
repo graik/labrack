@@ -126,6 +126,12 @@ class DnaComponentForm(forms.ModelForm):
         
     def clean(self):
         # check if disp name is clean with pattern XXX1234X
+        try:
+            dispId = self.cleaned_data['displayId']
+        except Exception, err:
+            raise forms.ValidationError("ID field is mandatory!")              
+            commit=False
+       
         dispId = self.cleaned_data['displayId']
         compType = self.cleaned_data['componentType']
         compTypeName = ''        
@@ -194,6 +200,7 @@ class DnaComponentForm(forms.ModelForm):
     def save(self, commit=True):
         instance = super(DnaComponentForm, self).save(commit=False)
         fileName = self.cleaned_data['htmlAttribute3']
+        
         #settings.MEDIA_ROOT+"/"+os.path.normpath(self.GenBankfile.name)
         if (fileName!=""):
             file = open(settings.MEDIA_ROOT+"/documents/GenBank/"+fileName)

@@ -50,6 +50,8 @@
               </tr>
         
             {% endfor %}
+            {% endif %}
+
             
              {% if original and original.related_chassis_samples %}
               {% for sample in original.related_chassis_samples %}
@@ -63,8 +65,10 @@
                  </td>
          
          
-                 <td>{% if sample.inChassis %}
-                       {{sample.inCell|safe}}
+                 <td>{% if sample.chassis %} 
+                 <a href="../../{{sample.chassis.get_relative_url}}" target="_blank">
+                       {{sample.chassis}}</a>
+                    
                        
                      {% else %}
                            --</td>
@@ -78,14 +82,12 @@
                </tr>
          
               {% endfor %}
-              {% endif %}
+            {% endif %}
         
             </tbody>
           </table>
           
-        
-          
-        {% endif %}
+         
         <p></p>
 </div>
 

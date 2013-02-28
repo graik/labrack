@@ -23,7 +23,7 @@
 
       window.onload = function()
       {
-	  
+		blockAllTextFieldFromEditing();
 		var scr = "";
 		var divs = document.getElementsByTagName("div");
 		  for(var i = 0; i < divs.length; i++){
@@ -37,9 +37,7 @@
 						
 						scr = td.innerHTML;
 					}
-				
 			 }
-			 
 		  }
 		  for(var i = 0; i < divs.length; i++){
 		   if (divs[i].className=='form-row field-sequence') {
@@ -53,6 +51,8 @@
 		  }
 
          uploadTheFile();
+		 // reload charts if file has been selected already
+		 uploadGBDataFileIfExist();
          //checkContent = document.getElementById("id_is_vector_backbone");
          //checkContent.onchange = checkHandler;
          
@@ -89,10 +89,19 @@
 		 HideShowElement('backbone_db','visible');
 		 HideShowElement('backbone_genbank','hidden');
 		 
+		 
+		  
+		 
 		
 		
     };
+function blockAllTextFieldFromEditing(){
+		$('form input[class="vManyToManyRawIdAdminField"]').each(function(){
+				// Do your magic here
+				this.readonly=true;
+		});
 
+}
 function selectallchecked_gb(){
  var fieldName='gb_checkbox';
  var fieldNameText2='gb_text2';
@@ -124,29 +133,42 @@ function selectallchecked_gb(){
 
 function repopulateCheckBox(){
 	test = '('+document.getElementById("id_htmlAttribute2").value+')';
+
 	if (test!='()') {
 			var myObject = eval(test);
 			test_db_checked = myObject.selected_annot[0].db_checked;
-			test_gb_checked = myObject.selected_annot[0].gb_checked;
+			test_gb_checked = myObject.selected_annot[1].gb_checked;
 			data_db = '({"data":'+test_db_checked+'})';
 			data_gb = '({"data":'+test_gb_checked+'})';
 			var myObject_db = eval(data_db);
+			var myObject_gb = eval(data_gb);
 			//alert(myObject_db.data[0].id);
 			//db repopulating
-			for (var i = 0; i < myObject_db.data.length; i++) { 
+			alert('before');
+			for (var i = 0; i < myObject_db.data.length; i++) {
 				//alert(myObject_db.data[i].id);
 				document.getElementById(myObject_db.data[i].id).checked = true;
 			}	
 			//gb repopulating
-			for (var i = 0; i < myObject_gb.data.length; i++) { 
-				alert(myObject_gb.data[i].id);
+			
+			for (var i = 0; i < myObject_gb.data.length; i++) {
+				//alert(myObject_gb.data[i].id);
+				document.getElementById(myObject_gb.data[i].id).checked = true;
+				
 			}
+			
+			
+			
+			  
+	
+	
+			
 	}
 }
 
+
 function retrieveAndFeedDataHandler(e)
    {
-  
 		textContent = document.getElementById("id_htmlAttribute1");
 		textContent2 = document.getElementById("id_htmlAttribute2");
 
@@ -171,15 +193,10 @@ function retrieveAndFeedDataHandler(e)
 				  {"gb_checked": ""+selectallchecked_gb()+""}
 				 ]
 		};
-		
 		textContent.value = JSON.stringify(json_ele);
 		textContent2.value = JSON.stringify(json_ele2);
 		
 	
-		
-
-		//selectallchecked_gb();
-		//selectallchecked_db();
    }
    
    
@@ -346,6 +363,7 @@ var jsonObject = eval(data.list_dnas);
 function populateInserts(data){
 reverse_jsonInsertObject = eval(data.reverse_extra_values);
 jsonObjectPartTypes = eval(data.parttypes_values);
+//alert('just populate ');
 jsonObjectOptimizedFor = eval(data.optimizedfor_values);
 
     emptyRowsTable(0);
@@ -353,7 +371,7 @@ jsonObjectOptimizedFor = eval(data.optimizedfor_values);
     var arrayOfInsertObjects = jsonInsertObject;
 		if(arrayOfInsertObjects) {
             for(var i=0, len=arrayOfInsertObjects.length; i<len; i++) {
-					addRowToAnnotationTable(0,'',arrayOfInsertObjects[i].id,arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].description,arrayOfInsertObjects[i].componentType_name,arrayOfInsertObjects[i].coverage,arrayOfInsertObjects[i].optimizedFor_name);
+					addRowToAnnotationTable(0,'',arrayOfInsertObjects[i].id,arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].description,arrayOfInsertObjects[i].componentType_name,arrayOfInsertObjects[i].coverage,arrayOfInsertObjects[i].optimizedFor_name,'');
 
                }
 		}
@@ -362,7 +380,7 @@ jsonObjectOptimizedFor = eval(data.optimizedfor_values);
 		if(revarrayOfInsertObjects) {
             for(var i=0, len=revarrayOfInsertObjects.length; i<len; i++) {
 				if (!checkIfElementExistInJson(revarrayOfInsertObjects[i].displayid,arrayOfInsertObjects)) {
-					addRowToAnnotationTable(0,'',revarrayOfInsertObjects[i].id,revarrayOfInsertObjects[i].displayid,revarrayOfInsertObjects[i].description,revarrayOfInsertObjects[i].componentType_name,revarrayOfInsertObjects[i].coverage,revarrayOfInsertObjects[i].optimizedFor_name);
+					addRowToAnnotationTable(0,'',revarrayOfInsertObjects[i].id,revarrayOfInsertObjects[i].displayid,revarrayOfInsertObjects[i].description,revarrayOfInsertObjects[i].componentType_name,revarrayOfInsertObjects[i].coverage,revarrayOfInsertObjects[i].optimizedFor_name,'');
 					}
                }
             }
@@ -456,9 +474,7 @@ function selectallchecked_gb(){
 	 for(var k=0;k<i;k++)
 	{
 	   if(e[k].checked==true){
- 
 			jsonObj.push({id: e[k].id,text2: et2[k].value,text3: et3[k].value,text4: et4[k].value,text5:et5[k].options[et5[k].selectedIndex].text,text6: et6[k].value,text7:et7[k].options[et7[k].selectedIndex].text});
-			 
 		  }    
 	}
 	 
@@ -478,46 +494,7 @@ function getTypeDropdownlistType(){
 		}
 		return textnode 
 }
-/*
-function feedTypeDropdownlist(){
- 	var el = document.getElementById('newfragment_type_id');
-  		if (typeof jsonObjectPartTypes !== "undefined") {
-			if(jsonObjectPartTypes.length) {
-				for(var i=0, len=jsonObjectPartTypes.length; i<len; i++) {
-					
-				        var opt = document.createElement("option");
-        
-						// Add an Option object to Drop Down/List Box
-				        document.getElementById("newfragment_type_id").options.add(opt);
 
-						// Assign text and value to Option object
-						opt.text = jsonObjectPartTypes[i].name;
-						opt.value = jsonObjectPartTypes[i].name;
-				   }
-				}
-		}
-}
-
-
-function feedOptimizwedForDropdownlist(){
- 	var el = document.getElementById('newfragment_optimizedfor_id');
-  		if (typeof jsonObjectPartTypes !== "undefined") {
-			if(jsonObjectPartTypes.length) {
-				for(var i=0, len=jsonObjectOptimizedFor.length; i<len; i++) {				 
-					
-				        var opt = document.createElement("option");
-        
-						// Add an Option object to Drop Down/List Box
-				        document.getElementById("newfragment_optimizedfor_id").options.add(opt);
-
-						// Assign text and value to Option object
-						opt.text = jsonObjectOptimizedFor[i].name;
-						opt.value = jsonObjectOptimizedFor[i].name;
-				   }
-				}
-		}				
-}
-*/ 
  
 
 function getTypeDropdownlistOptimizedFor(){
@@ -536,16 +513,19 @@ function getTypeDropdownlistOptimizedFor(){
 		return textnode 
 }
 
-function addRowToAnnotationTable(tableNumber,content1,content2,content3,content4,content5,content6,content7)
+function addRowToAnnotationTable(tableNumber,content1,content2,content3,content4,content5,content6,content7,contentId)
 {
 		var prefix = 'db_';
 		var readonlyattr = true;
 		 if (tableNumber==0){
 			prefix = 'db_';
 			readonlyattr = true;
+			contentId = content2
 		 }else{
 			prefix = 'gb_';
 			readonlyattr = false;
+			contentId = 'check_gb_'+contentId
+
 		 }
          if (!document.getElementsByTagName) return;
          tabBody=document.getElementsByTagName("TBODY").item(tableNumber);
@@ -560,7 +540,7 @@ function addRowToAnnotationTable(tableNumber,content1,content2,content3,content4
 		 
          checkboxnode1= document.createElement('input');
 		 checkboxnode1.type = 'checkbox';
-		 checkboxnode1.id = content2;
+		 checkboxnode1.id = contentId;
 		 checkboxnode1.name = prefix+'checkbox';
 		 
 		 textnode2= document.createElement('input');
@@ -708,15 +688,16 @@ function buildGenBankTable(jsontext){
 					
 	var dataList_gen = document.getElementById("datalist_gen");
             if(arrayOfInsertObjects.length) {
-                for(var i=0, len=arrayOfInsertObjects.length; i<len; i++) {
+                for(var i=0, len= arrayOfInsertObjects.length; i<len; i++) {
                 if (sequence=='') {
                 //call sequence change with the full sequence as a value
                     sequence = arrayOfInsertObjects[i].sequence;
                     document.getElementById("id_sequence").value = sequence;
                     send_request(true);
+					alert(jsonObjectPartTypes);
                     }
                     //alert(arrayOfInsertObjects[i].sequence); 
-                    addRowToAnnotationTable(1,'',arrayOfInsertObjects[i].id,arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].description,arrayOfInsertObjects[i].componentType_name,arrayOfInsertObjects[i].coverage,'');			
+                    addRowToAnnotationTable(1,'',arrayOfInsertObjects[i].id,arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].description,arrayOfInsertObjects[i].componentType_name,arrayOfInsertObjects[i].coverage,'',i);			
 					var optn = document.createElement("OPTION");
 					optn.text = arrayOfInsertObjects[i].displayid;
 					optn.value = arrayOfInsertObjects[i].id+'<>'+arrayOfInsertObjects[i].displayid+'<>'+arrayOfInsertObjects[i].description+'<>'+arrayOfInsertObjects[i].componentType_name+'<>'+arrayOfInsertObjects[i].coverage;
@@ -724,6 +705,32 @@ function buildGenBankTable(jsontext){
 					dataList_gen.options.add(optn);
                 }
             }
+}
+function uploadGBDataFileIfExist(){
+    pathFile = document.getElementById("id_htmlAttribute3").value;
+	
+	if (pathFile!="") {
+	$.get("/getGBDataFromFile/"+pathFile+"/", function(responseJSON){
+	// set parttypes objects
+	
+			try
+			{
+			   var json = JSON.parse(responseJSON);
+				//send_request(true);			   
+			   buildGenBankTable(json.test);
+			   drawGenBank(json.test,buildChartGeneBank());
+			   document.getElementById("id_GenBankfile_loaded").innerHTML += "<br>Last File :"+pathFile;
+			   
+
+			}
+			catch(e)
+			{
+			   alert('invalid json');
+			}	
+			
+			});	
+	}
+	
 }
 
 function uploadTheFile(){
@@ -734,8 +741,8 @@ function uploadTheFile(){
 		//element: document.getElementById('id_GenBankfile'), 
 		multiple: false,
 		onComplete: function( id, fileName, responseJSON ) {
-		document.getElementById("id_htmlAttribute3").value = fileName
-		document.getElementById("id_GenBankfile_loaded").innerHTML += "<br>Last File :"+fileName
+		document.getElementById("id_htmlAttribute3").value = fileName;
+		document.getElementById("id_GenBankfile_loaded").innerHTML += "<br>Last File :"+fileName;
 		buildGenBankTable(responseJSON.test);
 		
 		drawGenBank(responseJSON.test,buildChartGeneBank());
@@ -911,7 +918,7 @@ style="border:1px solid #000000;">
           <table cellspacing="0">
             <thead>
               <tr>
-                <th>ID</th><th>Start</th><th>End</th><th>strand</th><th>DNA</th><th>Type</th>
+                <th>ID</th><th>Start</th><th>End</th><th>Strand</th><th>DNA</th><th>Type</th>
               </tr>
             </thead>
             <tbody>
