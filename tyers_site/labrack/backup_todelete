@@ -1,0 +1,83 @@
+# in case of annotations and vector
+            # Vector saving part
+            if (is_db_data=='true'):
+                try:
+                    dna2db = DnaComponent(displayId=self.cleaned_data['displayId'],description=self.cleaned_data['Plasmid_Description'], name =self.cleaned_data['Plasmid_Name'], sequence = self.cleaned_data['sequence_text'],status = self.cleaned_data['status'], GenBankfile = self.cleaned_data['GenBankfile'])
+                    dna2db.save()
+                    dnaVector = DnaComponent.objects.filter(displayId=vectorIdFromDB)
+                    an2db = SequenceAnnotation(uri ='', bioStart = 1, bioEnd = 2, strand = '-', subComponent = dna2db, componentAnnotated = dnaVector)
+                    an2db.save()
+
+                    #if (not DNAComponentType.objects.filter(name='Vector')):
+                    #    subCtType = DNAComponentType(name = 'Vector')
+                    #    subCtType.save()  
+                    #subCtVectorType = DNAComponentType.objects.filter(name='Vector')
+                    #dna2db.componentType = subCtVectorType
+                    #dna2db.sequence = self.cleaned_data['sequence_text']
+                    #dna2db.save()                
+                except (RuntimeError, TypeError, NameError):
+                    commit=False
+                
+                # annotation linking part
+                if (selectedAnnotFromDB):
+                    try:
+                        if (dna2db is None):
+                            dna2db = DnaComponent(displayId=self.cleaned_data['displayId'],description=self.cleaned_data['Plasmid_Description'], name =self.cleaned_data['Plasmid_Name'], sequence = self.cleaned_data['sequence_text'],status = self.cleaned_data['status'], GenBankfile = self.cleaned_data['GenBankfile'])
+                            dna2db.save()                            
+                        for id in selectedAnnotFromDB:
+                            dnaAnnot = DnaComponent.objects.filter(id=id["id"])
+                            an2db = SequenceAnnotation(uri ='', bioStart = 1, bioEnd = 2, strand = '-', subComponent = dna2db, componentAnnotated = dnaAnnot)
+                            an2db.save()
+        
+                            #if (not DNAComponentType.objects.filter(name='Vector')):
+                            #    subCtType = DNAComponentType(name = 'Vector')
+                            #    subCtType.save()
+                            #subCtVectorType = DNAComponentType.objects.filter(name='Vector')
+                            #dna2db.componentType = subCtVectorType
+                            #dna2db.sequence = self.cleaned_data['sequence_text']
+                            #dna2db.save()                
+                    except (RuntimeError, TypeError, NameError):
+                        commit=False            
+                
+            else:
+                try:
+                    dna2db = DnaComponent(displayId=self.cleaned_data['displayId'],description=self.cleaned_data['Plasmid_Description'], name =self.cleaned_data['Plasmid_Name'], sequence = self.cleaned_data['sequence_text'],status = self.cleaned_data['status'], GenBankfile = self.cleaned_data['GenBankfile'])
+                    dna2db.save()
+                
+                    if (not DNAComponentType.objects.filter(name='Vector')):
+                        subCtType = DNAComponentType(name = 'Vector')
+                        subCtType.save()
+                    dnaVector2db = DnaComponent(displayId=self.cleaned_data['displayId']+'_Vector',description=self.cleaned_data['Plasmid_Description'], name =self.cleaned_data['Plasmid_Name'], sequence = self.cleaned_data['sequence_text'],status = self.cleaned_data['status'], GenBankfile = None)
+                    dnaVector2db.save()                    
+                    subCtVectorType = DNAComponentType.objects.filter(name='Vector')
+                    dnaVector2db.componentType = subCtVectorType
+                    dnaVector2db.sequence = self.cleaned_data['sequence_text']
+                    dnaVector2db.save()
+
+                    an2db = SequenceAnnotation(uri ='', bioStart = 1, bioEnd = 2, strand = '-', subComponent = dna2db, componentAnnotated = dnaVector2db)
+                    an2db.save()
+                    # annotation linking part
+                    if (selectedAnnotFromDB):
+                        try:
+                            if (dna2db is None):
+                                dna2db = DnaComponent(displayId=self.cleaned_data['displayId'],description=self.cleaned_data['Plasmid_Description'], name =self.cleaned_data['Plasmid_Name'], sequence = self.cleaned_data['sequence_text'],status = self.cleaned_data['status'], GenBankfile = self.cleaned_data['GenBankfile'])
+                                dna2db.save()                            
+                            for id in selectedAnnotFromDB:
+                                dnaAnnot = DnaComponent.objects.filter(id=id["id"])
+                                an2db = SequenceAnnotation(uri ='', bioStart = 1, bioEnd = 2, strand = '-', subComponent = dna2db, componentAnnotated = dnaAnnot)
+                                an2db.save()
+            
+                                #if (not DNAComponentType.objects.filter(name='Vector')):
+                                #    subCtType = DNAComponentType(name = 'Vector')
+                                #    subCtType.save()
+                                #subCtVectorType = DNAComponentType.objects.filter(name='Vector')
+                                #dna2db.componentType = subCtVectorType
+                                #dna2db.sequence = self.cleaned_data['sequence_text']
+                                #dna2db.save()                
+                        except (RuntimeError, TypeError, NameError):
+                            commit=False                              
+                except (RuntimeError, TypeError, NameError):
+                    print RuntimeError
+                    print TypeError
+                    print NameError
+                    commit=False        
