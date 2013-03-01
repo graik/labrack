@@ -590,8 +590,9 @@ function addRowToAnnotationTable(tableNumber,content1,content2,content3,content4
 		 textnode6.readOnly = readonlyattr;		
 		  
 		 if (tableNumber==0){
-		 textnode7=document.createTextNode(content7);}
+		 textnode7=document.createTextNode(content7);
 		 textnode7.id = 'text7_'+contentId;	
+		 }
 		 else{
 		 textnode7=getTypeDropdownlistOptimizedFor();
 		 textnode7.name = prefix+'text7';
