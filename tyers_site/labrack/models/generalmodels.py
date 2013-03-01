@@ -51,7 +51,7 @@ class Location(PermissionModel):
     """
     A location (fridge, freezer, shelf) where containers are stored
     """
-    displayId = models.CharField(max_length=20, unique=True, 
+    displayId = models.CharField('Location ID', max_length=20, unique=True, 
                                  help_text='Unique identifier')
 
     name = models.CharField('Name', max_length=200, 
@@ -104,7 +104,7 @@ class Rack(PermissionModel):
     """
     A Rack (box) where containers are stored
     """
-    displayId = models.CharField(max_length=20, unique=True, 
+    displayId = models.CharField('Rack ID', max_length=20, unique=True, 
                                  help_text='Unique identifier')
 
     name = models.CharField('Name', max_length=200, 
@@ -148,7 +148,7 @@ class Container( PermissionModel ):
         ('box', 'Freezer box'),
         ('other', 'other' ) )
 
-    displayId = models.CharField(max_length=20, unique=True, 
+    displayId = models.CharField('Box ID', max_length=20, unique=True, 
                                  help_text='Unique identifier. E.g. D001 or C012 (D...DNA, C...Cells)')
 
     name = models.CharField('Name', max_length=200, blank=True, 
@@ -251,7 +251,7 @@ class SelectiveMarker( models.Model ):
     Describes an Antibiotic or similar resistence marker
     """
 
-    displayId = models.CharField('Component (ID)', max_length=20, unique=True, 
+    displayId = models.CharField('ID', max_length=20, unique=True, 
                                  help_text='Unique identification')
 
     name = models.CharField('Name', max_length=200, blank=True, 

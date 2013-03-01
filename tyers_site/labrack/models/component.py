@@ -90,7 +90,11 @@ class PeptideComponentType( ComponentType ):
 
 class Component(PermissionModel,models.Model):
     """
-    Abstract base class for cells, nucleic acids, proteins, and chemicals.
+    Base class for cells, nucleic acids, proteins, and chemicals.
+    Not shown to the user (currently) but the table exists and collects
+    all fields that are common to all types of Components.
+    
+    See Meta.abstract
     """
 
     STATUS_CHOICES = ( ('available', 'available'),
@@ -98,7 +102,8 @@ class Component(PermissionModel,models.Model):
                        ('under_construction', 'under construction'),
                        ('abandoned', 'abandoned'))
 
-    displayId = models.CharField('display ID', max_length=20, unique=True, help_text='Unique identification')
+    displayId = models.CharField('ID', max_length=20, unique=True, 
+                                 help_text='Unique identification')
 
     name = models.CharField('Name', max_length=200, blank=True, 
                             help_text='Descriptive name (e.g. "TEV protease")')

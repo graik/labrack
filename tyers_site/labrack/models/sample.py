@@ -27,9 +27,6 @@ import tyers_site.settings as S
 
 
 
-
-
-
 class SampleContent(models.Model):
     """
     Helper class to define the content that the sample is made of.
@@ -141,7 +138,7 @@ class Sample( PermissionModel ):
     list.
     """
 
-    displayId = models.CharField(max_length=20,
+    displayId = models.CharField('Sample ID', max_length=20,
                                  help_text='Label or well position. Must be unique within container.')
 
     name = models.CharField('Name', max_length=200, blank=True, 
