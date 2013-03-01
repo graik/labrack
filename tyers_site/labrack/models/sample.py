@@ -138,7 +138,7 @@ class Sample( PermissionModel ):
     list.
     """
 
-    displayId = models.CharField('Sample ID', max_length=20,
+    displayId = models.CharField('ID', max_length=20,
                                  help_text='Label or well position. Must be unique within container.')
 
     name = models.CharField('Name', max_length=200, blank=True, 
@@ -167,11 +167,12 @@ class Sample( PermissionModel ):
 
     sampleCollection = models.ManyToManyField(SampleCollection, null=True, blank=True)
 
-    preparation_date = models.DateField(default=datetime.now(), verbose_name="date")
+    preparation_date = models.DateField(default=datetime.now(), verbose_name="created")
 
-    creation_date = models.DateTimeField(auto_now_add=True)
+    creation_date = models.DateTimeField(auto_now_add=True, 
+                                         verbose_name='entry created')
 
-    modification_date = models.DateTimeField(auto_now=True)
+    modification_date = models.DateTimeField('modified', auto_now=True)
 
 
     solvent = models.CharField('Buffer/Medium', max_length=100, blank=True)

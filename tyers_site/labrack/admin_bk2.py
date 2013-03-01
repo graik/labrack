@@ -744,8 +744,9 @@ class DnaSampleAdmin(PermissionAdmin, admin.ModelAdmin):
                                   ],
                         'description': 'Either select an existing DNA Construct or fill the dna description to create a new one'                    
                         }),
-        ('History',{'fields':[('derivedFrom','provenanceType'),
-                              ('historyDescription',)]}),        
+        ('History',{'fields':[('derivedFrom','provenanceType','historyDescription',)],
+                    'description': 'Indicate whether this sample was created from another sample.'
+                    }),        
     ]
 
 

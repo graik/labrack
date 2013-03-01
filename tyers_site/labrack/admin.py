@@ -541,7 +541,7 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
             'fields' : ((('container', 'displayId', 
                           'reference_status'),
                          ('aliquotNr',),
-                         ('preparation_date', 'status'),
+                         ('preparation_date','status'),
                          ('description'),
                          'sampleCollection'
                          )
@@ -556,7 +556,7 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
     inlines = [SampleContentInline, SampleProvenanceInline]
 
     list_display   = ('showId', 'location_url', 
-                      'created_by', 'preparation_date', 
+                      'created_by', 'preparation_date', 'creation_date',
                       'showMainContent', 
                       'status','reference_status', 'showComment')
 
@@ -729,10 +729,12 @@ class DnaSampleAdmin(PermissionAdmin, admin.ModelAdmin):
 
     fieldsets = [
         (None, {
-            'fields' : ((('container', 'displayId'),
-                         ('reference_status','sampleCollection'),
-                         ('preparation_date', 'status'),
-                         ('solvent','concentration','concentrationUnit','amount','amountUnit','aliquotNr',),
+            'fields' : ((('container', 'displayId', 'status'),
+                         ('preparation_date','creation_date'),
+##                         ('preparation_date','creation_date'),  ## doesn't work for some unknown reason
+                         ('sampleCollection','reference_status'),
+                         ('concentration','concentrationUnit','amount','amountUnit',),
+                         ('solvent','aliquotNr',),
                          ('description'),
                          )
                         )
@@ -742,8 +744,9 @@ class DnaSampleAdmin(PermissionAdmin, admin.ModelAdmin):
                                   ],
                         'description': 'Either select an existing DNA Construct or fill the dna description to create a new one'                    
                         }),
-        ('History',{'fields':[('derivedFrom','provenanceType'),
-                              ('historyDescription',)]}),        
+        ('History',{'fields':[('derivedFrom','provenanceType','historyDescription',)],
+                    'description': 'Indicate whether this sample was created from another sample.'
+                    }),        
     ]
 
 
