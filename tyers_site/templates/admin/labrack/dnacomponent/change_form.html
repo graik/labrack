@@ -23,7 +23,7 @@
 
       window.onload = function()
       {
-		blockAllTextFieldFromEditing();
+		//blockAllTextFieldFromEditing();
 		var scr = "";
 		var divs = document.getElementsByTagName("div");
 		  for(var i = 0; i < divs.length; i++){
@@ -81,17 +81,16 @@
 		 
 		 
 		 // reason for calling is to populate parttype and optimized for
+		 //send_request(true);
 		 send_request(true);
-		 
-		 
-		 repopulateCheckBox();
-		 
+          
+ 		 
 		 HideShowElement('backbone_db','visible');
 		 HideShowElement('backbone_genbank','hidden');
 		 
 		 
-		  
 		 
+		 repopulateCheckBox();
 		
 		
     };
@@ -133,7 +132,7 @@ function selectallchecked_gb(){
 
 function repopulateCheckBox(){
 	test = '('+document.getElementById("id_htmlAttribute2").value+')';
-
+	alert(test);
 	if (test!='()') {
 			var myObject = eval(test);
 			test_db_checked = myObject.selected_annot[0].db_checked;
@@ -142,27 +141,29 @@ function repopulateCheckBox(){
 			data_gb = '({"data":'+test_gb_checked+'})';
 			var myObject_db = eval(data_db);
 			var myObject_gb = eval(data_gb);
-			//alert(myObject_db.data[0].id);
 			//db repopulating
-			alert('before');
-			for (var i = 0; i < myObject_db.data.length; i++) {
-				//alert(myObject_db.data[i].id);
-				document.getElementById(myObject_db.data[i].id).checked = true;
-			}	
-			//gb repopulating
-			
-			for (var i = 0; i < myObject_gb.data.length; i++) {
-				//alert(myObject_gb.data[i].id);
-				document.getElementById(myObject_gb.data[i].id).checked = true;
-				
+			//alert(document.getElementById(myObject_db.data[0].id).id);
+			if (myObject_db) {
+				for (var i = 0; i < myObject_db.data.length; i++) {
+					//alert(myObject_db.data[i].id);
+					document.getElementById(myObject_db.data[i].id).checked = true;
+				}	
 			}
-			
-			
-			
-			  
-	
-	
-			
+			//gb repopulating
+			if (myObject_gb) {
+				for (var i = 0; i < myObject_gb.data.length; i++) {
+					//alert(myObject_gb.data[i].id);
+					document.getElementById(myObject_gb.data[i].id).checked = true;
+					document.getElementById('text2_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text2;
+					document.getElementById('text3_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text2;
+					document.getElementById('text4_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text2;
+					document.getElementById('text2_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text2;
+					document.getElementById('text2_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text2;
+					document.getElementById('text2_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text2;
+					document.getElementById('text2_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text2;
+					
+				}
+			}
 	}
 }
 
@@ -397,7 +398,8 @@ return;
 ta = t+"__"+a;
 $.get("/test/"+ta+"/", function(data){
 // set parttypes objects
-if (isUpdateVector) {populateVectorBackbone(data);}
+if (isUpdateVector) {
+populateVectorBackbone(data);}
 
 populateInserts(data);
 
@@ -524,7 +526,7 @@ function addRowToAnnotationTable(tableNumber,content1,content2,content3,content4
 		 }else{
 			prefix = 'gb_';
 			readonlyattr = false;
-			contentId = 'check_gb_'+contentId
+			contentId = 'checked_gb_'+contentId
 
 		 }
          if (!document.getElementsByTagName) return;
@@ -547,7 +549,7 @@ function addRowToAnnotationTable(tableNumber,content1,content2,content3,content4
 		 textnode2.type = 'text';	
 		 textnode2.value = content2;
 		 textnode2.name = prefix+'text2';
-		 textnode2.id = content2;
+		 textnode2.id = 'text2_'+contentId;
 		 textnode2.readOnly = readonlyattr;
  		 
          //textnode2=document.createTextNode(content2);
@@ -556,6 +558,7 @@ function addRowToAnnotationTable(tableNumber,content1,content2,content3,content4
 		 textnode3.type = 'text';
 		 textnode3.value = content3;
 		 textnode3.name = prefix+'text3';
+		 textnode3.id = 'text3_'+contentId;
 		 textnode3.readOnly = readonlyattr;
 		 
          //textnode4=document.createTextNode(content4);
@@ -563,14 +566,18 @@ function addRowToAnnotationTable(tableNumber,content1,content2,content3,content4
 		 textnode4.type = 'text';	
 		 textnode4.value = content4;
 		 textnode4.name = prefix+'text4';
+		 textnode4.id = 'text4_'+contentId;
 		 textnode4.readOnly = readonlyattr;
 		 
          //textnode5=document.createTextNode(content5);
 		 if (tableNumber==0){
-		 textnode5=document.createTextNode(content5);}
+		 textnode5=document.createTextNode(content5);
+		 textnode5.id = 'text5_'+contentId;		 
+		 }
 		 else{
 		 textnode5 = getTypeDropdownlistType();
 		 textnode5.name = prefix+'text5';
+		 textnode5.id = 'text5_'+contentId;	
 		 }
 		   
 		 
@@ -579,13 +586,16 @@ function addRowToAnnotationTable(tableNumber,content1,content2,content3,content4
 		 textnode6.type = 'text';	
 		 textnode6.value = content6;
 		 textnode6.name = prefix+'text6';
+		 textnode6.id = 'text6_'+contentId;	
 		 textnode6.readOnly = readonlyattr;		
 		  
 		 if (tableNumber==0){
 		 textnode7=document.createTextNode(content7);}
+		 textnode7.id = 'text7_'+contentId;	
 		 else{
 		 textnode7=getTypeDropdownlistOptimizedFor();
 		 textnode7.name = prefix+'text7';
+		 textnode7.id = 'text7_'+contentId;	
 		 }
          
          cell1.appendChild(checkboxnode1);
@@ -716,7 +726,8 @@ function uploadGBDataFileIfExist(){
 			try
 			{
 			   var json = JSON.parse(responseJSON);
-				//send_request(true);			   
+				//send_request(true);			
+			
 			   buildGenBankTable(json.test);
 			   drawGenBank(json.test,buildChartGeneBank());
 			   document.getElementById("id_GenBankfile_loaded").innerHTML += "<br>Last File :"+pathFile;
