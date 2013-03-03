@@ -1,0 +1,148 @@
+[
+    {
+        "pk": 1,
+        "model": "labrack.chassis",
+        "fields": {
+            "group_write": [],
+            "componentType": [],
+            "owners": [],
+            "group_read": [],
+            "variantOf": []
+        }
+    },
+    {
+        "pk": 2,
+        "model": "labrack.chassis",
+        "fields": {
+            "group_write": [],
+            "componentType": [],
+            "owners": [],
+            "group_read": [],
+            "variantOf": [
+                1
+            ]
+        }
+    },
+    {
+        "pk": 3,
+        "model": "labrack.chassis",
+        "fields": {
+            "group_write": [],
+            "componentType": [],
+            "owners": [],
+            "group_read": [],
+            "variantOf": [
+                1
+            ]
+        }
+    },
+    {
+        "pk": 4,
+        "model": "labrack.chassis",
+        "fields": {
+            "group_write": [],
+            "componentType": [],
+            "owners": [],
+            "group_read": [],
+            "variantOf": [
+                1
+            ]
+        }
+    },
+    {
+        "pk": 5,
+        "model": "labrack.chassis",
+        "fields": {
+            "group_write": [],
+            "componentType": [],
+            "owners": [],
+            "group_read": [],
+            "variantOf": [
+                4
+            ]
+        }
+    },
+    {
+        "pk": 6,
+        "model": "labrack.chassis",
+        "fields": {
+            "group_write": [],
+            "componentType": [],
+            "owners": [],
+            "group_read": [],
+            "variantOf": [
+                4
+            ]
+        }
+    },
+    {
+        "pk": 7,
+        "model": "labrack.chassis",
+        "fields": {
+            "group_write": [],
+            "componentType": [],
+            "owners": [],
+            "group_read": [],
+            "variantOf": []
+        }
+    },
+    {
+        "pk": 8,
+        "model": "labrack.chassis",
+        "fields": {
+            "group_write": [],
+            "componentType": [],
+            "owners": [],
+            "group_read": [],
+            "variantOf": []
+        }
+    },
+    {
+        "pk": 9,
+        "model": "labrack.chassis",
+        "fields": {
+            "group_write": [],
+            "componentType": [],
+            "owners": [],
+            "group_read": [],
+            "variantOf": []
+        }
+    },
+    {
+        "pk": 10,
+        "model": "labrack.chassis",
+        "fields": {
+            "group_write": [],
+            "componentType": [],
+            "owners": [],
+            "group_read": [],
+            "variantOf": []
+        }
+    },
+    {
+        "pk": 11,
+        "model": "labrack.chassis",
+        "fields": {
+            "group_write": [],
+            "componentType": [],
+            "owners": [],
+            "group_read": [],
+            "variantOf": [
+                10
+            ]
+        }
+    },
+    {
+        "pk": 12,
+        "model": "labrack.chassis",
+        "fields": {
+            "group_write": [],
+            "componentType": [],
+            "owners": [],
+            "group_read": [],
+            "variantOf": [
+                10
+            ]
+        }
+    }
+]
