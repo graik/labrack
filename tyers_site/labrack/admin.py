@@ -730,7 +730,7 @@ class DnaSampleAdmin(PermissionAdmin, admin.ModelAdmin):
     fieldsets = [
         (None, {
             'fields' : ((('container', 'displayId', 'status'),
-                         ('preparation_date','creation_date'),
+                         ('preparation_date',),
 ##                         ('preparation_date','creation_date'),  ## doesn't work for some unknown reason
                          ('sampleCollection','reference_status'),
                          ('concentration','concentrationUnit','amount','amountUnit',),
