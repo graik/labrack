@@ -188,8 +188,8 @@ class ComponentAdmin( admin.ModelAdmin):
          ),
     )
     
-    list_display = ('displayId', 'name', 'created_by', 'status', 
-                    'showComment', )
+    list_display = ('displayId', 'name', 'show_component_type',
+                    'created_by', 'showComment','status')
     list_filter = ('status', 'created_by')
 
     ordering = ('displayId',)
@@ -271,31 +271,26 @@ class DnaComponentAdmin(PermissionAdmin,ComponentAdmin):
     fieldsets = (
             (None, {
                 'fields': (('displayId', 'name','status'),
-                           ('componentType','htmlAttribute1','htmlAttribute2','htmlAttribute3')
+                           ('componentType','circular', )
                             )
             }
              ),
             ('Details', {
-                'fields' : (('variantOf'),
-                            ('description',)),
-    
-            }
-             ),
-            ('DNA Details', 
-                         {'fields': (('optimizedFor', 'translatesTo', 'circular'),
-                                     ('sequence',),
-                                     ('GenBankfile'),),
-                          'classes':('collapse',)
+                'fields' : (('variantOf','htmlAttribute1','htmlAttribute2','htmlAttribute3'),
+                            ('description',),
+                            ('optimizedFor', 'translatesTo',),
+                            ('sequence',),
+                            ('GenBankfile',)
+                            )
                           }
              ),            
         )
 
- 
 
-
-    list_display = ComponentAdmin.list_display[:-2] + \
-        ('show_optimizedFor', 'show_translatesTo','show_resistance', 'number_related_samples', 'size') + \
-        ComponentAdmin.list_display[-2:]
+    list_display = ('displayId', 'name', 'show_component_type',
+                    'show_optimizedFor',
+                    'created_by', 'showComment', 'show_resistance', 
+                    'size', 'number_related_samples', 'status')
 
     list_filter = ComponentAdmin.list_filter.__add__(('optimizedFor','componentType',))
 
@@ -919,17 +914,25 @@ class ChassisAdmin(PermissionAdmin,ComponentAdmin):
                                  ])
                                  """
     
+    fieldsets = (
+            (None, {
+                'fields': (('displayId', 'name','status'),
+                           ('componentType',)
+                            )
+            }
+             ),
+            ('Details', {
+                'fields' : (('variantOf',),
+                            ('description',),
+                            )
+                          }
+             ),            
+        )
     
 
     
-    fieldsets = ComponentAdmin.fieldsets.__add__(\
-            ((None, {
-                'fields': ('componentType',),
-            }
-              ),)
-        )    
-    
-    list_display   = ('displayId', 'name','created_by', 'status', 'getVariantOf', 'getPartType', 'showComment')    
+    list_display   = ('displayId', 'name', 'getPartType', 
+                      'getVariantOf', 'created_by', 'showComment', 'status')    
 
     list_filter = ComponentAdmin.list_filter.__add__(('componentType',))
      

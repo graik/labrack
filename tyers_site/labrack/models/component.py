@@ -156,7 +156,7 @@ class Component(PermissionModel,models.Model):
             return ret   
     show_component_type.short_description = 'Type'    
 
-    def show_DnaComponent_type(self):
+    def show_component_type(self):
         """
         """
         ret = ""
@@ -248,7 +248,7 @@ class Component(PermissionModel,models.Model):
         s = r.count()      
 
         return s
-    number_related_samples.short_description = '# Samples'
+    number_related_samples.short_description = 'Samples'
 
     def number_related_annotations( self ):
         """
