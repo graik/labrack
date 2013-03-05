@@ -156,23 +156,7 @@ class Component(PermissionModel,models.Model):
             return ret   
     show_component_type.short_description = 'Type'    
 
-    def show_component_type(self):
-        """
-        """
-        ret = ""
-        comDna= DnaComponent.objects.get(id = self.id)
-        try:                       
-            for t in comDna.componentType.all():
-                if ret=="":
-                    ret += t.name
-                else:
-                    ret += ","+t.name
-        except Exception, err:
-            print err        
-        #s = [content.sequenceannotation for content in r]
-
-        return ret   
-    show_component_type.short_description = 'Type'    
+   
 
     def __unicode__(self):
         name = self.name if self.name else ''

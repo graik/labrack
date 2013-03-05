@@ -181,14 +181,15 @@ function retrieveAndFeedDataHandler(e)
 		is_db_data = document.getElementById("radiodb").checked;
 		db_data_displayid = document.getElementById("inputDataList").value;
 		is_gb_data = document.getElementById("radiogb").checked;
-		gb_data_displayid = document.getElementById("id_backbone_gen_name").value;
+		gb_data_displayid = document.getElementById("id_backbone_gen_displayid").value;
+		gb_data_name = document.getElementById("id_backbone_gen_name").value;
 		gb_data_description = document.getElementById("id_backbone_gen_description").value;
 		gb_data_coverage = document.getElementById("id_backbone_gen_coverage").value;
 
 
 		var json_ele = {"data": [
 				 {"db_data": ""+is_db_data+"", "name": ""+db_data_displayid+"", "description": ""},
-				 {"gb_data": ""+is_gb_data+"", "name": ""+gb_data_displayid+"", "description": ""+gb_data_description+"", "coverage": ""+gb_data_coverage+""}
+				 {"gb_data": ""+is_gb_data+"", "displayid": ""+gb_data_displayid+"", "name": ""+gb_data_name+"", "description": ""+gb_data_description+"", "coverage": ""+gb_data_coverage+""}
 				 ]
 		};
 		
@@ -524,15 +525,19 @@ function getIndexTypeDropdownlistType(name){
 
 function getTypeDropdownlistType(){
 //alert('populating getTypeDropdownlistType');
+selectedIndex = 0;
 		 var textnode = document.createElement('select');
           textnode.setAttribute('name','parttype_select');
  		if (typeof jsonObjectPartTypes !== "undefined") {
 			if(jsonObjectPartTypes.length) {
 				for(var i=0, len=jsonObjectPartTypes.length; i<len; i++) {
 					textnode.options[i] = new Option(jsonObjectPartTypes[i].name, 'value',jsonObjectPartTypes[i].name);               
+					if 	(jsonObjectPartTypes[i].name=='Region') 
+							{selectedIndex = i;}
 				   }
 				}
 		}
+		textnode.options.selectedIndex = selectedIndex;
 		return textnode ;
 }
 
@@ -557,9 +562,12 @@ function getTypeDropdownlistOptimizedFor(){
 			if(jsonObjectOptimizedFor.length) {
 				for(var i=0, len=jsonObjectOptimizedFor.length; i<len; i++) {
 					textnode.options[i] = new Option(jsonObjectOptimizedFor[i].name, 'value',jsonObjectOptimizedFor[i].name);               
+					if 	(jsonObjectOptimizedFor[i].name=='') 
+							{selectedIndex = i;}
 				   }
 			}  
 		}
+		textnode.options.selectedIndex = selectedIndex;				
 		return textnode ;
 }
 
@@ -922,11 +930,16 @@ style="border:1px solid #000000;">
 				<div class="form-row">
 					<div id="backbone_genbank"> 
 						<div class="field-box">
-								<label for="id_backbone_gen_id">ID:</label>
+								<label for="id_backbone_gen_id">List:</label>
 								<SELECT id = "datalist_gen" NAME="datalist_gen" onChange="updateJSON_accordingto_genbankFileSelection();">
 								</SELECT>
 						</div>
-					
+						
+						<div class="field-box">
+								<label for="id_backbone_gen_displayid" class="inline">ID:</label>
+									<input type="text" name="id_backbone_gen_displayid" id="id_backbone_gen_displayid" />
+						</div>
+						
 						<div class="field-box">
 								<label for="id_backbone_gen_name" class="inline">Name:</label>
 									<input type="text" name="id_backbone_gen_name" id="id_backbone_gen_name" />

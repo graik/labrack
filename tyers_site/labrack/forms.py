@@ -9,8 +9,6 @@ from labrack.models.component import DNAComponentType
 from labrack.models.generalmodels import SequenceAnnotation
 from django.core.files import File
 from django.core.exceptions import ValidationError
-
-
 from django.forms.fields import DateField, ChoiceField, MultipleChoiceField
 #from django.forms.widgets import RadioSelect, CheckboxSelectMultiple
 from django.forms.extras.widgets import SelectDateWidget
@@ -144,7 +142,7 @@ class DnaComponentForm(forms.ModelForm):
             regExp = r'^[vV]\d\d\d?$'
             
         if not(re.match(regExp, dispId)):
-            if (compTypeName=='Vector'):
+            if (compTypeName=='Vector Backbone'):
                 raise forms.ValidationError("ID :"+dispId+" doesn't respect the vector pattern V123, example : v001 where v or V for Vector")              
             raise forms.ValidationError("ID :"+dispId+" doesn't respect the pattern XX1234X, example : sb0001A where sb for initial and A for version")
         
@@ -158,7 +156,7 @@ class DnaComponentForm(forms.ModelForm):
         fullSequence = self.cleaned_data['sequence']
         data = json.loads(jsonFromWeb)
         isGbData = data["data"][1]["gb_data"]
-
+        vectorIdFromGB_displayid = data["data"][1]["displayid"]
         vectorIdFromGB_name = data["data"][1]["name"]
         vectorIdFromGB_description = data["data"][1]["description"]                
         
@@ -172,9 +170,14 @@ class DnaComponentForm(forms.ModelForm):
         errors = {}
         # check if the name vector exist already in the DB
         if (isGbData=='true' and  data["data"][1]["name"]!='') :
-            idName=data["data"][1]["name"]
-            if (DnaComponent.objects.filter(name=idName)):
-                errorMessage = "Please reload the GB file and choose another name for the Vector "+idName+" since it already exist in the DB!"
+            displayid_gb=data["data"][1]["displayid"]
+            regExp = r'^[vV]\d\d\d?$'
+            if not(re.match(regExp, displayid_gb)):
+                raise forms.ValidationError("ID :"+displayid_gb+" doesn't respect the vector pattern V123, example : v001 where v or V for Vector")              
+
+            
+            if (DnaComponent.objects.filter(displayId=displayid_gb)):
+                errorMessage = "Please choose another name for the Vector "+displayid_gb+" since it already exist in the DB!"
                 errors.setdefault('',[]).append(errorMessage)
         
         # check if the named annotation exist already in the DB
@@ -182,10 +185,19 @@ class DnaComponentForm(forms.ModelForm):
                 try:                       
                     for obj in selectedAnnotFromGB:
                         
-                        nameAnnot=obj["text3"]
-                        if (DnaComponent.objects.filter(name=nameAnnot)):
-                            errorMessage = "Please reload the GB file and choose another name for the Annotation "+nameAnnot+" since it already exist in the DB!"
+                        idAnnot=obj["text2"]
+                        regExp = r'^[a-zA-Z][a-zA-Z]\d\d\d\d[a-zA-Z]?$'
+                        if not(re.match(regExp, idAnnot)):
+                            errorMessage = "ID Annotations Error: "+idAnnot+" doesn't respect the pattern XX1234X, example : sb0001A where sb for initial and A for version"
+                            errors.setdefault('',[]).append(errorMessage)                        
+                        
+                        if (DnaComponent.objects.filter(displayId=idAnnot)):
+                            errorMessage = "ID Annotations Error: Please reload the GB file and choose another name for the Annotation "+idAnnot+" since it already exist in the DB!"
                             errors.setdefault('',[]).append(errorMessage)
+                            
+                        if (dispId==idAnnot):
+                            errorMessage = "ID Annotations Error: the name for the Annotation "+idAnnot+" should be different from the created DNA Part!"
+                            errors.setdefault('',[]).append(errorMessage)                        
                             
                       
                 except Exception, err:
@@ -234,32 +246,16 @@ class DnaComponentForm(forms.ModelForm):
 
         #self.is_vector_backbone = isVectorBackbone
         #get the partytypeVector
-        if (not DNAComponentType.objects.filter(name='Vector')):
-            subCtType = DNAComponentType(name = 'Vector')
+        if (not DNAComponentType.objects.filter(name='Vector Backbone')):
+            subCtType = DNAComponentType(name = 'Vector Backbone')
             subCtType.save()
-        subCtVectorType = DNAComponentType.objects.filter(name='Vector')
+        subCtVectorType = DNAComponentType.objects.filter(name='Vector Backbone')
 
         isGbData = data["data"][1]["gb_data"]
+        vectorIdFromGB_displayid = data["data"][1]["displayid"]
         vectorIdFromGB_name = data["data"][1]["name"]
         vectorIdFromGB_description = data["data"][1]["description"]
 
-
-        #if isVectorBackbone==True:
-            #try:
-                #dna2db = DnaComponent(displayId=self.cleaned_data['displayId'],description=self.cleaned_data['description'], name =self.cleaned_data['name'], sequence = self.cleaned_data['sequence'],status = self.cleaned_data['status'], GenBankfile = self.cleaned_data['GenBankfile'])
-                #dna2db.circular = True
-                #dna2db.save()
-                #if (not DNAComponentType.objects.filter(name='Vector')):
-                    #subCtType = DNAComponentType(name = 'Vector')
-                    #subCtType.save()  
-                #subCtVectorType = DNAComponentType.objects.filter(name='Vector')
-                #dna2db.componentType = subCtVectorType
-                #dna2db.sequence = self.cleaned_data['sequence']
-                #dna2db.save()                
-            #except (RuntimeError, TypeError, NameError):
-                #commit=False
-        #else:
-            # Vector saving part
 
 
 
@@ -284,7 +280,7 @@ class DnaComponentForm(forms.ModelForm):
 
         if (isGbData=='true' and  data["data"][1]["name"]!='') :
             coverage=data["data"][1]["coverage"]
-            id=data["data"][1]["name"]
+            id=data["data"][1]["displayid"]
             coverage = coverage.split('-')
             first = int(coverage[0])
             secon = int(coverage[1])
