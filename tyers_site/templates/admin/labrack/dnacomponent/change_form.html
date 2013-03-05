@@ -94,6 +94,9 @@
 		
 		
     };
+	
+ 
+
 function blockAllTextFieldFromEditing(){
 		$('form input[class="vManyToManyRawIdAdminField"]').each(function(){
 				// Do your magic here
@@ -130,42 +133,43 @@ function selectallchecked_gb(){
 }
 
 
+
 function repopulateCheckBox(){
 	test = '('+document.getElementById("id_htmlAttribute2").value+')';
-	alert(test);
+ 
 	if (test!='()') {
-			var myObject = eval(test);
-			test_db_checked = myObject.selected_annot[0].db_checked;
-			test_gb_checked = myObject.selected_annot[1].gb_checked;
-			data_db = '({"data":'+test_db_checked+'})';
-			data_gb = '({"data":'+test_gb_checked+'})';
-			var myObject_db = eval(data_db);
-			var myObject_gb = eval(data_gb);
-			//db repopulating
-			//alert(document.getElementById(myObject_db.data[0].id).id);
-			if (myObject_db) {
-				for (var i = 0; i < myObject_db.data.length; i++) {
-					//alert(myObject_db.data[i].id);
-					document.getElementById(myObject_db.data[i].id).checked = true;
-				}	
+		var myObject = eval(test);
+		test_db_checked = myObject.selected_annot[0].db_checked;
+		test_gb_checked = myObject.selected_annot[1].gb_checked;
+		data_db = '({"data":'+test_db_checked+'})';
+		data_gb = '({"data":'+test_gb_checked+'})';
+		var myObject_db = eval(data_db);
+		var myObject_gb = eval(data_gb);
+		//db repopulating
+		//alert(document.getElementById(myObject_db.data[0].id).id);
+		if (myObject_db) {
+			for (var i = 0; i < myObject_db.data.length; i++) {
+ 				document.getElementById(myObject_db.data[i].id).checked = true;
 			}
-			//gb repopulating
-			if (myObject_gb) {
-				for (var i = 0; i < myObject_gb.data.length; i++) {
-					//alert(myObject_gb.data[i].id);
-					document.getElementById(myObject_gb.data[i].id).checked = true;
-					document.getElementById('text2_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text2;
-					document.getElementById('text3_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text2;
-					document.getElementById('text4_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text2;
-					document.getElementById('text2_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text2;
-					document.getElementById('text2_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text2;
-					document.getElementById('text2_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text2;
-					document.getElementById('text2_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text2;
-					
-				}
+		}
+		//gb repopulating
+		if (myObject_gb) {
+			for (var i = 0; i < myObject_gb.data.length; i++) {
+				//alert(myObject_gb.data[i].id);
+				document.getElementById(myObject_gb.data[i].id).checked = true;
+				document.getElementById('text2_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text2;
+				document.getElementById('text3_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text3;
+				document.getElementById('text4_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text4;
+				//document.getElementById('text5_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text5;
+				document.getElementById('text5_'+myObject_gb.data[i].id).selectedIndex = getIndexTypeDropdownlistType(myObject_gb.data[i].text5);
+				document.getElementById('text6_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text6;
+				//document.getElementById('text7_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text7;
+				document.getElementById('text7_'+myObject_gb.data[i].id).selectedIndex = getIndexNameDropdownlistOptimizedFor(myObject_gb.data[i].text7);  
 			}
+		}
 	}
 }
+
 
 
 function retrieveAndFeedDataHandler(e)
@@ -230,8 +234,7 @@ function retrieveAndFeedDataHandler(e)
    
    function sequenceHandler(e)
    {
-		send_request(true);
-		
+		send_request(true);		
    }
 			 
 function HideShowElement(elementName,status) {
@@ -281,7 +284,12 @@ function selected_dnaBackbone(){
 
 // get the information regarding the DNA Backbone vector from the server
 function update_dnaBackbone(selectedItem,fullsequence){
-    $.get("/get_dna_info/"+selectedItem+"/", function(data){
+
+	$.ajax({
+     async: false,
+     type: 'GET',
+     url: "/get_dna_info/"+selectedItem+"/",
+     success: function(data){
        var values = data.list_dnas;
         var jsonObject = eval(values);
         $("#vectorName").html(jsonObject[0].name);
@@ -290,7 +298,22 @@ function update_dnaBackbone(selectedItem,fullsequence){
 		
 		//update annot base on the vector sequence
 		currSelectedVectorSeq = jsonObject[0].sequence;
-    });
+    }
+	
+	});	
+
+
+
+    <!--$.get("/get_dna_info/"+selectedItem+"/", function(data){-->
+       <!--var values = data.list_dnas;-->
+        <!--var jsonObject = eval(values);-->
+        <!--$("#vectorName").html(jsonObject[0].name);-->
+        <!--$("#vectorDescription").html(jsonObject[0].description);-->
+        <!--//$("#idExtra").html(data.extra_values);-->
+		
+		<!--//update annot base on the vector sequence-->
+		<!--currSelectedVectorSeq = jsonObject[0].sequence;-->
+    <!--});-->
 	send_request(false);
 	
 }
@@ -373,7 +396,6 @@ jsonObjectOptimizedFor = eval(data.optimizedfor_values);
 		if(arrayOfInsertObjects) {
             for(var i=0, len=arrayOfInsertObjects.length; i<len; i++) {
 					addRowToAnnotationTable(0,'',arrayOfInsertObjects[i].id,arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].description,arrayOfInsertObjects[i].componentType_name,arrayOfInsertObjects[i].coverage,arrayOfInsertObjects[i].optimizedFor_name,'');
-
                }
 		}
 		
@@ -392,24 +414,28 @@ function send_request(isUpdateVector){
 t = this.document.getElementById("id_sequence").value;
 a = currSelectedVectorSeq;
 if ((t.length>0) & (t.match(/[ACTGactg]+/) != t)) {
-alert("Error : this not a DNA Sequence!");
+	alert("Error : this not a DNA Sequence!");
 return;
 }
 ta = t+"__"+a;
-$.get("/test/"+ta+"/", function(data){
-// set parttypes objects
-if (isUpdateVector) {
-populateVectorBackbone(data);}
+	
 
-populateInserts(data);
+$.ajax({
+     async: false,
+     type: 'GET',
+     url: "/test/"+ta+"/",
+     success: function(data) {
+          if (isUpdateVector) {populateVectorBackbone(data);}
+		  populateInserts(data);
+     }
+});
 
-        });
 }
 	
 // emtpy table genbank and database annotation 
 function emptyRowsTable(tableNumber){
 	var Parent = document.getElementsByTagName("TBODY").item(tableNumber);
-    while(Parent.hasChildNodes()  & Parent.getElementsByTagName('tr').length>2)
+    while(Parent.hasChildNodes()  & Parent.getElementsByTagName('tr').length>1)
     {
 		Parent.removeChild(Parent.lastChild);
     }
@@ -483,6 +509,19 @@ function selectallchecked_gb(){
 	return JSON.stringify(jsonObj);
 }
 
+
+function getIndexTypeDropdownlistType(name){
+//alert('populating getTypeDropdownlistType');
+ 		if (typeof jsonObjectPartTypes !== "undefined") {
+			if(jsonObjectPartTypes.length) {
+				for(var i=0, len=jsonObjectPartTypes.length; i<len; i++) {
+						if (jsonObjectPartTypes[i].name==name) { return i;}
+				   }
+				}
+		}
+		return 0;
+}
+
 function getTypeDropdownlistType(){
 //alert('populating getTypeDropdownlistType');
 		 var textnode = document.createElement('select');
@@ -494,11 +533,20 @@ function getTypeDropdownlistType(){
 				   }
 				}
 		}
-		return textnode 
+		return textnode ;
 }
 
  
-
+function getIndexNameDropdownlistOptimizedFor(name){
+		if (typeof jsonObjectOptimizedFor !== "undefined") {
+			if(jsonObjectOptimizedFor.length) {
+				for(var i=0, len=jsonObjectOptimizedFor.length; i<len; i++) {
+						if (jsonObjectOptimizedFor[i].name==name) { return i;}
+				   }
+			}  
+		}
+		return 0;
+}
 function getTypeDropdownlistOptimizedFor(){
 //alert('populating getTypeDropdownlistOptimizedFor');
 		  var textnode = document.createElement('select');
@@ -510,9 +558,9 @@ function getTypeDropdownlistOptimizedFor(){
 				for(var i=0, len=jsonObjectOptimizedFor.length; i<len; i++) {
 					textnode.options[i] = new Option(jsonObjectOptimizedFor[i].name, 'value',jsonObjectOptimizedFor[i].name);               
 				   }
-				}  
+			}  
 		}
-		return textnode 
+		return textnode ;
 }
 
 function addRowToAnnotationTable(tableNumber,content1,content2,content3,content4,content5,content6,content7,contentId)
@@ -573,8 +621,8 @@ function addRowToAnnotationTable(tableNumber,content1,content2,content3,content4
 		 if (tableNumber==0){
 		 textnode5=document.createTextNode(content5);
 		 textnode5.id = 'text5_'+contentId;		 
-		 }
-		 else{
+		 } else {
+		  
 		 textnode5 = getTypeDropdownlistType();
 		 textnode5.name = prefix+'text5';
 		 textnode5.id = 'text5_'+contentId;	
@@ -583,7 +631,7 @@ function addRowToAnnotationTable(tableNumber,content1,content2,content3,content4
 		 
 		//textnode6=document.createTextNode(content6);
 		 textnode6= document.createElement('input');
-		 textnode6.type = 'text';	
+		 textnode6.type = 'text';
 		 textnode6.value = content6;
 		 textnode6.name = prefix+'text6';
 		 textnode6.id = 'text6_'+contentId;	
@@ -594,6 +642,7 @@ function addRowToAnnotationTable(tableNumber,content1,content2,content3,content4
 		 textnode7.id = 'text7_'+contentId;	
 		 }
 		 else{
+		  
 		 textnode7=getTypeDropdownlistOptimizedFor();
 		 textnode7.name = prefix+'text7';
 		 textnode7.id = 'text7_'+contentId;	
@@ -698,6 +747,7 @@ function buildGenBankTable(jsontext){
 					datalist_gen.options.add(optn);
 					
 	var dataList_gen = document.getElementById("datalist_gen");
+	//alert = function() {};
             if(arrayOfInsertObjects.length) {
                 for(var i=0, len= arrayOfInsertObjects.length; i<len; i++) {
                 if (sequence=='') {
@@ -705,7 +755,10 @@ function buildGenBankTable(jsontext){
                     sequence = arrayOfInsertObjects[i].sequence;
                     document.getElementById("id_sequence").value = sequence;
                     send_request(true);
-					alert(jsonObjectPartTypes);
+					//alert(jsonObjectPartTypes);
+					
+					//alert('avida');
+					//alert(jsonObjectPartTypes);
                     }
                     //alert(arrayOfInsertObjects[i].sequence); 
                     addRowToAnnotationTable(1,'',arrayOfInsertObjects[i].id,arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].description,arrayOfInsertObjects[i].componentType_name,arrayOfInsertObjects[i].coverage,'',i);			
@@ -721,7 +774,35 @@ function uploadGBDataFileIfExist(){
     pathFile = document.getElementById("id_htmlAttribute3").value;
 	
 	if (pathFile!="") {
-	$.get("/getGBDataFromFile/"+pathFile+"/", function(responseJSON){
+	<!--$.get("/getGBDataFromFile/"+pathFile+"/", function(responseJSON){-->
+	<!--// set parttypes objects-->
+	
+			<!--try-->
+			<!--{-->
+			   <!--var json = JSON.parse(responseJSON);-->
+				<!--//send_request(true);			-->
+			
+			   <!--buildGenBankTable(json.test);-->
+			   <!--drawGenBank(json.test,buildChartGeneBank());-->
+			   <!--document.getElementById("id_GenBankfile_loaded").innerHTML += "<br>Last File :"+pathFile;-->
+			   
+
+			<!--}-->
+			<!--catch(e)-->
+			<!--{-->
+			   <!--alert('invalid json');-->
+			<!--}	-->
+			
+			<!--});	-->
+	<!--}-->
+	
+	
+	
+	$.ajax({
+     async: false,
+     type: 'GET',
+     url: "/getGBDataFromFile/"+pathFile+"/",
+     success: function(responseJSON){
 	// set parttypes objects
 	
 			try
@@ -740,6 +821,7 @@ function uploadGBDataFileIfExist(){
 			   alert('invalid json');
 			}	
 			
+			}
 			});	
 	}
 	
