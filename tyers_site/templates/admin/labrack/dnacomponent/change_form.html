@@ -89,7 +89,7 @@
 		 HideShowElement('backbone_genbank','hidden');
 		 
 		 
-		 
+		 repopulateVectorChoice();
 		 repopulateCheckBox();
 		
 		
@@ -134,6 +134,38 @@ function selectallchecked_gb(){
 
 
 
+function repopulateVectorChoice(){
+	test = '('+document.getElementById("id_htmlAttribute1").value+')';
+	if (test!='()') {
+		var myObject = eval(test);
+		test_db_checked = myObject.data[0].db_data;
+		test_gb_checked = myObject.data[1].gb_data;
+		// populate radio button
+		document.getElementById("radiodb").checked = test_db_checked
+		document.getElementById("radiogb").checked = test_gb_checked
+		if (test_db_checked=='true') {
+		HideShowElement('backbone_db','visible');
+		HideShowElement('backbone_genbank','hidden');
+		}
+		if (test_gb_checked=='true') {
+		HideShowElement('backbone_db','hidden');
+		HideShowElement('backbone_genbank','visible');
+		}
+		// populate Vectors fields
+		// db part
+		
+		document.getElementById("inputDataList").selectedIndex = myObject.data[0].db_listSelectedIndex;
+
+		// gb part		
+		document.getElementById("datalist_gen").selectedIndex = myObject.data[1].gb_listSelectedIndex;
+		document.getElementById("id_backbone_gen_displayid").value = myObject.data[1].displayid;
+		document.getElementById("id_backbone_gen_name").value = myObject.data[1].name;
+		document.getElementById("id_backbone_gen_description").value = myObject.data[1].description;
+		document.getElementById("id_backbone_gen_coverage").value = myObject.data[1].coverage;
+		
+	
+	}
+}
 function repopulateCheckBox(){
 	test = '('+document.getElementById("id_htmlAttribute2").value+')';
  
@@ -180,16 +212,19 @@ function retrieveAndFeedDataHandler(e)
 		
 		is_db_data = document.getElementById("radiodb").checked;
 		db_data_displayid = document.getElementById("inputDataList").value;
+		db_data_listIdSelectedIndex = document.getElementById("inputDataList").selectedIndex;		
+
 		is_gb_data = document.getElementById("radiogb").checked;
 		gb_data_displayid = document.getElementById("id_backbone_gen_displayid").value;
+		gb_data_listIdSelectedIndex = document.getElementById("datalist_gen").selectedIndex;
 		gb_data_name = document.getElementById("id_backbone_gen_name").value;
 		gb_data_description = document.getElementById("id_backbone_gen_description").value;
 		gb_data_coverage = document.getElementById("id_backbone_gen_coverage").value;
 
-
+ 
 		var json_ele = {"data": [
-				 {"db_data": ""+is_db_data+"", "name": ""+db_data_displayid+"", "description": ""},
-				 {"gb_data": ""+is_gb_data+"", "displayid": ""+gb_data_displayid+"", "name": ""+gb_data_name+"", "description": ""+gb_data_description+"", "coverage": ""+gb_data_coverage+""}
+				 {"db_data": ""+is_db_data+"", "db_listSelectedIndex": ""+db_data_listIdSelectedIndex+"", "name": ""+db_data_displayid+"", "description": ""},
+				 {"gb_data": ""+is_gb_data+"", "gb_listSelectedIndex": ""+gb_data_listIdSelectedIndex+"", "displayid": ""+gb_data_displayid+"", "name": ""+gb_data_name+"", "description": ""+gb_data_description+"", "coverage": ""+gb_data_coverage+""}
 				 ]
 		};
 		
@@ -763,12 +798,7 @@ function buildGenBankTable(jsontext){
                     sequence = arrayOfInsertObjects[i].sequence;
                     document.getElementById("id_sequence").value = sequence;
                     send_request(true);
-					//alert(jsonObjectPartTypes);
-					
-					//alert('avida');
-					//alert(jsonObjectPartTypes);
                     }
-                    //alert(arrayOfInsertObjects[i].sequence); 
                     addRowToAnnotationTable(1,'',arrayOfInsertObjects[i].id,arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].description,arrayOfInsertObjects[i].componentType_name,arrayOfInsertObjects[i].coverage,'',i);			
 					var optn = document.createElement("OPTION");
 					optn.text = arrayOfInsertObjects[i].displayid;
@@ -781,30 +811,7 @@ function buildGenBankTable(jsontext){
 function uploadGBDataFileIfExist(){
     pathFile = document.getElementById("id_htmlAttribute3").value;
 	
-	if (pathFile!="") {
-	<!--$.get("/getGBDataFromFile/"+pathFile+"/", function(responseJSON){-->
-	<!--// set parttypes objects-->
-	
-			<!--try-->
-			<!--{-->
-			   <!--var json = JSON.parse(responseJSON);-->
-				<!--//send_request(true);			-->
-			
-			   <!--buildGenBankTable(json.test);-->
-			   <!--drawGenBank(json.test,buildChartGeneBank());-->
-			   <!--document.getElementById("id_GenBankfile_loaded").innerHTML += "<br>Last File :"+pathFile;-->
-			   
-
-			<!--}-->
-			<!--catch(e)-->
-			<!--{-->
-			   <!--alert('invalid json');-->
-			<!--}	-->
-			
-			<!--});	-->
-	<!--}-->
-	
-	
+	if (pathFile!="") {	
 	
 	$.ajax({
      async: false,

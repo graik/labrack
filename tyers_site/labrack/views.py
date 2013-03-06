@@ -682,9 +682,9 @@ def retrieveGenBankInfo(filename):
         for gb_record in SeqIO.parse(open(gb_file,"r"), "genbank") :
                 if (not isParsingDone):
                         for ind in xrange(len(gb_record.features)) :
+                                nameType = repr(gb_record.features[ind].type).replace("'", "")
                                 isParsingDone = True
                                 #gb_features += '\n'+ repr(gb_record.features[ind].type) + " Location start : "+ repr(gb_record.features[ind].location._start.position) + " Location end : "+ repr(gb_record.features[ind].location._end.position)
-                                nameType = repr(gb_record.features[ind].type).replace("'", "")
                                 strandValue = repr(gb_record.features[ind].strand)
                                 startPos = repr(gb_record.features[ind].location._start.position+1)
                                 endPos = repr(gb_record.features[ind].location._end.position)

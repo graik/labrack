@@ -122,11 +122,15 @@ class DnaComponentForm(forms.ModelForm):
     
         
     def clean(self):
+        errorMessage = ""
+        errors = {}        
         # check if disp name is clean with pattern XXX1234X
         try:
             dispId = self.cleaned_data['displayId']
         except Exception, err:
-            raise forms.ValidationError("ID field is mandatory!")              
+            errorMessage = "ID field is mandatory!"
+            errors.setdefault('',[]).append(errorMessage)                      
+            #raise forms.ValidationError("ID field is mandatory!")              
             commit=False
        
         dispId = self.cleaned_data['displayId']
@@ -143,8 +147,11 @@ class DnaComponentForm(forms.ModelForm):
             
         if not(re.match(regExp, dispId)):
             if (compTypeName=='Vector Backbone'):
-                raise forms.ValidationError("ID :"+dispId+" doesn't respect the vector pattern V123, example : v001 where v or V for Vector")              
-            raise forms.ValidationError("ID :"+dispId+" doesn't respect the pattern XX1234X, example : sb0001A where sb for initial and A for version")
+                errorMessage = "ID :"+dispId+" doesn't respect the vector pattern V123, example : v001 where v or V for Vector"
+                errors.setdefault('',[]).append(errorMessage)                      
+            #raise forms.ValidationError("ID :"+dispId+" doesn't respect the pattern XX1234X, example : sb0001A where sb for initial and A for version")
+            errorMessage = "ID :"+dispId+" doesn't respect the pattern XX1234X, example : sb0001A where sb for initial and A for version"
+            errors.setdefault('',[]).append(errorMessage)                      
         
         
         cleanedData = super(DnaComponentForm, self).clean()
@@ -166,15 +173,14 @@ class DnaComponentForm(forms.ModelForm):
         selectedAnnotFromGB = json.loads(data2["selected_annot"][1]["gb_checked"])
         
         
-        errorMessage = ""
-        errors = {}
+        
         # check if the name vector exist already in the DB
         if (isGbData=='true' and  data["data"][1]["name"]!='') :
             displayid_gb=data["data"][1]["displayid"]
             regExp = r'^[vV]\d\d\d?$'
             if not(re.match(regExp, displayid_gb)):
-                raise forms.ValidationError("ID :"+displayid_gb+" doesn't respect the vector pattern V123, example : v001 where v or V for Vector")              
-
+                errorMessage = "ID :"+displayid_gb+" doesn't respect the vector pattern V123, example : v001 where v or V for Vector"
+                errors.setdefault('',[]).append(errorMessage)            
             
             if (DnaComponent.objects.filter(displayId=displayid_gb)):
                 errorMessage = "Please choose another name for the Vector "+displayid_gb+" since it already exist in the DB!"
@@ -229,9 +235,7 @@ class DnaComponentForm(forms.ModelForm):
 
 
 
-        #var index = document.getElementById('datalist_gen').selectedIndex -1;
-        #alert(arrayOfJSON_AnnotationsFile[index].coverage);
-
+   
 
         jsonFromWeb2 = self.cleaned_data['htmlAttribute2']
         data2 = json.loads(jsonFromWeb2)
