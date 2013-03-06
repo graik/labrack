@@ -61,9 +61,9 @@ class Location(PermissionModel):
 
     room = models.CharField('Room', max_length=20)
 
-    creation_date = models.DateTimeField('Created at', auto_now_add=True)
+    #creation_date = models.DateTimeField('Created at', auto_now_add=True)
 
-    modification_date = models.DateTimeField('Modified at', auto_now=True)
+    #modification_date = models.DateTimeField('Modified at', auto_now=True)
 
     description = models.CharField( 'short Description', max_length=200,
                                             help_text='Very short description for listings')    
@@ -162,9 +162,9 @@ class Container( PermissionModel ):
     #: optional long description
     description = models.TextField( 'Detailed description', blank=True)
 
-    creation_date = models.DateTimeField('Created at', auto_now_add=True)
+    #creation_date = models.DateTimeField('Created at', auto_now_add=True)
 
-    modification_date = models.DateTimeField('Modified at', auto_now=True)
+    #modification_date = models.DateTimeField('Modified at', auto_now=True)
 
     # rack = models.ForeignKey(Rack, null=True, blank=True)
 

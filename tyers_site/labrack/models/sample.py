@@ -86,9 +86,9 @@ class SampleCollection(PermissionModel):
 
     description = models.TextField( 'Detailed description', blank=True)
 
-    creation_date = models.DateTimeField(auto_now_add=True)
+    #creation_date = models.DateTimeField(auto_now_add=True)
 
-    modification_date = models.DateTimeField(auto_now=True)
+    #modification_date = models.DateTimeField(auto_now=True)
 
 
     def __unicode__(self):
@@ -169,10 +169,10 @@ class Sample( PermissionModel ):
 
     preparation_date = models.DateField(default=datetime.now(), verbose_name="created")
 
-    creation_date = models.DateTimeField(auto_now_add=True, 
-                                         verbose_name='entry created')
+    #creation_date = models.DateTimeField(auto_now_add=True, 
+    #                                    verbose_name='entry created')
 
-    modification_date = models.DateTimeField('modified', auto_now=True)
+    #modification_date = models.DateTimeField('modified', auto_now=True)
 
 
     solvent = models.CharField('Buffer/Medium', max_length=100, blank=True)

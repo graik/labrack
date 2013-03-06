@@ -69,91 +69,21 @@ from tyers_site.labrack.forms import DnaSampleForm
 
 
 class PermissionAdmin():
-    # Was nessary to save owners at creation
+    
+  
+
     def save_related(self, request, form, formsets, change):
-
-
-        if not self.obj.pk == None:
-
-            admin.ModelAdmin.save_related(self, request, form, formsets, change)
-
-            ## Save the current user as an owner
-            if self.obj.writePermission(request.user) or self.obj.created_by == request.user:
-                self.obj.owners.add(request.user)
-                self.obj.save()
-
-                ## Copy Container permission to Sample
-                if isinstance(self.obj, Sample):
-                    self.obj.owners = self.obj.container.owners.all()
-                    self.obj.owners.add(request.user)
-                    self.obj.group_read = self.obj.container.group_read.all()
-                    self.obj.group_write = self.obj.container.group_write.all()
-                    self.obj.save()
-
-                if isinstance(self.obj, Container):
-                    for sample in self.obj.samples.all():
-                        sample.owners = self.obj.owners.all()
-                        sample.group_read = self.obj.group_read.all()
-                        sample.group_write = self.obj.group_write.all()
-                        sample.save()
-
+        self.obj.owners.add(request.user)
+        self.obj.save()        
 
     # Save the owner of the object
     def save_model(self, request, obj, form, change):
 
         self.obj = obj  # store the obj for save_related method
+        obj.created_by = request.user
+        obj.save()
+        
 
-        ## Store the obj creator
-        if getattr(obj, 'created_by', None) is None:
-            obj.created_by = request.user
-
-            # Check that user can add sample to container
-            if isinstance(obj, Sample) and not obj.container.writePermission(request.user):
-                messages.error(request, '%s is not allowed to add sample to this container. Ignore message below.'  
-                               % (request.user.username))
-            else:
-                obj.save()
-        else:
-            # Check if user has right to modify
-            if obj.writePermission(request.user):
-                obj.save()
-            else:
-                messages.error(request, '%s is not allowed to modify this record. Ignore message below.'  
-                               % (request.user.username))
-
-
-
-
-    # Limit view to current user based on entries permission
-    # Ref: http://stackoverflow.com/questions/6310983/django-admin-specific-user-admin-content
-    def queryset(self, request):
-        qs = admin.ModelAdmin.queryset(self, request)
-
-        # Super user can see anything        
-        if request.user.is_superuser:
-            return qs
-
-
-        qsSize = 0
-        import re
-        match = re.search('/(?P<content_type_id>\w+)/(?P<object_id>\d+)/$', request.get_full_path())
-        if hasattr(match, 'group'):
-            qs = qs.filter(Q(pk=int(match.group('object_id'))))
-            qsSize = qs.count()
-
-
-        qs = qs.filter(Q(owners=request.user) |
-                       Q(group_read=request.user.groups.all()) |
-                       Q(group_write=request.user.groups.all()) 
-                       ).distinct()
-
-
-        # Raise Permission denied if filtering of permission has removed required entry
-        if hasattr(match, 'group') and qsSize != qs.count():
-            raise PermissionDenied
-
-
-        return qs
 
 
 
@@ -265,13 +195,14 @@ class PeptideComponentAdmin(ProteinComponentAdmin):
 
 
 
-class DnaComponentAdmin(PermissionAdmin,ComponentAdmin):
+class DnaComponentAdmin(ComponentAdmin):
     form = DnaComponentForm 
 
     fieldsets = (
             (None, {
                 'fields': (('displayId', 'name','status'),
-                           ('componentType','circular', )
+                           ('componentType','circular', ),
+                           ('created_by','owners')
                             )
             }
              ),
@@ -316,15 +247,15 @@ class ContainerAdmin(PermissionAdmin, admin.ModelAdmin):
                                  ('last modified','modification_date'),
                                  ])
 
-    fieldsets = (
+    fieldsets = [
         (None, {
             'fields' : (('displayId', 'name'),
                         ('containerType', 'rack'),
-                        'description',
-                        )
-        }
+                        'description',('created_by','owners')                        
+                        ),
+          }
          ),
-    )
+    ]
 
 
     list_display = ('displayId', 'name', 'containerType', 'rack_url','location_url',
@@ -384,7 +315,7 @@ class LocationAdmin(PermissionAdmin,admin.ModelAdmin):
                                  ('Last modified','modification_date'),
                                  ])
 
-    fields = (('displayId', 'name'), 'temperature', 'room','description')
+    fields = (('displayId', 'name'),'temperature','Ptest_user', 'room','description',('created_by','owners'))
 
     list_display = ('displayId', 'name', 'temperature', 'room')
 
@@ -415,7 +346,7 @@ class RackAdmin(PermissionAdmin,admin.ModelAdmin):
                                  ])
     list_display = ('displayId', 'name', 'location_url', 
                     )    
-    fields = (('displayId', 'name'),'current_location','description')
+    fields = (('displayId', 'name'),'current_location','description',('created_by','owners'))
 
     def container_url(self, obj):
         url = obj.container.get_relative_url()
@@ -731,6 +662,7 @@ class DnaSampleAdmin(PermissionAdmin, admin.ModelAdmin):
                          ('concentration','concentrationUnit','amount','amountUnit',),
                          ('solvent','aliquotNr',),
                          ('description'),
+                         ('created_by','owners'),
                          )
                         )
         }
@@ -917,7 +849,8 @@ class ChassisAdmin(PermissionAdmin,ComponentAdmin):
     fieldsets = (
             (None, {
                 'fields': (('displayId', 'name','status'),
-                           ('componentType',)
+                           ('componentType',),
+                           ('created_by','owners')
                             )
             }
              ),
@@ -993,14 +926,15 @@ class ChassisSampleAdmin(PermissionAdmin, admin.ModelAdmin):
                          ('preparation_date', 'status'),
                          ('solvent','concentration','concentrationUnit','amount','amountUnit','aliquotNr',),
                          ('description'),
+                         ('created_by','owners')
                          )
+                        
                         )
         }
          ), 
         ('Cell Content',{'fields':[('chassis'),
                                   #('Chassis_Display_ID','Chassis_Name','Chassis_Description')
                                   ],
-                        'description': 'Either select an existing Cell or fill the cell description to create a new one'                    
                         }),
         ('History',{'fields':[('derivedFrom','provenanceType'),
                               ('historyDescription',)]}),
@@ -1203,13 +1137,6 @@ class SampleCollectionAdmin(PermissionAdmin, admin.ModelAdmin):
                         )
         }
          ),
-        ('Permission', {
-            'classes': ('collapse',),
-            'fields' : (
-                (('owners'), ('group_read', 'group_write'))
-            )
-        }
-         )
     )
 
     list_display = ('name', 'created_by', 'creation_date')

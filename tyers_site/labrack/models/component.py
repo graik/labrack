@@ -126,9 +126,7 @@ class Component(PermissionModel,models.Model):
     #abstract = models.BooleanField( 'Abstract Part', default=False, 
     #                                help_text='Entry only serves as container to organize related parts.')
 
-    creation_date = models.DateTimeField(auto_now_add=True, null=True)
 
-    modification_date = models.DateTimeField(auto_now=True, null=True)
 
 
     
