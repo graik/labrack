@@ -231,6 +231,7 @@ class DnaComponentForm(forms.ModelForm):
 
         jsonFromWeb = self.cleaned_data['htmlAttribute1']
         fullSequence = self.cleaned_data['sequence']
+        created_by = self.cleaned_data['created_by']
         data = json.loads(jsonFromWeb)
 
 
@@ -342,8 +343,7 @@ class DnaComponentForm(forms.ModelForm):
                         else:
                             chassisOptimizedFor = ''
                         subCtVectorType = DNAComponentType.objects.filter(name=dnatype)	
-
-                        dnaAnnot = DnaComponent(displayId=id,description=descrp, name =name, sequence = seq,optimizedFor = chassisOptimizedFor)
+                        dnaAnnot = DnaComponent(displayId=id,description=descrp, name =name, sequence = seq,optimizedFor = chassisOptimizedFor, created_by = created_by)
                         dnaAnnot.save()
                         dnaAnnot.componentType = subCtVectorType
                         dnaAnnot.save()
