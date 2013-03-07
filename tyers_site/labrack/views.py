@@ -545,10 +545,11 @@ def search_dna_parts(request, sequence_text):
                 for chas in chassisOptimizedAll :
                         id = chas.id
                         name = chas.name
+                        displayId = chas.displayId
                         if json_chassisOptimizedAll == '':
-                                json_chassisOptimizedAll = '{ "id":"'+str(id)+'","name":"'+name+'"}'
+                                json_chassisOptimizedAll = '{ "id":"'+str(id)+'","name":"'+name+'","displayId":"'+displayId+'"}'
                         else:
-                                json_chassisOptimizedAll = json_chassisOptimizedAll+',{ "id":"'+str(id)+'","name":"'+name+'"}'
+                                json_chassisOptimizedAll = json_chassisOptimizedAll+',{ "id":"'+str(id)+'","name":"'+name+'","displayId":"'+displayId+'"}'
                 json_chassisOptimizedAll = '['+json_chassisOptimizedAll+']'
                 message['optimizedfor_values'] = json_chassisOptimizedAll                
         else:

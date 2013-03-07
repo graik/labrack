@@ -319,26 +319,46 @@ class SequenceAnnotation(models.Model):
                                           validators=[],
                                           help_text='End position counting from 1')
 
-    strand = models.CharField('Strand',max_length=1, blank=True, null=True,
-                              choices=(('+','+'),('-','-')) )
-
+   
     precedes = models.ManyToManyField( 'self', symmetrical=False,
                                        null=True, blank=True )
 
-    subComponent = models.ForeignKey('Component', related_name ='subComponentOf')
-
-    componentAnnotated = models.ForeignKey('Component', related_name ='annotatedForComponent',null=True, blank=True)
-
+   
     # override Django object methods
     def __unicode__(self):
-        return u'(%s - %s)(%s,%s)' % (self.subComponent, self.componentAnnotated,self.bioStart,self.bioEnd)
+        return u'(%s - %s) (%s,%s)' % (self.subComponent, self.componentAnnotated,self.bioStart,self.bioEnd)
 
+    
+
+    class Meta:
+        app_label = 'labrack'    
+        abstract = True
+
+class DnaSequenceAnnotation(SequenceAnnotation):
+    subComponent = models.ForeignKey('DnaComponent', related_name ='subComponentOf')
+
+    componentAnnotated = models.ForeignKey('DnaComponent', related_name ='annotatedForComponent',null=True, blank=True)
+    
+    strand = models.CharField('Strand',max_length=1, blank=True, null=True,
+                              choices=(('+','+'),('-','-')) )
+    
     def get_relative_url(self):
         """
         Define standard relative URL for object access in templates
         """
-        return 'sequenceannotation/%i/' % self.id
-
+        return 'dnasequenceannotation/%i/' % self.id    
     class Meta:
         app_label = 'labrack'    
 
+
+class ProteinSequenceAnnotation(SequenceAnnotation):
+    subComponent = models.ForeignKey('ProteinComponent', related_name ='subComponentOf')
+
+    componentAnnotated = models.ForeignKey('ProteinComponent', related_name ='annotatedForComponent',null=True, blank=True)
+    def get_relative_url(self):
+        """
+        Define standard relative URL for object access in templates
+        """
+        return 'proteinsequenceannotation/%i/' % self.id    
+    class Meta:
+        app_label = 'labrack'    

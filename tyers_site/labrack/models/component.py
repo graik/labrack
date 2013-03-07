@@ -7,7 +7,7 @@ import os
 
 from Bio import SeqIO
 from Bio.Seq import Seq
-from tyers_site.labrack.models.generalmodels import SequenceAnnotation
+from tyers_site.labrack.models.generalmodels import DnaSequenceAnnotation
 from permissionModel import PermissionModel
 from django.core.exceptions import ValidationError
 
@@ -87,7 +87,7 @@ class PeptideComponentType( ComponentType ):
 
 
 
-
+        
 class Component(PermissionModel,models.Model):
     """
     Base class for cells, nucleic acids, proteins, and chemicals.
@@ -179,7 +179,7 @@ class Component(PermissionModel,models.Model):
     def related_annotations( self ):
         """
         """
-        r = SequenceAnnotation.objects.filter( subComponent=self.id).order_by('bioStart')
+        r = DnaSequenceAnnotation.objects.filter( subComponent=self.id).order_by('bioStart')
 
         #s = [content.sequenceannotation for content in r]
 
@@ -235,7 +235,7 @@ class Component(PermissionModel,models.Model):
     def number_related_annotations( self ):
         """
         """
-        r = SequenceAnnotation.objects.filter( subComponent=self.id)
+        r = DnaSequenceAnnotation.objects.filter( subComponent=self.id)
         s = r.count()
 
         return s     
@@ -269,332 +269,7 @@ class Component(PermissionModel,models.Model):
     class Meta:
         app_label = 'labrack'   
 
-
-
-class DnaComponent(Component):
-    """
-    Description of a stretch of DNA or RNA.
-    """
-    #: optional sequence
-    sequence = models.TextField( help_text='nucleotide sequence', 
-                                 blank=True, null=True )
-
-    translatesTo = models.ForeignKey( 'ProteinComponent', blank=True, null=True, 
-                                      related_name='encodedBy', 
-                                      help_text='Protein part this sequence translates to' )
-
-    optimizedFor = models.ForeignKey( 'Chassis', blank=True, null=True )
-
-
-    #myfield=forms.CharField( widget=forms.TextInput(attrs={'class':'disabled', 'readonly':'readonly'}))
-
-
-    componentType = models.ManyToManyField(DNAComponentType, 
-                                           blank=True, null=True, 
-                                           verbose_name='Type', 
-                                           help_text='Classification of this part.')
-
-    circular = models.BooleanField( 'Circular', default=True, 
-                                    help_text='is the DNA Circular or not.')
-
-
-    GenBankfile = models.FileField(upload_to='documents/GenBank/%Y/%m/%d',blank=True,null=True)
-    
-    
-    
-    def get_relative_url(self):
-        """
-        Define standard relative URL for object access in templates
-        """
-        return 'dnacomponent/%i/' % self.id
-
-    def size(self):
-        """@return int; size in nucleotides"""
-        if self.sequence:
-            return len( self.sequence )
-        return 0
-
-
-
-    def show_translatesTo(self):
-        """filter '(None)' display in admin table"""
-        if self.translatesTo:
-            return self.translatesTo
-        return u''
-    show_translatesTo.short_description = 'translates to'
-    show_translatesTo.admin_order_field = 'translatesTo'
-
-    def show_optimizedFor(self):
-        """filter '(None)' display in admin table"""
-        if self.optimizedFor:
-            return self.optimizedFor
-        return u''
-
-    def show_resistance(self):
-        """z
-        """
-        ret = ""
-        r = SequenceAnnotation.objects.filter( subComponent=self.id).order_by('bioStart')
-        try:                       
-            for s in r:
-                com = s.componentAnnotated
-                comDna= DnaComponent.objects.get(id = com.id)
-                for t in comDna.componentType.all():
-                    if t.name == 'SelectionMarker':
-                        if ret=="":
-                            ret += s.componentAnnotated.name
-                        else:
-                            ret += ","+s.componentAnnotated.name
-        except Exception, err:
-            print err        
-        #s = [content.sequenceannotation for content in r]
-
-        return ret   
-    show_resistance.short_description = 'Resistance'
-    
-    
-    def getVector(self):
-        """z
-        """
-        ret = ""
-        r = SequenceAnnotation.objects.filter( subComponent=self.id).order_by('bioStart')
-        try:                       
-            for s in r:
-                com = s.componentAnnotated
-                comDna= DnaComponent.objects.get(id = com.id)
-                for t in comDna.componentType.all():
-                    if t.name == 'Vector':
-                        return s.componentAnnotated
-        except Exception, err:
-            print err        
-        #s = [content.sequenceannotation for content in r]
-
-        return ret   
-    getVector.short_description = 'Vector'    
-    
-     
-
-
-    def related_dnaSamples(self):
-        """
-        """       
-        import labrack.models as M
-
-        r = M.DnaSample.objects.filter(dnaConstruct=self.id)
-
-        #r = labrack.models.sample.DnaSample.objects.filter(dnaConstruct=1)
-
-        return r
-
-
-    def show_parentSample(self):
-        from django.db import connection, transaction
-        cursor = connection.cursor()
-
-
-        # Data retrieval operation - no commit required
-        #cursor.execute("SELECT foo FROM bar WHERE baz = %s", [self.baz])
-
-        cursor.execute("select count(*) as nbr from labrack_dnacomponent ")
-        row = cursor.fetchone()
-
-        return row
-
-    show_optimizedFor.short_description = 'optimized for'
-    show_optimizedFor.admin_order_field = 'optimizedFor'
-
-    def save(self, *args, **kwargs):
-        #Saving the sequence
-        if self.GenBankfile:
-            self.sequence = self.related_seq()
-        super(DnaComponent, self).save(*args, **kwargs) # Call the "real" save() method.
-        #if self.GenBankfile:
-        #    self.save_annotation()
-
-    def related_seq( self ):
-        """
-        """
-
-
-        gb_features = ''
-        try: 
-            gb_file = settings.MEDIA_ROOT+"/"+os.path.normpath(self.GenBankfile.name)
-            for gb_record in SeqIO.parse(open(gb_file,"r"), "genbank") :
-                # now do something with the record
-                #gb_features += "Name %s, %i features" % (gb_record.name, len(gb_record.features))
-                gb_features += gb_record.seq.tostring()
-            return gb_features
-        except Exception:
-            return ''
-
-    def saveSequenceWithoutAnnotations(self, *args, **kwargs):
-            #Saving the sequence 
-        super(DnaComponent, self).save(*args, **kwargs) # Call the "real" save() method.
-        if self.GenBankfile:
-            self.sequence = self.related_seq()
-        super(DnaComponent, self).save(*args, **kwargs) # Call the "real" save() method.
-
-
-    def saveWithoutAnnotations(self, *args, **kwargs):
-        #Saving the sequence
-        #self.sequence = self.related_seq()
-        super(DnaComponent, self).save(*args, **kwargs) # Call the "real" save() method.
-
-    def save_annotation( self ):
-        if (self.GenBankfile):
-            gb_file = settings.MEDIA_ROOT+"/"+os.path.normpath(self.GenBankfile.name)
-            gb_features = ""
-            dispId = 1
-            isParsingDone = False
-
-            for gb_record in SeqIO.parse(open(gb_file,"r"), "genbank") :
-                if (not isParsingDone):
-                    for ind in xrange(len(gb_record.features)) :
-                        isParsingDone = True
-                        #gb_features += '\n'+ repr(gb_record.features[ind].type) + " Location start : "+ repr(gb_record.features[ind].location._start.position) + " Location end : "+ repr(gb_record.features[ind].location._end.position)
-                        nameType = repr(gb_record.features[ind].type).replace("'", "")
-                        strandValue = repr(gb_record.features[ind].strand)
-                        startPos = repr(gb_record.features[ind].location._start.position+1)
-                        endPos = repr(gb_record.features[ind].location._end.position)
-                        label = repr(gb_record.features[ind].qualifiers.get('label')).replace("['","").replace("']","").replace("\\"," ")
-                        if (label == 'None' ):
-                            label = repr(gb_record.features[ind].qualifiers.get('gene')).replace("['","").replace("']","").replace("\\"," ")
-
-                        ###check if the annotation refering to this dna already exists using start and end point and dnaID (this is to solve a bug but should be removed, the bug is that its saving the annotated dna twice))
-                        if (not SequenceAnnotation.objects.filter(bioStart = startPos, bioEnd = endPos, strand = strandValue, subComponent = self)):
-                            # save in the DNA/Protein if necessary
-                            fullSequence = gb_record.seq.tostring()
-                            if (startPos==endPos):
-                                partOfSequence = fullSequence[int(startPos):int(endPos)+1].replace(" ","").upper()
-                            else:
-                                partOfSequence = fullSequence[int(startPos):int(endPos)].replace(" ","").upper()
-
-                            if (strandValue == '-1'):
-                                partOfSequence = Seq(partOfSequence).reverse_complement().tostring()
-
-
-                            # the reason to save it twice is to get a unique ID to be able to put it in DisplayId
-                            # retrieve the part type, if not existing create it
-                            if (not DNAComponentType.objects.filter(name='GenebankType')):
-                                subCtGenebankType = DNAComponentType(name = 'GenebankType')
-                                subCtGenebankType.save() 
-                            subCtGenebankType = DNAComponentType.objects.get(name='GenebankType')
-                            if (not DNAComponentType.objects.filter(name=nameType)):
-                                ct = DNAComponentType(name = nameType)
-                                ct.save()
-                            ct = DNAComponentType.objects.filter(name=nameType)
-                            ct.subTypeOf = subCtGenebankType
-                            # save the dna
-                            #if (not DnaComponent.objects.filter(sequence=partOfSequence)):
-                            if (not self.__class__.objects.filter(sequence=partOfSequence)):
-                                dna2db = self.__class__(displayId='########', sequence = partOfSequence, name = label, GenBankfile = None)
-                                dna2db.saveWithoutAnnotations()
-                                dna2db.componentType = ct
-                                dna2db.displayId="gb%06i"%dna2db.id
-                                dna2db.saveWithoutAnnotations()
-                            dna2db = self.__class__.objects.get(sequence=partOfSequence)
-                            # save the annotation in the database
-                            #an2db = SequenceAnnotation(uri ='', bioStart = startPos, bioEnd = endPos, strand = strandValue, subComponent = self, componentAnnotated = dna2db)
-                            an2db = SequenceAnnotation(uri ='', bioStart = startPos, bioEnd = endPos, strand = strandValue, subComponent = self, componentAnnotated = dna2db)
-                            an2db.save()             
-    class Meta:
-        app_label = 'labrack'
-        verbose_name = 'DNA part'
-
-
-
-
-
-class ProteinComponent(Component):
-    """
-    Description of a protein 'part'.
-    """
-    #: optional sequence
-    sequence = models.TextField( help_text='amino acid sequence', 
-                                 blank=True, null=True )
-
-
-    componentType = models.ManyToManyField(ProteinComponentType, 
-                                           blank=True, null=True, 
-                                           verbose_name='Part type', 
-                                           help_text='Classification of this part.')   
-
-    GenBankfile = models.FileField(upload_to='documents/GenBank/%Y/%m/%d',blank=True,null=True)
-    def get_relative_url(self):
-        """
-        Define standard relative URL for object access in templates
-        """
-        return 'proteincomponent/%i/' % self.id
-
-    def size(self):
-        """@return int; size in aminoacids"""
-        if self.sequence:
-            return len( self.sequence )
-        return 0
-
-    def save(self, *args, **kwargs):
-        #Saving the sequence
-        self.sequence = self.related_seq()
-        super(ProteinComponent, self).save(*args, **kwargs) # Call the "real" save() method.
-        if self.GenBankfile:
-            self.save_annotation()
-
-    def saveWithoutAnnotations(self, *args, **kwargs):
-        #Saving the sequence
-        #self.sequence = self.related_seq()
-        super(ProteinComponent, self).save(*args, **kwargs) # Call the "real" save() method.    
-
-    class Meta:
-        app_label = 'labrack'                   
-        verbose_name = 'Protein part'
-
-    #    def related_samples( self ):
-    #        """
-    #        """
-    #        return self.protein_samples.all()
-
-
-
-
-
-class PeptideComponent(Component):
-    """
-    Description of a peptide 'part'.
-    """
-    sequence = models.TextField( help_text='amino acid sequence', 
-                                 blank=True, null=True )
-
-    componentType = models.ManyToManyField(PeptideComponentType, 
-                                           blank=True, null=True, 
-                                           verbose_name='Part type', 
-                                           help_text='Classification of this part.')   
-
-
-    def get_relative_url(self):
-        """
-        Define standard relative URL for object access in templates
-        """
-        return 'peptidecomponent/%i/' % self.id
-
-    def size(self):
-        """@return int; size in aminoacids"""
-        if self.sequence:
-            return len( self.sequence )
-        return 0
-
-    class Meta:
-        app_label = 'labrack'      
-        verbose_name = 'Peptide'
-
-
-    #    def related_samples( self ):
-    #        """
-    #        """
-    #        return self.protein_samples.all()
-
-
-
-
+  
 
 class ChemicalComponent(Component):
     """
@@ -698,12 +373,322 @@ class Collection(models.Model):
     class Meta:
         app_label = 'labrack'    
 
-class Person(models.Model):
-    name = models.CharField(max_length=80)
-    birthday = models.DateField()
-    def __unicode__(self):
-        return u"%s was born in %s" % (self.name, self.birthday.strftime("%B of %Y"))
-    def as_dict(self):
-        return {'name':self.name, 'birthday':self.birthday.strftime("%B of %Y")}
+
+        
+        
+class PeptideComponent(Component):
+    """
+    Description of a peptide 'part'.
+    """
+    sequence = models.TextField( help_text='amino acid sequence', 
+                                 blank=True, null=True )
+
+    componentType = models.ManyToManyField(PeptideComponentType, 
+                                           blank=True, null=True, 
+                                           verbose_name='Part type', 
+                                           help_text='Classification of this part.')   
+
+
+    def get_relative_url(self):
+        """
+        Define standard relative URL for object access in templates
+        """
+        return 'peptidecomponent/%i/' % self.id
+
+    def size(self):
+        """@return int; size in aminoacids"""
+        if self.sequence:
+            return len( self.sequence )
+        return 0
+
     class Meta:
         app_label = 'labrack'      
+        verbose_name = 'Peptide'
+
+
+    #    def related_samples( self ):
+    #        """
+    #        """
+    #        return self.protein_samples.all()
+
+
+class ProteinComponent(Component):
+    """
+    Description of a protein 'part'.
+    """
+    #: optional sequence
+    sequence = models.TextField( help_text='amino acid sequence', 
+                                blank=True, null=True )
+    
+    
+    componentType = models.ManyToManyField(ProteinComponentType, 
+                                            blank=True, null=True, 
+                                            verbose_name='Part type', 
+                                            help_text='Classification of this part.')   
+    
+    GenBankfile = models.FileField(upload_to='documents/GenBank/%Y/%m/%d',blank=True,null=True)
+    
+    def get_relative_url(self):
+        """
+        Define standard relative URL for object access in templates
+        """
+        return 'proteincomponent/%i/' % self.id
+    
+    def size(self):
+        """@return int; size in aminoacids"""
+        if self.sequence:
+            return len( self.sequence )
+        return 0
+    
+    def save(self, *args, **kwargs):
+        #Saving the sequence
+        self.sequence = self.related_seq()
+        super(ProteinComponent, self).save(*args, **kwargs) # Call the "real" save() method.
+        if self.GenBankfile:
+            self.save_annotation()
+    
+    def saveWithoutAnnotations(self, *args, **kwargs):
+        #Saving the sequence
+        #self.sequence = self.related_seq()
+        super(ProteinComponent, self).save(*args, **kwargs) # Call the "real" save() method.    
+    
+    class Meta :
+        app_label = 'labrack'                   
+        verbose_name = 'Protein part'
+        
+        
+
+class DnaComponent(Component):
+    """
+    Description of a stretch of DNA or RNA.
+    """
+    #: optional sequence
+    
+    
+    sequence = models.TextField( help_text='nucleotide sequence', 
+                                             blank=True, null=True )      
+
+    translatesTo = models.ForeignKey( 'ProteinComponent', blank=True, null=True, 
+                                      related_name='encodedBy', 
+                                      help_text='Protein part this sequence translates to' )
+
+    optimizedFor = models.ForeignKey( 'Chassis', blank=True, null=True )
+
+
+    #myfield=forms.CharField( widget=forms.TextInput(attrs={'class':'disabled', 'readonly':'readonly'}))
+
+
+    componentType = models.ManyToManyField(DNAComponentType, 
+                                           blank=True, null=True, 
+                                           verbose_name='Type', 
+                                           help_text='Classification of this part.')
+
+    circular = models.BooleanField( 'Circular', default=True, 
+                                    help_text='is the DNA Circular or not.')
+
+
+    GenBankfile = models.FileField(upload_to='documents/GenBank/%Y/%m/%d',blank=True,null=True)
+    
+    
+    
+    def get_relative_url(self):
+        """
+        Define standard relative URL for object access in templates
+        """
+        return 'dnacomponent/%i/' % self.id
+
+    def size(self):
+        """@return int; size in nucleotides"""
+        if self.sequence:
+            return len( self.sequence )
+        return 0
+
+
+
+    def show_translatesTo(self):
+        """filter '(None)' display in admin table"""
+        if self.translatesTo:
+            return self.translatesTo
+        return u''
+    show_translatesTo.short_description = 'translates to'
+    show_translatesTo.admin_order_field = 'translatesTo'
+
+    def show_optimizedFor(self):
+        """filter '(None)' display in admin table"""
+        if self.optimizedFor:
+            return self.optimizedFor
+        return u''
+
+    def show_resistance(self):
+        """z
+        """
+        ret = ""
+        r = DnaSequenceAnnotation.objects.filter( subComponent=self.id).order_by('bioStart')
+        try:                       
+            for s in r:
+                com = s.componentAnnotated
+                comDna= DnaComponent.objects.get(id = com.id)
+                for t in comDna.componentType.all():
+                    if t.name == 'SelectionMarker':
+                        if ret=="":
+                            ret += s.componentAnnotated.name
+                        else:
+                            ret += ","+s.componentAnnotated.name
+        except Exception, err:
+            print err        
+        #s = [content.sequenceannotation for content in r]
+
+        return ret   
+    show_resistance.short_description = 'Resistance'
+    
+    
+    def getVector(self):
+        """z
+        """
+        ret = ""
+        r = DnaSequenceAnnotation.objects.filter( subComponent=self.id).order_by('bioStart')
+        try:                       
+            for s in r:
+                com = s.componentAnnotated
+                comDna= DnaComponent.objects.get(id = com.id)
+                for t in comDna.componentType.all():
+                    if t.name == 'Vector':
+                        return s.componentAnnotated
+        except Exception, err:
+            print err        
+        #s = [content.sequenceannotation for content in r]
+
+        return ret   
+    getVector.short_description = 'Vector'    
+    
+     
+
+
+    def related_dnaSamples(self):
+        """
+        """       
+        import labrack.models as M
+
+        r = M.DnaSample.objects.filter(dnaConstruct=self.id)
+
+        #r = labrack.models.sample.DnaSample.objects.filter(dnaConstruct=1)
+
+        return r
+
+
+    def show_parentSample(self):
+        from django.db import connection, transaction
+        cursor = connection.cursor()
+
+
+        # Data retrieval operation - no commit required
+        #cursor.execute("SELECT foo FROM bar WHERE baz = %s", [self.baz])
+
+        cursor.execute("select count(*) as nbr from labrack_dnacomponent ")
+        row = cursor.fetchone()
+
+        return row
+
+    show_optimizedFor.short_description = 'optimized for'
+    show_optimizedFor.admin_order_field = 'optimizedFor'
+
+    def save(self, *args, **kwargs):
+        #Saving the sequence
+        if self.GenBankfile:
+            self.sequence = self.related_seq()
+        super(DnaComponent, self).save(*args, **kwargs) # Call the "real" save() method.
+        #if self.GenBankfile:
+        #    self.save_annotation()
+
+    def related_seq( self ):
+        """
+        """
+
+
+        gb_features = ''
+        try: 
+            gb_file = settings.MEDIA_ROOT+"/"+os.path.normpath(self.GenBankfile.name)
+            for gb_record in SeqIO.parse(open(gb_file,"r"), "genbank") :
+                # now do something with the record
+                #gb_features += "Name %s, %i features" % (gb_record.name, len(gb_record.features))
+                gb_features += gb_record.seq.tostring()
+            return gb_features
+        except Exception:
+            return ''
+
+    def saveSequenceWithoutAnnotations(self, *args, **kwargs):
+            #Saving the sequence 
+        super(DnaComponent, self).save(*args, **kwargs) # Call the "real" save() method.
+        if self.GenBankfile:
+            self.sequence = self.related_seq()
+        super(DnaComponent, self).save(*args, **kwargs) # Call the "real" save() method.
+
+
+    def saveWithoutAnnotations(self, *args, **kwargs):
+        #Saving the sequence
+        #self.sequence = self.related_seq()
+        super(DnaComponent, self).save(*args, **kwargs) # Call the "real" save() method.
+
+    def save_annotation( self ):
+        if (self.GenBankfile):
+            gb_file = settings.MEDIA_ROOT+"/"+os.path.normpath(self.GenBankfile.name)
+            gb_features = ""
+            dispId = 1
+            isParsingDone = False
+
+            for gb_record in SeqIO.parse(open(gb_file,"r"), "genbank") :
+                if (not isParsingDone):
+                    for ind in xrange(len(gb_record.features)) :
+                        isParsingDone = True
+                        #gb_features += '\n'+ repr(gb_record.features[ind].type) + " Location start : "+ repr(gb_record.features[ind].location._start.position) + " Location end : "+ repr(gb_record.features[ind].location._end.position)
+                        nameType = repr(gb_record.features[ind].type).replace("'", "")
+                        strandValue = repr(gb_record.features[ind].strand)
+                        startPos = repr(gb_record.features[ind].location._start.position+1)
+                        endPos = repr(gb_record.features[ind].location._end.position)
+                        label = repr(gb_record.features[ind].qualifiers.get('label')).replace("['","").replace("']","").replace("\\"," ")
+                        if (label == 'None' ):
+                            label = repr(gb_record.features[ind].qualifiers.get('gene')).replace("['","").replace("']","").replace("\\"," ")
+
+                        ###check if the annotation refering to this dna already exists using start and end point and dnaID (this is to solve a bug but should be removed, the bug is that its saving the annotated dna twice))
+                        if (not DnaSequenceAnnotation.objects.filter(bioStart = startPos, bioEnd = endPos, strand = strandValue, subComponent = self)):
+                            # save in the DNA/Protein if necessary
+                            fullSequence = gb_record.seq.tostring()
+                            if (startPos==endPos):
+                                partOfSequence = fullSequence[int(startPos):int(endPos)+1].replace(" ","").upper()
+                            else:
+                                partOfSequence = fullSequence[int(startPos):int(endPos)].replace(" ","").upper()
+
+                            if (strandValue == '-1'):
+                                partOfSequence = Seq(partOfSequence).reverse_complement().tostring()
+
+
+                            # the reason to save it twice is to get a unique ID to be able to put it in DisplayId
+                            # retrieve the part type, if not existing create it
+                            if (not DNAComponentType.objects.filter(name='GenebankType')):
+                                subCtGenebankType = DNAComponentType(name = 'GenebankType')
+                                subCtGenebankType.save() 
+                            subCtGenebankType = DNAComponentType.objects.get(name='GenebankType')
+                            if (not DNAComponentType.objects.filter(name=nameType)):
+                                ct = DNAComponentType(name = nameType)
+                                ct.save()
+                            ct = DNAComponentType.objects.filter(name=nameType)
+                            ct.subTypeOf = subCtGenebankType
+                            # save the dna
+                            #if (not DnaComponent.objects.filter(sequence=partOfSequence)):
+                            if (not self.__class__.objects.filter(sequence=partOfSequence)):
+                                dna2db = self.__class__(displayId='########', sequence = partOfSequence, name = label, GenBankfile = None)
+                                dna2db.saveWithoutAnnotations()
+                                dna2db.componentType = ct
+                                dna2db.displayId="gb%06i"%dna2db.id
+                                dna2db.saveWithoutAnnotations()
+                            dna2db = self.__class__.objects.get(sequence=partOfSequence)
+                            # save the annotation in the database
+                            #an2db = SequenceAnnotation(uri ='', bioStart = startPos, bioEnd = endPos, strand = strandValue, subComponent = self, componentAnnotated = dna2db)
+                            an2db = DnaSequenceAnnotation(uri ='', bioStart = startPos, bioEnd = endPos, strand = strandValue, subComponent = self, componentAnnotated = dna2db)
+                            an2db.save()             
+    class Meta:
+        app_label = 'labrack'
+        verbose_name = 'DNA part'
+
+
+

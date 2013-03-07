@@ -33,6 +33,7 @@ from django import forms
 from django.forms.util import ErrorList
 from django.shortcuts import render_to_response
 
+
 #from django.utils.translation import ugettext_lazy as _
 
 
@@ -56,9 +57,12 @@ from labrack.models.component import ChassisComponentType
 from labrack.models.component import PeptideComponent
 from labrack.models.component import Component
 from labrack.models.component import ChemicalComponent
-from labrack.models.generalmodels import SequenceAnnotation
+from labrack.models.generalmodels import DnaSequenceAnnotation
+from labrack.models.generalmodels import ProteinSequenceAnnotation
+
 from labrack.models.generalmodels import Collection
 from labrack.models.generalmodels import Chassis 
+ 
 
 
 #from tyers_site.labrack.forms import DnaSampleForm
@@ -1155,18 +1159,16 @@ class SampleCollectionAdmin(PermissionAdmin, admin.ModelAdmin):
 
 
 
-class SequenceAnnotationAdmin(admin.ModelAdmin):
+class DnaSequenceAnnotationAdmin(admin.ModelAdmin):
 
-    #fieldsets = ComponentAdmin.fieldsets.__add__(\
-    #    (('uri', {
-    #        'fields': ('sequence',),
-    #        'classes':('collapse',)
-    #    }
-    #      ),)
-    #)
 
     search_fields = ComponentAdmin.search_fields.__add__(('subComponent','componentAnnotated'))
 
+
+class ProteinSequenceAnnotationAdmin(admin.ModelAdmin):
+
+
+    search_fields = ComponentAdmin.search_fields.__add__(('subComponent','componentAnnotated'))
 
 
 
@@ -1186,7 +1188,8 @@ admin.site.register(DnaComponent, DnaComponentAdmin)
 admin.site.register(DNAComponentType, ComponentTypeAdmin) 
 admin.site.register(Component, ComponentAdmin)
 admin.site.register(ChemicalComponent, ComponentAdmin)
-admin.site.register(SequenceAnnotation, SequenceAnnotationAdmin)
+admin.site.register(DnaSequenceAnnotation, DnaSequenceAnnotationAdmin)
+admin.site.register(ProteinSequenceAnnotation, ProteinSequenceAnnotationAdmin)
 admin.site.register(Chassis,ChassisAdmin) 
 admin.site.register(ChassisComponentType, ComponentTypeAdmin) 
 admin.site.register(Collection)

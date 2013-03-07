@@ -425,13 +425,14 @@ reverse_jsonInsertObject = eval(data.reverse_extra_values);
 jsonObjectPartTypes = eval(data.parttypes_values);
 //alert('just populate ');
 jsonObjectOptimizedFor = eval(data.optimizedfor_values);
-
+//alert(jsonObjectOptimizedFor);
     emptyRowsTable(0);
     var jsonInsertObject = eval(data.extra_values);
     var arrayOfInsertObjects = jsonInsertObject;
 		if(arrayOfInsertObjects) {
             for(var i=0, len=arrayOfInsertObjects.length; i<len; i++) {
-					addRowToAnnotationTable(0,'',arrayOfInsertObjects[i].id,arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].description,arrayOfInsertObjects[i].componentType_name,arrayOfInsertObjects[i].coverage,arrayOfInsertObjects[i].optimizedFor_name,'');
+					positionStrand = arrayOfInsertObjects[i].coverage + '('+arrayOfInsertObjects[i].strand+')';
+					addRowToAnnotationTable(0,'',arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].name,arrayOfInsertObjects[i].description,arrayOfInsertObjects[i].componentType_name,positionStrand,arrayOfInsertObjects[i].optimizedFor_name,'');
                }
 		}
 		
@@ -587,6 +588,8 @@ function getIndexNameDropdownlistOptimizedFor(name){
 		}
 		return 0;
 }
+
+
 function getTypeDropdownlistOptimizedFor(){
 //alert('populating getTypeDropdownlistOptimizedFor');
 		  var textnode = document.createElement('select');
@@ -596,8 +599,11 @@ function getTypeDropdownlistOptimizedFor(){
   		if (typeof jsonObjectOptimizedFor !== "undefined") {
 			if(jsonObjectOptimizedFor.length) {
 				for(var i=0, len=jsonObjectOptimizedFor.length; i<len; i++) {
-					textnode.options[i] = new Option(jsonObjectOptimizedFor[i].name, 'value',jsonObjectOptimizedFor[i].name);               
-					if 	(jsonObjectOptimizedFor[i].name=='') 
+					if (jsonObjectOptimizedFor[i].name== "") { showId = ''; } else { 
+						showId = jsonObjectOptimizedFor[i].displayId+' - '+jsonObjectOptimizedFor[i].name;
+					}
+					textnode.options[i] = new Option(showId, 'value',jsonObjectOptimizedFor[i].name);               
+					if 	(showId=='') 
 							{selectedIndex = i;}
 				   }
 			}  
@@ -799,7 +805,7 @@ function buildGenBankTable(jsontext){
                     document.getElementById("id_sequence").value = sequence;
                     send_request(true);
                     }
-                    addRowToAnnotationTable(1,'',arrayOfInsertObjects[i].id,arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].description,arrayOfInsertObjects[i].componentType_name,arrayOfInsertObjects[i].coverage,'',i);			
+                    addRowToAnnotationTable(1,'',arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].name,arrayOfInsertObjects[i].componentType_name,arrayOfInsertObjects[i].coverage,'',i);			
 					var optn = document.createElement("OPTION");
 					optn.text = arrayOfInsertObjects[i].displayid;
 					optn.value = arrayOfInsertObjects[i].id+'<>'+arrayOfInsertObjects[i].displayid+'<>'+arrayOfInsertObjects[i].description+'<>'+arrayOfInsertObjects[i].componentType_name+'<>'+arrayOfInsertObjects[i].coverage;
@@ -1022,7 +1028,7 @@ style="border:1px solid #000000;">
         
         {% if original %}
           <ul class="object-tools">
-            <li><a href="../../sequenceannotation/add/?subComponent={{original.id}}" target="_blank">
+            <li><a href="../../dnasequenceannotation/add/?subComponent={{original.id}}" target="_blank">
                 Add Annotation</a></li> 
           </ul>                  
         {% endif %}
@@ -1037,26 +1043,26 @@ style="border:1px solid #000000;">
             </thead>
             <tbody>
         
-            {% for sequenceannotation in original.related_annotations %}
+            {% for dnasequenceannotation in original.related_annotations %}
         
               <tr class="{% cycle 'row1' 'row2' %}">
         
-                <td><b><a href="../../{{sequenceannotation.get_relative_url}}" target="_blank">
-                      {{sequenceannotation.id}}</a></b></td><td>{{sequenceannotation.bioStart}}</td>   
-                      <td>{{sequenceannotation.bioEnd}}</td>
-                      <td>{% if sequenceannotation.strand == "-1" %}
+                <td><b><a href="../../{{dnasequenceannotation.get_relative_url}}" target="_blank">
+                      {{dnasequenceannotation.id}}</a></b></td><td>{{dnasequenceannotation.bioStart}}</td>   
+                      <td>{{dnasequenceannotation.bioEnd}}</td>
+                      <td>{% if dnasequenceannotation.strand == "-1" %}
                       (-)</td>
                     {% else %}
                           (+)</td>
                     {% endif %}
-                <td>{% if sequenceannotation.componentAnnotated %}
-                      <a href="../{{sequenceannotation.componentAnnotated.id}}" target="_blank">
-                      {{sequenceannotation.componentAnnotated}}</a></td>
+                <td>{% if dnasequenceannotation.componentAnnotated %}
+                      <a href="../{{dnasequenceannotation.componentAnnotated.id}}" target="_blank">
+                      {{dnasequenceannotation.componentAnnotated}}</a></td>
                     {% else %}
                           --</td>
                     {% endif %}
-					<td>{% if sequenceannotation.componentAnnotated %}
-                      {{sequenceannotation.componentAnnotated.show_component_type}}</td>
+					<td>{% if dnasequenceannotation.componentAnnotated %}
+                      {{dnasequenceannotation.componentAnnotated.show_component_type}}</td>
                     {% else %}
                           --</td>
                     {% endif %}

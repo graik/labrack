@@ -6,7 +6,9 @@ from labrack.models.generalmodels import Document
 from labrack.models.component import DnaComponent
 from labrack.models.component import Component
 from labrack.models.component import DNAComponentType
-from labrack.models.generalmodels import SequenceAnnotation
+from labrack.models.component import Chassis
+from labrack.models.generalmodels import DnaSequenceAnnotation
+from labrack.models.generalmodels import ProteinSequenceAnnotation
 from django.core.files import File
 from django.core.exceptions import ValidationError
 from django.forms.fields import DateField, ChoiceField, MultipleChoiceField
@@ -99,8 +101,10 @@ class ChassisSampleForm(forms.ModelForm):
 
     description = forms.CharField(widget=forms.TextInput(attrs={'size':'80'}),required=False)
     class Meta:
-        model = ChassisSample        
-
+        model = ChassisSample    
+        
+        
+        
 
 
 
@@ -130,7 +134,7 @@ class DnaComponentForm(forms.ModelForm):
         except Exception, err:
             errorMessage = "ID field is mandatory!"
             errors.setdefault('',[]).append(errorMessage)                      
-            #raise forms.ValidationError("ID field is mandatory!")              
+            raise forms.ValidationError("ID field is mandatory!")              
             commit=False
        
         dispId = self.cleaned_data['displayId']
@@ -278,8 +282,8 @@ class DnaComponentForm(forms.ModelForm):
             
             second = first + len(dnaVector.sequence)
             stra = utilLabrack.getStrand(fullSequence,dnaVector.sequence)
-            an2db = SequenceAnnotation(uri ='', bioStart = first, bioEnd = second, strand = stra, subComponent = instance, componentAnnotated = dnaVector)
-            PermissionModel
+            an2db = DnaSequenceAnnotation(uri ='', bioStart = first, bioEnd = second, strand = stra, subComponent = instance, componentAnnotated = dnaVector)
+            
             an2db.save()		    
 
         if (isGbData=='true' and  data["data"][1]["name"]!='') :
@@ -297,7 +301,7 @@ class DnaComponentForm(forms.ModelForm):
             dnaAnnot.componentType = subCtVectorType
             dnaAnnot.save()
             stra = utilLabrack.getStrand(fullSequence,seq)
-            an2db = SequenceAnnotation(uri ='', bioStart = first, bioEnd = secon, strand = stra, subComponent = instance, componentAnnotated = dnaAnnot)
+            an2db = DnaSequenceAnnotation(uri ='', bioStart = first, bioEnd = secon, strand = stra, subComponent = instance, componentAnnotated = dnaAnnot)
             an2db.save()	
 
         try:
@@ -314,7 +318,7 @@ class DnaComponentForm(forms.ModelForm):
                         secon = int(coverage[1])                            
                         
                         stra = utilLabrack.getStrand(fullSequence,dnaAnnot.sequence)
-                        an2db = SequenceAnnotation(uri ='', bioStart = first, bioEnd = secon, strand = stra, subComponent = instance, componentAnnotated = dnaAnnot)
+                        an2db = DnaSequenceAnnotation(uri ='', bioStart = first, bioEnd = secon, strand = stra, subComponent = instance, componentAnnotated = dnaAnnot)
                         an2db.save()
 
                 except Exception, err:
@@ -332,16 +336,20 @@ class DnaComponentForm(forms.ModelForm):
                         name=obj["text3"]
                         descrp=obj["text4"]
                         dnatype=obj["text5"]
-                        optimizedfor=obj["text7"]
+                        optimizedfor=obj["text7"].split(' - ')
+                        if (Chassis.objects.get(displayId=optimizedfor[0])):
+                            chassisOptimizedFor = Chassis.objects.get(displayId=optimizedfor[0])
+                        else:
+                            chassisOptimizedFor = ''
                         subCtVectorType = DNAComponentType.objects.filter(name=dnatype)	
 
-                        dnaAnnot = DnaComponent(displayId=id,description=descrp, name =name, sequence = seq)
+                        dnaAnnot = DnaComponent(displayId=id,description=descrp, name =name, sequence = seq,optimizedFor = chassisOptimizedFor)
                         dnaAnnot.save()
                         dnaAnnot.componentType = subCtVectorType
                         dnaAnnot.save()
                         stra = utilLabrack.getStrand(fullSequence,dnaAnnot.sequence)
                        
-                        an2db = SequenceAnnotation(uri ='', bioStart = first, bioEnd = secon, strand = stra, subComponent = instance, componentAnnotated = dnaAnnot)
+                        an2db = DnaSequenceAnnotation(uri ='', bioStart = first, bioEnd = secon, strand = stra, subComponent = instance, componentAnnotated = dnaAnnot)
                         an2db.save()
 
 

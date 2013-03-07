@@ -4,7 +4,6 @@ from django.conf.urls.defaults import patterns, include, url
 from django.contrib import admin
 from labrack.views import getGBDataFromFile,ajax_upload,upload_page,get_dna_info,dnalist,celllist,cellonlylist,contact,success,plasmidlist,search_dna_parts
 admin.autodiscover()
-from labrack.models.component import Person 
 from django.views.generic.simple import redirect_to
 import settings
 
