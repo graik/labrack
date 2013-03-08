@@ -34,6 +34,7 @@ from django.forms.util import ErrorList
 from django.shortcuts import render_to_response
 
 
+
 #from django.utils.translation import ugettext_lazy as _
 
 
@@ -70,6 +71,8 @@ from tyers_site.labrack.forms import ChassisSampleForm
 from tyers_site.labrack.forms import DnaComponentForm
 from tyers_site.labrack.forms import DnaSampleForm
 
+from django.contrib.auth.models import User
+
 
 
 class PermissionAdmin():
@@ -98,7 +101,7 @@ class ComponentAdmin( admin.ModelAdmin):
 
     actions = ['make_csv']
 
-
+ 
     exportFields = OrderedDict( [('ID', 'displayId'),
                                  ('Name', 'name'),
                                  ('Description','description'),
@@ -202,11 +205,13 @@ class PeptideComponentAdmin(ProteinComponentAdmin):
 class DnaComponentAdmin(ComponentAdmin):
     form = DnaComponentForm 
 
+    readonly_fields = ('registration_date',)
+
     fieldsets = (
             (None, {
                 'fields': (('displayId', 'name','status'),
                            ('componentType','circular', ),
-                           ('created_by','owners')
+                           ('created_by','owners','registration_date')
                             )
             }
              ),
@@ -234,12 +239,32 @@ class DnaComponentAdmin(ComponentAdmin):
     #raw_id_fields = ComponentAdmin.raw_id_fields.__add__(('translatesTo',))
     #raw_id_fields = ('componentType', 'variantOf',)
     raw_id_fields = ('componentType', 'variantOf',)
+    
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'created_by':
+            kwargs['queryset'] = User.objects.filter(username=request.user.username)
+        return super(DnaComponentAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
+    
+    def get_readonly_fields(self, request, obj=None):
+        if obj is not None:
+            return self.readonly_fields + ('created_by',)
+        return self.readonly_fields
+
+    def add_view(self, request, form_url="", extra_context=None):
+        data = request.GET.copy()
+        data['created_by'] = request.user
+        request.GET = data
+        return super(DnaComponentAdmin, self).add_view(request, form_url="", extra_context=extra_context)
+    
 
 
 
 class ContainerAdmin(PermissionAdmin, admin.ModelAdmin):
 
     actions = ['make_csv']
+    
+    readonly_fields = ('registration_date',)
+    
 
     exportFields = OrderedDict( [('Container ID', 'displayId'),
                                  ('Name', 'name'),
@@ -255,7 +280,7 @@ class ContainerAdmin(PermissionAdmin, admin.ModelAdmin):
         (None, {
             'fields' : (('displayId', 'name'),
                         ('containerType', 'rack'),
-                        'description',('created_by','owners')                        
+                        'description',('created_by','owners','registration_date')                        
                         ),
           }
          ),
@@ -310,6 +335,9 @@ class ContainerAdmin(PermissionAdmin, admin.ModelAdmin):
 class LocationAdmin(PermissionAdmin,admin.ModelAdmin):
 
     actions = ['make_csv']
+    
+    readonly_fields = ('registration_date',)
+    
 
     exportFields = OrderedDict( [('Location ID', 'displayId'),
                                  ('Name', 'name'),
@@ -319,7 +347,7 @@ class LocationAdmin(PermissionAdmin,admin.ModelAdmin):
                                  ('Last modified','modification_date'),
                                  ])
 
-    fields = (('displayId', 'name'),'temperature','Ptest_user', 'room','description',('created_by','owners'))
+    fields = (('displayId', 'name'),'temperature','room','description',('created_by','owners','registration_date'))
 
     list_display = ('displayId', 'name', 'temperature', 'room')
 
@@ -342,6 +370,9 @@ class LocationAdmin(PermissionAdmin,admin.ModelAdmin):
 class RackAdmin(PermissionAdmin,admin.ModelAdmin):
 
     actions = ['make_csv']
+    
+    readonly_fields = ('registration_date',)
+    
 
     exportFields = OrderedDict( [('Rack ID', 'displayId'),
                                  ('Name', 'name'),
@@ -350,7 +381,7 @@ class RackAdmin(PermissionAdmin,admin.ModelAdmin):
                                  ])
     list_display = ('displayId', 'name', 'location_url', 
                     )    
-    fields = (('displayId', 'name'),'current_location','description',('created_by','owners'))
+    fields = (('displayId', 'name'),'current_location','description',('created_by','owners','registration_date'))
 
     def container_url(self, obj):
         url = obj.container.get_relative_url()
@@ -461,7 +492,6 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
                                  ('History', 'strProvenance()'),
                                  ('Sample link','sampleLinkStr()'),
                                  ('Preparation date', 'preparation_date'),
-                                 ('Registered at','creation_date'),
                                  ('Last modified','modification_date'),
                                  ])
 
@@ -486,7 +516,7 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
     inlines = [SampleContentInline, SampleProvenanceInline]
 
     list_display   = ('showId', 'location_url', 
-                      'created_by', 'preparation_date', 'creation_date',
+                      'created_by', 'preparation_date',
                       'showMainContent', 
                       'status','reference_status', 'showComment')
 
@@ -538,20 +568,6 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
     file_link.allow_tags = True
 
 
-    def formfield_for_dbfield(self, db_field, **kwargs):
-
-        if db_field.name in self.raw_id_fields:
-
-            kwargs.pop("request", None)
-            fType = db_field.rel.__class__.__name__
-            if fType == "ManyToOneRel":
-                kwargs['widget'] = VerboseForeignKeyRawIdWidget(db_field.rel, site)
-            elif fType == "ManyToManyRel":
-                kwargs['widget'] = VerboseManyToManyRawIdWidget(db_field.rel, site)
-            return db_field.formfield(**kwargs)
-        return super(SampleAdmin, self).formfield_for_dbfield(db_field, **kwargs)
- 
-    
      
 
 
@@ -623,6 +639,8 @@ class DnaSampleAdmin(PermissionAdmin, admin.ModelAdmin):
 
     form = DnaSampleForm     
 
+    readonly_fields = ('registration_date',)
+    
     def get_form(self, request, obj=None, **kwargs):
 
         AdminForm = super(DnaSampleAdmin, self).get_form(request, obj, **kwargs)
@@ -660,7 +678,7 @@ class DnaSampleAdmin(PermissionAdmin, admin.ModelAdmin):
     fieldsets = [
         (None, {
             'fields' : ((('container', 'displayId', 'status'),
-                         ('preparation_date',),
+                         ('preparation_date','registration_date',),
 ##                         ('preparation_date','creation_date'),  ## doesn't work for some unknown reason
                          ('sampleCollection','reference_status'),
                          ('concentration','concentrationUnit','amount','amountUnit',),
@@ -696,7 +714,7 @@ class DnaSampleAdmin(PermissionAdmin, admin.ModelAdmin):
 
     ordering       = ('container', 'displayId')
 
-    raw_id_fields = ('container','dnaConstruct','inChassis','sampleCollection',)
+    raw_id_fields = ('container','dnaConstruct','inChassis','sampleCollection','derivedFrom',)
 
     save_as        = True
 
@@ -773,19 +791,23 @@ class DnaSampleAdmin(PermissionAdmin, admin.ModelAdmin):
     file_link.allow_tags = True
 
 
-    def formfield_for_dbfield(self, db_field, **kwargs):
+    
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'created_by':
+            kwargs['queryset'] = User.objects.filter(username=request.user.username)
+        return super(DnaSampleAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
+    
+    def get_readonly_fields(self, request, obj=None):
+        if obj is not None:
+            return self.readonly_fields + ('created_by',)
+        return self.readonly_fields
 
-        if db_field.name in self.raw_id_fields:
-
-            kwargs.pop("request", None)
-            fType = db_field.rel.__class__.__name__
-            if fType == "ManyToOneRel":
-                kwargs['widget'] = VerboseForeignKeyRawIdWidget(db_field.rel, site)
-            elif fType == "ManyToManyRel":
-                kwargs['widget'] = VerboseManyToManyRawIdWidget(db_field.rel, site)
-            return db_field.formfield(**kwargs)
-        return super(DnaSampleAdmin, self).formfield_for_dbfield(db_field, **kwargs)
-
+    def add_view(self, request, form_url="", extra_context=None):
+        data = request.GET.copy()
+        data['created_by'] = request.user
+        request.GET = data
+        return super(DnaSampleAdmin, self).add_view(request, form_url="", extra_context=extra_context)
+   
      
 
 
@@ -843,6 +865,10 @@ class DnaSampleAdmin(PermissionAdmin, admin.ModelAdmin):
 
 class ChassisAdmin(PermissionAdmin,ComponentAdmin):
     actions = ['make_csv']
+    
+    readonly_fields = ('registration_date',)
+    
+    
     """
     exportFields = OrderedDict( [('Rack ID', 'displayId'),
                                  ('Name', 'name'),
@@ -854,7 +880,7 @@ class ChassisAdmin(PermissionAdmin,ComponentAdmin):
             (None, {
                 'fields': (('displayId', 'name','status'),
                            ('componentType',),
-                           ('created_by','owners')
+                           ('created_by','owners','registration_date')
                             )
             }
              ),
@@ -871,10 +897,25 @@ class ChassisAdmin(PermissionAdmin,ComponentAdmin):
     list_display   = ('displayId', 'name', 'getPartType', 
                       'getVariantOf', 'created_by', 'showComment', 'status')    
 
-    list_filter = ComponentAdmin.list_filter.__add__(('componentType',))
+    #list_filter = ComponentAdmin.list_filter.__add__(('componentType',))
      
     raw_id_fields = ('componentType', 'variantOf',)
     
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'created_by':
+            kwargs['queryset'] = User.objects.filter(username=request.user.username)
+        return super(ChassisAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
+    
+    def get_readonly_fields(self, request, obj=None):
+        if obj is not None:
+            return self.readonly_fields + ('created_by',)
+        return self.readonly_fields
+
+    def add_view(self, request, form_url="", extra_context=None):
+        data = request.GET.copy()
+        data['created_by'] = request.user
+        request.GET = data
+        return super(ChassisAdmin, self).add_view(request, form_url="", extra_context=extra_context)
     
     def getPartType(self, obj):
         #vario = len(obj.variantOf.displayId
@@ -912,7 +953,7 @@ class ChassisAdmin(PermissionAdmin,ComponentAdmin):
 class ChassisSampleAdmin(PermissionAdmin, admin.ModelAdmin):
 
     form = ChassisSampleForm    
-
+    readonly_fields = ('registration_date',)
 
     #actions = ['make_csv', 'make_ok', 'make_empty', 'make_bad']
 
@@ -927,7 +968,7 @@ class ChassisSampleAdmin(PermissionAdmin, admin.ModelAdmin):
         (None, {
             'fields' : ((('container', 'displayId'),
                          ('reference_status','sampleCollection'),
-                         ('preparation_date', 'status'),
+                         ('preparation_date','registration_date', 'status'),
                          ('solvent','concentration','concentrationUnit','amount','amountUnit','aliquotNr',),
                          ('description'),
                          ('created_by','owners')
@@ -962,7 +1003,7 @@ class ChassisSampleAdmin(PermissionAdmin, admin.ModelAdmin):
 
     ordering       = ('container', 'displayId',)
 
-    raw_id_fields = ('container','sampleCollection','chassis')
+    raw_id_fields = ('container','sampleCollection','chassis','derivedFrom',)
 
     save_as        = True
 
@@ -1004,19 +1045,22 @@ class ChassisSampleAdmin(PermissionAdmin, admin.ModelAdmin):
     file_link.allow_tags = True
 
 
-    def formfield_for_dbfield(self, db_field, **kwargs):
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'created_by':
+            kwargs['queryset'] = User.objects.filter(username=request.user.username)
+        return super(ChassisSampleAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
+    
+    def get_readonly_fields(self, request, obj=None):
+        if obj is not None:
+            return self.readonly_fields + ('created_by',)
+        return self.readonly_fields
 
-        if db_field.name in self.raw_id_fields:
-
-            kwargs.pop("request", None)
-            fType = db_field.rel.__class__.__name__
-            if fType == "ManyToOneRel":
-                kwargs['widget'] = VerboseForeignKeyRawIdWidget(db_field.rel, site)
-            elif fType == "ManyToManyRel":
-                kwargs['widget'] = VerboseManyToManyRawIdWidget(db_field.rel, site)
-            return db_field.formfield(**kwargs)
-        return super(ChassisSampleAdmin, self).formfield_for_dbfield(db_field, **kwargs)
-
+    def add_view(self, request, form_url="", extra_context=None):
+        data = request.GET.copy()
+        data['created_by'] = request.user
+        request.GET = data
+        return super(ChassisSampleAdmin, self).add_view(request, form_url="", extra_context=extra_context)
+   
 
     def location_url(self, obj):
         con = obj.container
@@ -1143,7 +1187,7 @@ class SampleCollectionAdmin(PermissionAdmin, admin.ModelAdmin):
          ),
     )
 
-    list_display = ('name', 'created_by', 'creation_date')
+    list_display = ('name', 'created_by')
 
     save_as = True
 

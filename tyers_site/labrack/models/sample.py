@@ -168,6 +168,8 @@ class Sample( PermissionModel ):
     sampleCollection = models.ManyToManyField(SampleCollection, null=True, blank=True)
 
     preparation_date = models.DateField(default=datetime.now(), verbose_name="created")
+    
+    registration_date = models.DateField(default=datetime.now(), verbose_name="registred")
 
     #creation_date = models.DateTimeField(auto_now_add=True, 
     #                                    verbose_name='entry created')
@@ -686,7 +688,7 @@ class DnaSample(Sample):
 
 class ChassisSample(Sample):
     #, help ='Either select an existing DNA Construct or fill the dna description to create a new one'
-    chassis = models.ForeignKey(Chassis,verbose_name='Cell', null=True, blank=True, related_name='Cell')
+    chassis = models.ForeignKey(Chassis,verbose_name='Cell', related_name='Cell')
     
     derivedFrom = models.ForeignKey('self', verbose_name='Derived From', blank=True, null=True, related_name='derivedFromSample')
 

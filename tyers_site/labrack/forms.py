@@ -33,7 +33,6 @@ class DocumentForm(forms.Form):
     )
 
 class DnaSampleForm(forms.ModelForm):
-    #DNA_Construct = forms.ModelChoiceField(required=False,queryset=DnaComponent.objects.all(),help_text='Either select an existing DNA Construct or fill the dna description to create a new one')
 
 
 
@@ -116,6 +115,8 @@ class DnaComponentForm(forms.ModelForm):
     htmlAttribute1 = forms.CharField(widget=forms.TextInput(attrs={'size':'1800'}),required=False,label="")
     htmlAttribute2 = forms.CharField(widget=forms.TextInput(attrs={'size':'1800','hidden':'true'}),required=False,label="")
     htmlAttribute3 = forms.CharField(widget=forms.TextInput(attrs={'size':'1800','hidden':'true'}),required=False,label="")
+    
+    
     
     
     def __init__(self, *args, **kwargs):
@@ -338,10 +339,10 @@ class DnaComponentForm(forms.ModelForm):
                         descrp=obj["text4"]
                         dnatype=obj["text5"]
                         optimizedfor=obj["text7"].split(' - ')
-                        if (Chassis.objects.get(displayId=optimizedfor[0])):
+                        try:
                             chassisOptimizedFor = Chassis.objects.get(displayId=optimizedfor[0])
-                        else:
-                            chassisOptimizedFor = ''
+                        except Chassis.DoesNotExist:
+                            chassisOptimizedFor = None
                         subCtVectorType = DNAComponentType.objects.filter(name=dnatype)	
                         dnaAnnot = DnaComponent(displayId=id,description=descrp, name =name, sequence = seq,optimizedFor = chassisOptimizedFor, created_by = created_by)
                         dnaAnnot.save()

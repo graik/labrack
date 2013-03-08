@@ -50,20 +50,6 @@ class ContainerListFilter(SimpleListFilter):
         return containerList
 
 
-    def queryset(self, request, qs):
-        
-        if request.user.is_superuser:
-            pass
-        else:
-            qs = qs.filter(Q(owners=request.user) |
-                           Q(group_read=request.user.groups.all()) |
-                           Q(group_write=request.user.groups.all()) 
-                           ).distinct()
-        
-        if(self.value() == None):
-            return qs
-        else:
-            return qs.filter(container__id__exact=self.value())
 
 
 
@@ -100,17 +86,4 @@ class SampleCollectionListFilter(SimpleListFilter):
         return sampleCollectionList
 
 
-    def queryset(self, request, qs):
-        
-        if request.user.is_superuser:
-            pass
-        else:
-            qs = qs.filter(Q(owners=request.user) |
-                           Q(group_read=request.user.groups.all()) |
-                           Q(group_write=request.user.groups.all()) 
-                           ).distinct()
-        
-        if(self.value() == None):
-            return qs
-        else:
-            return qs.filter(sampleCollection__id__exact=self.value())
+   

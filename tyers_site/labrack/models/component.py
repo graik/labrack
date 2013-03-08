@@ -10,6 +10,8 @@ from Bio.Seq import Seq
 from tyers_site.labrack.models.generalmodels import DnaSequenceAnnotation
 from permissionModel import PermissionModel
 from django.core.exceptions import ValidationError
+from datetime import datetime
+
 
 
 
@@ -109,6 +111,9 @@ class Component(PermissionModel,models.Model):
                             help_text='Descriptive name (e.g. "TEV protease")')
 
     description = models.TextField( 'Detailed description', blank=True)
+    
+    registration_date = models.DateField(default=datetime.now(), verbose_name="registred")
+   
 
     #: uri should be constructed from #displayId if left empty
     uri = models.URLField( blank=True, null=True, unique=False, 
@@ -122,13 +127,6 @@ class Component(PermissionModel,models.Model):
                                         blank=True, null=True, 
                                         verbose_name='Variant of', 
                                         help_text='Specify part(s) this part is derived from, if any.' )
-
-    #abstract = models.BooleanField( 'Abstract Part', default=False, 
-    #                                help_text='Entry only serves as container to organize related parts.')
-
-
-
-
     
 
     def formatedUrl(self):
@@ -603,8 +601,7 @@ class DnaComponent(Component):
     def related_seq( self ):
         """
         """
-
-
+        
         gb_features = ''
         try: 
             gb_file = settings.MEDIA_ROOT+"/"+os.path.normpath(self.GenBankfile.name)

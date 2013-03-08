@@ -68,9 +68,8 @@ class Location(PermissionModel):
     description = models.CharField( 'short Description', max_length=200,
                                             help_text='Very short description for listings')    
 
-    #rack = models.CharField('Rack', max_length=200, 
-    #    blank=True, help_text='Informative name of rack')
-
+    registration_date = models.DateField(default=datetime.now(), verbose_name="registred")
+   
 
     def __unicode__(self):
         return self.displayId + " (" + self.temperature.__str__() \
@@ -115,7 +114,8 @@ class Rack(PermissionModel):
     description = models.CharField( 'short Description', max_length=200,
                                             help_text='Very short description for listings')    
     
-
+    registration_date = models.DateField(default=datetime.now(), verbose_name="registred")
+       
     def __unicode__(self):
         return u'%s' % (self.displayId)
 
@@ -159,6 +159,8 @@ class Container( PermissionModel ):
 
     rack = models.ForeignKey(Rack)
 
+    registration_date = models.DateField(default=datetime.now(), verbose_name="registred")
+       
     #: optional long description
     description = models.TextField( 'Detailed description', blank=True)
 
