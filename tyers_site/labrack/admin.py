@@ -63,6 +63,7 @@ from labrack.models.generalmodels import ProteinSequenceAnnotation
 
 from labrack.models.generalmodels import Collection
 from labrack.models.generalmodels import Chassis 
+import utilLabrack
  
 
 
@@ -253,6 +254,10 @@ class DnaComponentAdmin(ComponentAdmin):
     def add_view(self, request, form_url="", extra_context=None):
         data = request.GET.copy()
         data['created_by'] = request.user
+        
+        initialUser = str(request.user)[:2]
+        data['displayId'] = utilLabrack.getNextAvailableDNAName(initialUser)
+        
         request.GET = data
         return super(DnaComponentAdmin, self).add_view(request, form_url="", extra_context=extra_context)
     
@@ -331,6 +336,23 @@ class ContainerAdmin(PermissionAdmin, admin.ModelAdmin):
                                          self.exportFields, 'Container')
 
 
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'created_by':
+            kwargs['queryset'] = User.objects.filter(username=request.user.username)
+        return super(ContainerAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
+    
+    def get_readonly_fields(self, request, obj=None):
+        if obj is not None:
+            return self.readonly_fields + ('created_by',)
+        return self.readonly_fields
+
+    def add_view(self, request, form_url="", extra_context=None):
+        data = request.GET.copy()
+        data['created_by'] = request.user
+        request.GET = data
+        return super(ContainerAdmin, self).add_view(request, form_url="", extra_context=extra_context)
+    
+
 
 class LocationAdmin(PermissionAdmin,admin.ModelAdmin):
 
@@ -365,6 +387,22 @@ class LocationAdmin(PermissionAdmin,admin.ModelAdmin):
 
     make_csv.short_description = 'Export as CSV'
 
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'created_by':
+            kwargs['queryset'] = User.objects.filter(username=request.user.username)
+        return super(LocationAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
+    
+    def get_readonly_fields(self, request, obj=None):
+        if obj is not None:
+            return self.readonly_fields + ('created_by',)
+        return self.readonly_fields
+
+    def add_view(self, request, form_url="", extra_context=None):
+        data = request.GET.copy()
+        data['created_by'] = request.user
+        request.GET = data
+        return super(LocationAdmin, self).add_view(request, form_url="", extra_context=extra_context)
+    
 
 
 class RackAdmin(PermissionAdmin,admin.ModelAdmin):
@@ -400,6 +438,24 @@ class RackAdmin(PermissionAdmin,admin.ModelAdmin):
                                          self.exportFields, 'Rack')
 
     make_csv.short_description = 'Export as CSV'
+    
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'created_by':
+            kwargs['queryset'] = User.objects.filter(username=request.user.username)
+        return super(RackAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
+    
+    def get_readonly_fields(self, request, obj=None):
+        if obj is not None:
+            return self.readonly_fields + ('created_by',)
+        return self.readonly_fields
+
+    def add_view(self, request, form_url="", extra_context=None):
+        data = request.GET.copy()
+        data['created_by'] = request.user
+        request.GET = data
+        return super(RackAdmin, self).add_view(request, form_url="", extra_context=extra_context)
+    
+    
 
 
 
@@ -795,6 +851,7 @@ class DnaSampleAdmin(PermissionAdmin, admin.ModelAdmin):
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'created_by':
             kwargs['queryset'] = User.objects.filter(username=request.user.username)
+            
         return super(DnaSampleAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
     
     def get_readonly_fields(self, request, obj=None):
@@ -805,6 +862,7 @@ class DnaSampleAdmin(PermissionAdmin, admin.ModelAdmin):
     def add_view(self, request, form_url="", extra_context=None):
         data = request.GET.copy()
         data['created_by'] = request.user
+        
         request.GET = data
         return super(DnaSampleAdmin, self).add_view(request, form_url="", extra_context=extra_context)
    
@@ -948,6 +1006,24 @@ class ChassisAdmin(PermissionAdmin,ComponentAdmin):
                                          self.exportFields, 'Rack')
 
     make_csv.short_description = 'Export as CSV'
+    
+    
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'created_by':
+            kwargs['queryset'] = User.objects.filter(username=request.user.username)
+        return super(ChassisAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
+    
+    def get_readonly_fields(self, request, obj=None):
+        if obj is not None:
+            return self.readonly_fields + ('created_by',)
+        return self.readonly_fields
+
+    def add_view(self, request, form_url="", extra_context=None):
+        data = request.GET.copy()
+        data['created_by'] = request.user
+        request.GET = data
+        return super(ChassisAdmin, self).add_view(request, form_url="", extra_context=extra_context)
+    
     
     
 class ChassisSampleAdmin(PermissionAdmin, admin.ModelAdmin):

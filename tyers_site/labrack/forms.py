@@ -110,7 +110,6 @@ class ChassisSampleForm(forms.ModelForm):
 
 class DnaComponentForm(forms.ModelForm):
 
- 
 
     htmlAttribute1 = forms.CharField(widget=forms.TextInput(attrs={'size':'1800'}),required=False,label="")
     htmlAttribute2 = forms.CharField(widget=forms.TextInput(attrs={'size':'1800','hidden':'true'}),required=False,label="")
@@ -298,7 +297,7 @@ class DnaComponentForm(forms.ModelForm):
             name=data["data"][1]["name"]
             descrp=data["data"][1]["description"]
 
-            dnaAnnot = DnaComponent(displayId=id,description=descrp, name =name, sequence = seq)
+            dnaAnnot = DnaComponent(displayId=id,description=descrp, name =name, sequence = seq, created_by = created_by)
             dnaAnnot.save()
             dnaAnnot.componentType = subCtVectorType
             dnaAnnot.save()

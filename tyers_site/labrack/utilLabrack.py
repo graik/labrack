@@ -2,6 +2,8 @@ import os
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
+from labrack.models.component import DnaComponent
+
             
 def getStrand(fullSeq,seq):
 
@@ -16,4 +18,19 @@ def getStrand(fullSeq,seq):
         return '-1'
     else:
         return '?'
+            
+            
+def getNextAvailableDNAName(userInitial):
+    displayIdDefault = DnaComponent.objects.filter(displayId__startswith=userInitial).order_by('-displayId')[:1]
+    if not displayIdDefault:
+        displayIdDefaultName = ''
+    else:
+        dis = displayIdDefault[0].displayId
+        initial = dis[:2]
+        numberSeq = int(dis[2:6])+1
+        
+        displayIdDefaultName = initial+str(numberSeq)+'a'
+    
+        
+    return displayIdDefaultName
             

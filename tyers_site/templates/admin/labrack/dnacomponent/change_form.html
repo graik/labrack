@@ -780,6 +780,8 @@ function buildGenBankTable(jsontext){
     var arrayOfInsertObjects = jsonInsertObject;
     var sequence = '';
 	document.getElementById("id_sequence").value = '';
+	initialDisplayId = document.getElementById("id_displayId").value;
+	intialnumber = initialDisplayId.substring(2,6);
 	
 	// update parttype and optimizedFor dropdownlist in new fragment
 		//feedTypeDropdownlist();
@@ -805,7 +807,9 @@ function buildGenBankTable(jsontext){
                     document.getElementById("id_sequence").value = sequence;
                     send_request(true);
                     }
-                    addRowToAnnotationTable(1,'',arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].name,arrayOfInsertObjects[i].componentType_name,arrayOfInsertObjects[i].coverage,'',i);			
+                    //addRowToAnnotationTable(1,'',arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].name,arrayOfInsertObjects[i].componentType_name,arrayOfInsertObjects[i].coverage,'',i);			
+					initialNameGB = 'gb'+intialnumber+String.fromCharCode(65+i);
+					addRowToAnnotationTable(1,'',initialNameGB,arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].name,arrayOfInsertObjects[i].componentType_name,arrayOfInsertObjects[i].coverage,'',i);			
 					var optn = document.createElement("OPTION");
 					optn.text = arrayOfInsertObjects[i].displayid;
 					optn.value = arrayOfInsertObjects[i].id+'<>'+arrayOfInsertObjects[i].displayid+'<>'+arrayOfInsertObjects[i].description+'<>'+arrayOfInsertObjects[i].componentType_name+'<>'+arrayOfInsertObjects[i].coverage;
