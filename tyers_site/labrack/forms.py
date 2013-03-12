@@ -231,7 +231,10 @@ class DnaComponentForm(forms.ModelForm):
 
         jsonFromWeb = self.cleaned_data['htmlAttribute1']
         fullSequence = self.cleaned_data['sequence']
-        created_by = self.cleaned_data['created_by']
+        try:
+            created_by = self.cleaned_data['created_by']
+        except Exception, err:
+            print err
         data = json.loads(jsonFromWeb)
 
 
@@ -312,8 +315,8 @@ class DnaComponentForm(forms.ModelForm):
             if (selectedAnnotFromDB):
                 try:                       
                     for id in selectedAnnotFromDB:
-                        dnaAnnot = DnaComponent.objects.get(id=id["id"])
-                        coverage=id["text6"]
+                        dnaAnnot = DnaComponent.objects.get(displayId=id["id"])
+                        coverage=id["text6"].replace('(-)','').replace('(+)','')
                         coverage = coverage.split('-')
                         first = int(coverage[0])
                         secon = int(coverage[1])                            

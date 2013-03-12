@@ -20,10 +20,17 @@ def getStrand(fullSeq,seq):
         return '?'
             
             
-def getNextAvailableDNAName(userInitial):
-    displayIdDefault = DnaComponent.objects.filter(displayId__startswith=userInitial).order_by('-displayId')[:1]
+def getNextAvailableDNAName(currUser):
+    lName  = currUser.last_name
+    fName = currUser.first_name
+    initialUser = lName[:1]+fName[:1]
+    if initialUser=='':
+        initialUser = str(currUser)[:2]
+        
+    displayIdDefault = DnaComponent.objects.filter(displayId__startswith=initialUser).order_by('-displayId')[:1]
+    
     if not displayIdDefault:
-        displayIdDefaultName = ''
+        displayIdDefaultName = initialUser+'0001a'
     else:
         dis = displayIdDefault[0].displayId
         initial = dis[:2]

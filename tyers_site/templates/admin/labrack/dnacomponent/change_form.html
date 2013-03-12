@@ -69,6 +69,10 @@
 		 
 		 savebutton = document.getElementsByName("_save");
  		 savebutton[0].onclick = retrieveAndFeedDataHandler;
+		 savebutton1 = document.getElementsByName("_addanother");
+		 savebutton1[0].onclick = retrieveAndFeedDataHandler;
+		 savebutton2 = document.getElementsByName("_continue");
+		 savebutton2[0].onclick = retrieveAndFeedDataHandler;
 		 //savebutton[1].onclick = retrieveAndFeedDataHandler;
 		 
 		 //hide attrb1
@@ -440,7 +444,7 @@ jsonObjectOptimizedFor = eval(data.optimizedfor_values);
 		if(revarrayOfInsertObjects) {
             for(var i=0, len=revarrayOfInsertObjects.length; i<len; i++) {
 				if (!checkIfElementExistInJson(revarrayOfInsertObjects[i].displayid,arrayOfInsertObjects)) {
-					addRowToAnnotationTable(0,'',revarrayOfInsertObjects[i].id,revarrayOfInsertObjects[i].displayid,revarrayOfInsertObjects[i].description,revarrayOfInsertObjects[i].componentType_name,revarrayOfInsertObjects[i].coverage,revarrayOfInsertObjects[i].optimizedFor_name,'');
+					addRowToAnnotationTable(0,'',revarrayOfInsertObjects[i].displayid,revarrayOfInsertObjects[i].name,revarrayOfInsertObjects[i].description,revarrayOfInsertObjects[i].componentType_name,revarrayOfInsertObjects[i].coverage,revarrayOfInsertObjects[i].optimizedFor_name,'');
 					}
                }
             }
@@ -853,7 +857,6 @@ function uploadGBDataFileIfExist(){
 }
 
 function uploadTheFile(){
-
     var uploader = new qq.FileUploader({
 		action: "{% url ajax_upload %}",
 		element: $('#id_GenBankfile')[0],

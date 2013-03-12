@@ -255,10 +255,10 @@ class DnaComponentAdmin(ComponentAdmin):
         data = request.GET.copy()
         data['created_by'] = request.user
         
-        initialUser = str(request.user)[:2]
-        proposedDisplayId = utilLabrack.getNextAvailableDNAName(initialUser)
-        if (proposedDisplayId==''):
-            proposedDisplayId = initialUser+'0001a'
+        #initialUser = str(request.user)[:2]
+        proposedDisplayId = utilLabrack.getNextAvailableDNAName(request.user)
+        #if (proposedDisplayId==''):
+        #    proposedDisplayId = initialUser+'0001a'
         data['displayId'] = proposedDisplayId
         
         request.GET = data
@@ -738,7 +738,6 @@ class DnaSampleAdmin(PermissionAdmin, admin.ModelAdmin):
         (None, {
             'fields' : ((('container', 'displayId', 'status'),
                          ('preparation_date','registration_date',),
-##                         ('preparation_date','creation_date'),  ## doesn't work for some unknown reason
                          ('sampleCollection','reference_status'),
                          ('concentration','concentrationUnit','amount','amountUnit',),
                          ('solvent','aliquotNr',),
