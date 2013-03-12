@@ -175,7 +175,10 @@ class DnaComponentForm(forms.ModelForm):
         jsonFromWeb2 = self.cleaned_data['htmlAttribute2']
         data2 = json.loads(jsonFromWeb2)
         selectedAnnotFromGB = json.loads(data2["selected_annot"][1]["gb_checked"])
-        
+        r = self.instance.number_related_ParentChildAnnotations()
+        if (fullSequence<>self.instance.sequence and self.instance.sequence<>"" and r>0) :
+            errorMessage = "This is already an annotated sequence or used as annotation, any change will not be made unless you remove all the annotations!"
+            errors.setdefault('',[]).append(errorMessage)      
         
         
         # check if the name vector exist already in the DB
@@ -230,6 +233,7 @@ class DnaComponentForm(forms.ModelForm):
 
 
         jsonFromWeb = self.cleaned_data['htmlAttribute1']
+        
         fullSequence = self.cleaned_data['sequence']
         try:
             created_by = self.cleaned_data['created_by']

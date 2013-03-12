@@ -238,6 +238,16 @@ class Component(PermissionModel,models.Model):
 
         return s     
 
+    def number_related_ParentChildAnnotations( self ):
+            """
+            """
+            r = DnaSequenceAnnotation.objects.filter( subComponent=self.id)
+            s = r.count()
+            
+            g = DnaSequenceAnnotation.objects.filter( componentAnnotated=self.id)
+            total = s+g.count()
+    
+            return total  
 
     def showComment( self ):
         """
