@@ -28,8 +28,9 @@ def getNextAvailableDNAName(userInitial):
         dis = displayIdDefault[0].displayId
         initial = dis[:2]
         numberSeq = int(dis[2:6])+1
-        
-        displayIdDefaultName = initial+str(numberSeq)+'a'
+        numSeqChar = "0000"+str(numberSeq)
+        numSeqChar = numSeqChar[1:6]
+        displayIdDefaultName = initial+str(numSeqChar)+'a'
     
         
     return displayIdDefaultName

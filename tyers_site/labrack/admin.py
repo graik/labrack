@@ -256,7 +256,10 @@ class DnaComponentAdmin(ComponentAdmin):
         data['created_by'] = request.user
         
         initialUser = str(request.user)[:2]
-        data['displayId'] = utilLabrack.getNextAvailableDNAName(initialUser)
+        proposedDisplayId = utilLabrack.getNextAvailableDNAName(initialUser)
+        if (proposedDisplayId==''):
+            proposedDisplayId = initialUser+'0001a'
+        data['displayId'] = proposedDisplayId
         
         request.GET = data
         return super(DnaComponentAdmin, self).add_view(request, form_url="", extra_context=extra_context)
