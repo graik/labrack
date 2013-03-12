@@ -1105,7 +1105,16 @@ class ChassisSampleAdmin(PermissionAdmin, admin.ModelAdmin):
         
     container_url.allow_tags = True
     container_url.short_description = 'Container'
-
+    
+    def showMainContent(self, obj):
+        urlink = ''
+        if (obj.chassis <> None):
+            url = obj.chassis.get_relative_url()
+            urlink = mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.chassis.__unicode__()))      
+        return urlink
+    showMainContent.allow_tags = True
+    showMainContent.short_description = 'Content'
+    
     def isreference_status(self, obj):
         refStatus = ''
         if obj.reference_status:
