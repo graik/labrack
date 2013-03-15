@@ -2,7 +2,7 @@ from django.conf.urls.defaults import patterns, include, url
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
-from labrack.views import getGBDataFromFile,ajax_upload,upload_page,get_dna_info,dnalist,celllist,cellonlylist,contact,success,plasmidlist,search_dna_parts
+from labrack.views import getAnnotToBeDeleted,getGBDataFromFile,ajax_upload,upload_page,get_dna_info,dnalist,celllist,cellonlylist,contact,success,plasmidlist,search_dna_parts
 admin.autodiscover()
 from django.views.generic.simple import redirect_to
 import settings
@@ -21,8 +21,10 @@ urlpatterns = patterns('',
     url( r'ajax_upload/$', ajax_upload, name="ajax_upload" ),
     url( r'/project/$', upload_page, name="upload_page" ),     
     url(r'^get_dna_info/(?P<text_value>.*)/$',get_dna_info,name='get_dna_info'),
-    url(r'^getGBDataFromFile/(?P<filePath>.*)/$',getGBDataFromFile,name='getGBDataFromFile'),  
-    url(r'^test/(?P<sequence_text>.*)/$',search_dna_parts,name='search_dna_parts'),  
+    url(r'^getGBDataFromFile/(?P<filePath>.*)/$', getGBDataFromFile,name='getGBDataFromFile'),  
+    url(r'^test/(?P<sequence_text>.*)/(?P<displayIdDnaComponent>.*)/$', search_dna_parts,name='search_dna_parts'),  
+    url(r'^checkAnnotToDelete/(?P<jsonAmmpt>.*)/(?P<displayIdDnaComponent>.*)/$', getAnnotToBeDeleted,name='getAnnotToBeDeleted'),      
+    #url(r'^test/(?P<sequence_text>.*)/$', search_dna_parts,name='search_dna_parts'),  
     url(r'^contact/$', contact, name='contact'),
     url(r'^success/$', success, name='success'),    
     url(r'^cellonlylist/$', cellonlylist, name='cellonlylist'),

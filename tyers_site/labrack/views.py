@@ -13,6 +13,7 @@ from django.utils import simplejson
 from tyers_site import settings
 from django.core.files.storage import FileSystemStorage
 from labrack.models.generalmodels import Container
+from labrack.models.generalmodels import DnaSequenceAnnotation
 from labrack.models.component import DnaComponent
 from labrack.models.component import Component
 from labrack.models.component import ChemicalComponent
@@ -26,6 +27,7 @@ from django.contrib import messages
 from django.shortcuts import get_object_or_404
 from django.core import serializers
 from django.middleware.csrf import get_token
+
 
 import os
 from Bio import SeqIO
@@ -456,7 +458,7 @@ def getVectorBySequence(sequence_text,strand):#local function
         json_object = '['+json_object+']'
         return json_object
 
-def getInsertDBAnnotationBySequence(sequence_text,strand):#local function
+def getInsertDBAnnotationBySequence(sequence_text,strand,displayIdDnaComponent):#local function
         dnapartsVectorAll  = DnaComponent.objects.filter(componentType__name='Vector')
         dnapartsInsertsAll = DnaComponent.objects.filter(componentType__name='Vector')
         dnaparts = [dnapart for dnapart in DnaComponent.objects.all() if (dnapart not in dnapartsVectorAll and dnapart.sequence is not None and dnapart.sequence != "" and dnapart.sequence in sequence_text)]
@@ -465,6 +467,7 @@ def getInsertDBAnnotationBySequence(sequence_text,strand):#local function
         json_Insertobject = ''
         for dnapart in dnaparts :
                 id = dnapart.id
+                
                 name = dnapart.name
                 displayid = dnapart.displayId
                 sequence = dnapart.sequence
@@ -473,6 +476,18 @@ def getInsertDBAnnotationBySequence(sequence_text,strand):#local function
                 rslt = fisrtPeace/float(secondpeace)
                 firstposition = sequence_text.find(sequence)
                 lastposition = firstposition+len(sequence)
+                
+                # check if the annotation are already related
+                isRelated = False
+                try:
+                        isRelated = DnaSequenceAnnotation.isRelated(displayid,displayIdDnaComponent)
+                except:
+                        print 'not related'
+                
+                if (strand=='-'):
+                        firstPos = firstposition
+                        firstposition = secondpeace - lastposition
+                        lastposition = secondpeace - firstPos
                 # remove case where sequence from DB is the same as the requested annotation to avoid annotating fragment by it self
                 if (sequence!=sequence_text):
                         coverage = str(firstposition)+'-'+str(lastposition)
@@ -491,13 +506,40 @@ def getInsertDBAnnotationBySequence(sequence_text,strand):#local function
                         else:
                                 componentType_name = ''                        
                         if json_Insertobject == '':
-                                json_Insertobject = '{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'","coverage":"'+coverage+'","optimizedFor_name":"'+optimizedFor_name+'","componentType_name":"'+componentType_name+'","strand":"'+strand+'"}' 
+                                json_Insertobject = '{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'","coverage":"'+coverage+'","optimizedFor_name":"'+optimizedFor_name+'","componentType_name":"'+componentType_name+'","strand":"'+strand+'","isRelated":"'+str(isRelated)+'"}' 
                         else:
-                                json_Insertobject = json_Insertobject+',{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'","coverage":"'+coverage+'","optimizedFor_name":"'+optimizedFor_name+'","componentType_name":"'+componentType_name+'","strand":"'+strand+'"}' 
+                                json_Insertobject = json_Insertobject+',{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'","coverage":"'+coverage+'","optimizedFor_name":"'+optimizedFor_name+'","componentType_name":"'+componentType_name+'","strand":"'+strand+'","isRelated":"'+str(isRelated)+'"}' 
         json_Insertobject = '['+json_Insertobject+']'
         return json_Insertobject
 
-def search_dna_parts(request, sequence_text):
+def getAnnotToBeDeleted(request, jsonAmmpt,displayIdDnaComponent):
+        import django.utils.simplejson as json
+        
+        data2 = json.loads(jsonAmmpt)
+        sumDna = ""
+        selectedAnnotFromDB = json.loads(data2["selected_annot"][0]["db_checked"])
+        if (selectedAnnotFromDB):
+                        try:                       
+                            for id in selectedAnnotFromDB:    
+                                    sumDna = sumDna+','+id["id"]
+                        except:
+                                print 'error'        
+        
+        
+        dnacomp = DnaComponent.objects.get(displayId = displayIdDnaComponent)
+        missingAnnot = ''
+        for qannot in DnaSequenceAnnotation.objects.filter( subComponent=dnacomp.id):
+                test = qannot.componentAnnotated.displayId
+                if (sumDna.find(test)==-1):
+                        if (missingAnnot ==''):
+                                missingAnnot = test
+                        else:
+                                missingAnnot = missingAnnot + ","+ test
+   
+        json = simplejson.dumps(missingAnnot)
+        return HttpResponse(json, mimetype='application/json') 
+
+def search_dna_parts(request, sequence_text,displayIdDnaComponent):
         coo = sequence_text;
         rs = sequence_text.split('__');
         sequence_text = rs[0];
@@ -520,10 +562,10 @@ def search_dna_parts(request, sequence_text):
                 
                 message['list_dnas'] = getVectorBySequence(sequence_textDuplicate,'+')
                 message['reverse_list_dnas'] = getVectorBySequence(revseqDuplicate,'-')
-                
+
                 #part for retriving potential Inserts
-                message['extra_values'] = getInsertDBAnnotationBySequence(seq_exceptVector,'+')
-                message['reverse_extra_values'] = getInsertDBAnnotationBySequence(str(revseq_exceptVect),'-')
+                message['extra_values'] = getInsertDBAnnotationBySequence(seq_exceptVector,'+',displayIdDnaComponent)
+                message['reverse_extra_values'] = getInsertDBAnnotationBySequence(str(revseq_exceptVect),'-',displayIdDnaComponent)
                 
                 #paret retrieving all partTypes
                 dnapartstypesAll = DNAComponentType.objects.all()

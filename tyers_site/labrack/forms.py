@@ -128,6 +128,17 @@ class DnaComponentForm(forms.ModelForm):
     def clean(self):
         errorMessage = ""
         errors = {}        
+        
+        jsonCancel = self.cleaned_data['htmlAttribute2']
+        dataCancel = json.loads(jsonCancel)
+        try:
+            gb_checked_cancel = json.loads(dataCancel["selected_annot"][2]["gb_checked_cancel"])        
+            if (gb_checked_cancel=='True'):
+                errorMessage = "The user has cancel the saving procedure due to annotation deletions risks!"
+                errors.setdefault('',[]).append(errorMessage)                
+        except:
+            print ''
+        
         # check if disp name is clean with pattern XXX1234X
         try:
             dispId = self.cleaned_data['displayId']
@@ -159,9 +170,7 @@ class DnaComponentForm(forms.ModelForm):
         
         
         cleanedData = super(DnaComponentForm, self).clean()
-        #settings.MEDIA_ROOT+"/"+os.path.normpath(self.GenBankfile.name)
-        #instance.historyDescription = self.cleaned_data['genebank'] # etc
-
+        
         #retrieve vector GB information
         jsonFromWeb = self.cleaned_data['htmlAttribute1']
         fullSequence = self.cleaned_data['sequence']
@@ -169,25 +178,27 @@ class DnaComponentForm(forms.ModelForm):
         isGbData = data["data"][1]["gb_data"]
         vectorIdFromGB_displayid = data["data"][1]["displayid"]
         vectorIdFromGB_name = data["data"][1]["name"]
-        vectorIdFromGB_description = data["data"][1]["description"]                
+        vectorIdFromGB_description = data["data"][1]["description"]
         
         #retrieve annot GB information
         jsonFromWeb2 = self.cleaned_data['htmlAttribute2']
         data2 = json.loads(jsonFromWeb2)
         selectedAnnotFromGB = json.loads(data2["selected_annot"][1]["gb_checked"])
-        r = self.instance.number_related_ParentChildAnnotations()
-        if (fullSequence<>self.instance.sequence and self.instance.sequence<>"" and r>0) :
-            errorMessage = "This is already an annotated sequence or used as annotation, any change will not be made unless you remove all the annotations!"
-            errors.setdefault('',[]).append(errorMessage)      
+        
+        if (self.instance.id!=None):        
+            r = self.instance.number_related_ParentChildAnnotations()
+            if (fullSequence<>self.instance.sequence and self.instance.sequence<>"" and r>0) :
+                
+                print 'dooo'
         
         
         # check if the name vector exist already in the DB
-        if (isGbData=='true' and  data["data"][1]["name"]!='') :
+        if (isGbData=='true' and  data["data"][1]["name"]!=''):
             displayid_gb=data["data"][1]["displayid"]
             regExp = r'^[vV]\d\d\d?$'
             if not(re.match(regExp, displayid_gb)):
                 errorMessage = "ID :"+displayid_gb+" doesn't respect the vector pattern V123, example : v001 where v or V for Vector"
-                errors.setdefault('',[]).append(errorMessage)            
+                errors.setdefault('',[]).append(errorMessage)
             
             if (DnaComponent.objects.filter(displayId=displayid_gb)):
                 errorMessage = "Please choose another name for the Vector "+displayid_gb+" since it already exist in the DB!"
@@ -316,6 +327,8 @@ class DnaComponentForm(forms.ModelForm):
             #if (dna2db is None):
                 #dna2db = DnaComponent(displayId=self.cleaned_data['displayId'],description=self.cleaned_data['description'], name =self.cleaned_data['name'], sequence = self.cleaned_data['sequence'],status = self.cleaned_data['status'], GenBankfile = self.cleaned_data['GenBankfile'])
                 #dna2db.save()
+            #delete all the entry for annotation for this component ID and recreate if needed
+            DnaSequenceAnnotation.deleteRelated(instance.displayId)
             if (selectedAnnotFromDB):
                 try:                       
                     for id in selectedAnnotFromDB:

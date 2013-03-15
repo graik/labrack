@@ -351,6 +351,32 @@ class DnaSequenceAnnotation(SequenceAnnotation):
         return 'dnasequenceannotation/%i/' % self.id    
     class Meta:
         app_label = 'labrack'    
+    
+    @staticmethod
+    def isRelated(displayId1,displayId2):
+        from labrack.models.component import DnaComponent
+        try:
+            id1 = DnaComponent.objects.get(displayId=displayId1)
+            id2 = DnaComponent.objects.get(displayId=displayId2)
+        
+            r1 = DnaSequenceAnnotation.objects.filter( subComponent=id1,componentAnnotated=id2).count()
+            r2 = DnaSequenceAnnotation.objects.filter( subComponent=id2,componentAnnotated=id1).count()
+        
+            if (r1>0 or r2>0):
+                return True
+        except error:
+            return False
+        return False
+    
+    @staticmethod
+    def deleteRelated(displayId):
+        from labrack.models.component import DnaComponent
+        
+        id = DnaComponent.objects.get(displayId=displayId)                
+        DnaSequenceAnnotation.objects.filter( subComponent=id).delete()
+        
+        
+        
 
 
 class ProteinSequenceAnnotation(SequenceAnnotation):

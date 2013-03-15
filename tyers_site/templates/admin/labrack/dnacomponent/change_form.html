@@ -8,7 +8,7 @@
 
 
 <link rel="stylesheet" type="text/css" href="/media/js/fileuploader/fileuploader.css">
-<script type="text/javascript" src="/media/js/fileuploader/fileuploader.js"></script> 
+<script type="text/javascript" src="/media/js/fileuploader/fileuploader.js"></script>
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
 <script src="/media/scribl/Scribl.1.1.3.min.js" ></script>
 <script type="text/javascript" src="/media/scribl/examples/js/dragscrollable.js"></script>
@@ -18,6 +18,7 @@
 
        var txtContent;
 	   var currSelectedVectorSeq = '';
+	   var currSelectedAnnot = '';
 	   var jsonObjectPartTypes;
 	   var jsonObjectOptimizedFor;
 
@@ -67,13 +68,8 @@
 		 fileContent.onchange=sequenceHandlerFile;
 		 
 		 
-		 savebutton = document.getElementsByName("_save");
- 		 savebutton[0].onclick = retrieveAndFeedDataHandler;
-		 savebutton1 = document.getElementsByName("_addanother");
-		 savebutton1[0].onclick = retrieveAndFeedDataHandler;
-		 savebutton2 = document.getElementsByName("_continue");
-		 savebutton2[0].onclick = retrieveAndFeedDataHandler;
-		 //savebutton[1].onclick = retrieveAndFeedDataHandler;
+		 
+	     updateTextBoxElementsAndCheckDeletionAnnotationMsg();
 		 
 		 //hide attrb1
 		 document.getElementById("id_htmlAttribute1").hidden="true";
@@ -99,7 +95,20 @@
 		
     };
 	
- 
+function updateTextBoxElementsAndCheckDeletionAnnotationMsg(){
+	      
+		 savebutton = document.getElementsByName("_save");
+ 		 savebutton[0].onclick = retrieveAndFeedDataHandler;
+		 savebutton1 = document.getElementsByName("_addanother");
+		 savebutton1[0].onclick = retrieveAndFeedDataHandler;
+		 savebutton2 = document.getElementsByName("_continue");
+		 savebutton2[0].onclick = retrieveAndFeedDataHandler;
+		 //savebutton[1].onclick = retrieveAndFeedDataHandler;
+		 
+		 
+		 
+
+}
 
 function blockAllTextFieldFromEditing(){
 		$('form input[class="vManyToManyRawIdAdminField"]').each(function(){
@@ -207,12 +216,28 @@ function repopulateCheckBox(){
 }
 
 
+function checkDeletionAnnotBeforeAfter(json){
+	displayId = document.getElementById("id_displayId").value;
+	answer = "";
+	choice = false;
+$.ajax({
+     async: false,
+     type: 'GET',
+     url: "/checkAnnotToDelete/"+json+"/"+displayId+"/",
+     success: function(data) {
+		answer = data;
+          
+     }
+});
+return answer;
+}
 
 function retrieveAndFeedDataHandler(e)
    {
+   
 		textContent = document.getElementById("id_htmlAttribute1");
 		textContent2 = document.getElementById("id_htmlAttribute2");
-
+		textContent2Before = textContent2.value;
 		
 		is_db_data = document.getElementById("radiodb").checked;
 		db_data_displayid = document.getElementById("inputDataList").value;
@@ -232,16 +257,26 @@ function retrieveAndFeedDataHandler(e)
 				 ]
 		};
 		
-		
+		gb_checked_cancel = false;
 		var json_ele2 = {"selected_annot": [
 				  {"db_checked": ""+selectallchecked_db()+""},
-				  {"gb_checked": ""+selectallchecked_gb()+""}
+				  {"gb_checked": ""+selectallchecked_gb()+""},
+				  {"gb_checked_cancel":""+gb_checked_cancel+""}
 				 ]
 		};
 		textContent.value = JSON.stringify(json_ele);
 		textContent2.value = JSON.stringify(json_ele2);
-		
+  		textToShow = checkDeletionAnnotBeforeAfter(textContent2.value);
+  		if (textToShow!="") {
+		// retrieve current values of selected DB and send a blocking message if some will get deleted
+			var r=confirm("Warning : If you continue those annotations: ("+textToShow+") will be removed!");
+			if (r==false) { 
+
+			    return false;			  
+			  } 
+		}  
 	
+		
    }
    
    
@@ -359,7 +394,23 @@ function update_dnaBackbone(selectedItem,fullsequence){
 }
 
 
- 
+function checkIfElementExistNewJSon(elem,myObject){
+
+		test_db_checked = myObject.selected_annot[0].db_checked;
+		data_db = '({"data":'+test_db_checked+'})';
+		var myObject_db = eval(data_db);
+		//db repopulating
+		//alert(document.getElementById(myObject_db.data[0].id).id);
+		if (myObject_db) {
+			for (var i = 0; i < myObject_db.data.length; i++) {
+			alert(myObject_db.data[i].id);
+ 				//document.getElementById(myObject_db.data[i].id).checked = true;
+				
+			}
+		}
+
+		
+} 
 
 function checkIfElementExistInJson(elem,jsonStruct){
 var jsonObject = jsonStruct;
@@ -435,8 +486,8 @@ jsonObjectOptimizedFor = eval(data.optimizedfor_values);
     var arrayOfInsertObjects = jsonInsertObject;
 		if(arrayOfInsertObjects) {
             for(var i=0, len=arrayOfInsertObjects.length; i<len; i++) {
-					positionStrand = arrayOfInsertObjects[i].coverage + '('+arrayOfInsertObjects[i].strand+')';
-					addRowToAnnotationTable(0,'',arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].name,arrayOfInsertObjects[i].description,arrayOfInsertObjects[i].componentType_name,positionStrand,arrayOfInsertObjects[i].optimizedFor_name,'');
+	 				positionStrand = arrayOfInsertObjects[i].coverage + '('+arrayOfInsertObjects[i].strand+')';
+					addRowToAnnotationTable(0,'',arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].name,arrayOfInsertObjects[i].description,arrayOfInsertObjects[i].componentType_name,positionStrand,arrayOfInsertObjects[i].optimizedFor_name,'',arrayOfInsertObjects[i].isRelated);
                }
 		}
 		
@@ -444,7 +495,8 @@ jsonObjectOptimizedFor = eval(data.optimizedfor_values);
 		if(revarrayOfInsertObjects) {
             for(var i=0, len=revarrayOfInsertObjects.length; i<len; i++) {
 				if (!checkIfElementExistInJson(revarrayOfInsertObjects[i].displayid,arrayOfInsertObjects)) {
-					addRowToAnnotationTable(0,'',revarrayOfInsertObjects[i].displayid,revarrayOfInsertObjects[i].name,revarrayOfInsertObjects[i].description,revarrayOfInsertObjects[i].componentType_name,revarrayOfInsertObjects[i].coverage,revarrayOfInsertObjects[i].optimizedFor_name,'');
+					positionStrand = revarrayOfInsertObjects[i].coverage + '('+revarrayOfInsertObjects[i].strand+')';
+					addRowToAnnotationTable(0,'',revarrayOfInsertObjects[i].displayid,revarrayOfInsertObjects[i].name,revarrayOfInsertObjects[i].description,revarrayOfInsertObjects[i].componentType_name,positionStrand,revarrayOfInsertObjects[i].optimizedFor_name,'',revarrayOfInsertObjects[i].isRelated);
 					}
                }
             }
@@ -453,6 +505,7 @@ jsonObjectOptimizedFor = eval(data.optimizedfor_values);
 // send the request to the server with the sequence to retrieve all the annotation or vectors in the database
 function send_request(isUpdateVector){
 t = this.document.getElementById("id_sequence").value;
+idComp = this.document.getElementById("id_displayId").value;
 a = currSelectedVectorSeq;
 if ((t.length>0) & (t.match(/[ACTGactg]+/) != t)) {
 	alert("Error : this not a DNA Sequence!");
@@ -460,13 +513,13 @@ return;
 }
 ta = t+"__"+a;
 	
-
 $.ajax({
      async: false,
      type: 'GET',
-     url: "/test/"+ta+"/",
+     url: "/test/"+ta+"/"+idComp+"/",
      success: function(data) {
           if (isUpdateVector) {populateVectorBackbone(data);}
+		  currSelectedAnnot = data;
 		  populateInserts(data);
      }
 });
@@ -499,7 +552,6 @@ function selectallchecked_db(){
 	 for(var k=0;k<i;k++)
 	{
 	   if(e[k].checked==true){
-		  
 			jsonObj.push({id: e[k].id,text6: et6[k].value});
 			 
 		  }    
@@ -616,7 +668,7 @@ function getTypeDropdownlistOptimizedFor(){
 		return textnode ;
 }
 
-function addRowToAnnotationTable(tableNumber,content1,content2,content3,content4,content5,content6,content7,contentId)
+function addRowToAnnotationTable(tableNumber,content1,content2,content3,content4,content5,content6,content7,contentId,isRelated)
 {
 		var prefix = 'db_';
 		var readonlyattr = true;
@@ -645,6 +697,9 @@ function addRowToAnnotationTable(tableNumber,content1,content2,content3,content4
 		 checkboxnode1.type = 'checkbox';
 		 checkboxnode1.id = contentId;
 		 checkboxnode1.name = prefix+'checkbox';
+		 if (isRelated=='True') {
+			checkboxnode1.checked = true;
+			} 
 		 
 		 textnode2= document.createElement('input');
 		 textnode2.type = 'text';	
@@ -1025,66 +1080,6 @@ style="border:1px solid #000000;">
   
 </fieldset>
  
-<div class="module aligned">
-  <h2>Annotations</h2>
-        <div class="description">
-          Note, clicking any of the links below will open a new window/tab!
-        </div>
-        
-        <p></p>
-        
-        {% if original %}
-          <ul class="object-tools">
-            <li><a href="../../dnasequenceannotation/add/?subComponent={{original.id}}" target="_blank">
-                Add Annotation</a></li> 
-          </ul>                  
-        {% endif %}
-        
-               
-        {% if original and original.related_annotations %}
-          <table cellspacing="0">
-            <thead>
-              <tr>
-                <th>ID</th><th>Start</th><th>End</th><th>Strand</th><th>DNA</th><th>Type</th>
-              </tr>
-            </thead>
-            <tbody>
-        
-            {% for dnasequenceannotation in original.related_annotations %}
-        
-              <tr class="{% cycle 'row1' 'row2' %}">
-        
-                <td><b><a href="../../{{dnasequenceannotation.get_relative_url}}" target="_blank">
-                      {{dnasequenceannotation.id}}</a></b></td><td>{{dnasequenceannotation.bioStart}}</td>   
-                      <td>{{dnasequenceannotation.bioEnd}}</td>
-                      <td>{% if dnasequenceannotation.strand == "-1" %}
-                      (-)</td>
-                    {% else %}
-                          (+)</td>
-                    {% endif %}
-                <td>{% if dnasequenceannotation.componentAnnotated %}
-                      <a href="../{{dnasequenceannotation.componentAnnotated.id}}" target="_blank">
-                      {{dnasequenceannotation.componentAnnotated}}</a></td>
-                    {% else %}
-                          --</td>
-                    {% endif %}
-					<td>{% if dnasequenceannotation.componentAnnotated %}
-                      {{dnasequenceannotation.componentAnnotated.show_component_type}}</td>
-                    {% else %}
-                          --</td>
-                    {% endif %}
-              </tr>
-        
-            {% endfor %}
-        
-            </tbody>
-          </table>
-          
-        {% else %}
-          <div class="description"><b>No Sequence Annotations found for this item.</b></div>
-        {% endif %}
-        <p></p>
-</div>
 <div class="module aligned">
   <h2>DNA Samples</h2>
         <div class="description">
