@@ -17,8 +17,26 @@ def getStrand(fullSeq,seq):
     if first >= 0:
         return '-1'
     else:
-        return '?'
+        fullSeq = fullSeq + fullSeq
+        first = fullSeq.find(seq)
+        if first >= 0:
+            return '1'
+    
+        my_seq = Seq(seq, IUPAC.unambiguous_dna)
+        revseq = my_seq.reverse_complement()     ## import this module
+        first = fullSeq.find(str(revseq))
+        if first >= 0:
+            return '-1'
+        else:
+            return '+1'
             
+def isDnaTypeVector(dnaComponent):
+    dnapartsVectorAll = DnaComponent.objects.filter(componentType__name='Vector Backbone')
+    if dnaComponent in dnapartsVectorAll:
+        return True
+    
+    return False
+    
             
 def getNextAvailableDNAName(currUser):
     lName  = currUser.last_name

@@ -152,12 +152,12 @@ class DnaComponentForm(forms.ModelForm):
         compType = self.cleaned_data['componentType']
         compTypeName = ''        
         for s in compType:
-            if s.name =='Vector':
-                compTypeName = 'Vector'
+            if s.name =='Vector Backbone':
+                compTypeName = 'Vector Backbone'
         
             
         regExp = r'^[a-zA-Z][a-zA-Z]\d\d\d\d[a-zA-Z]?$'
-        if (compTypeName=='Vector'):
+        if (compTypeName=='Vector Backbone'):
             regExp = r'^[vV]\d\d\d?$'
             
         if not(re.match(regExp, dispId)):
@@ -289,6 +289,8 @@ class DnaComponentForm(forms.ModelForm):
 
         #if commit:
         instance.save()
+        #delete all the entry for annotation for this component ID and recreate if needed
+        DnaSequenceAnnotation.deleteRelated(instance.displayId)        
 
         ### saving Vector annotation
         if (isDbData=='true' and  data["data"][0]["name"]!='') :
@@ -296,9 +298,7 @@ class DnaComponentForm(forms.ModelForm):
             dnaVector = DnaComponent.objects.get(displayId=vectorIdFromDB)
             first = fullSequence.find(dnaVector.sequence)
             
-            #my_seq = Seq(sequence_text, IUPAC.unambiguous_dna)
-            #revseq = my_seq.reverse_complement()            
-            
+                                
             second = first + len(dnaVector.sequence)
             stra = utilLabrack.getStrand(fullSequence,dnaVector.sequence)
             an2db = DnaSequenceAnnotation(uri ='', bioStart = first, bioEnd = second, strand = stra, subComponent = instance, componentAnnotated = dnaVector)
@@ -311,7 +311,12 @@ class DnaComponentForm(forms.ModelForm):
             coverage = coverage.split('-')
             first = int(coverage[0])
             secon = int(coverage[1])
-            seq = fullSequence[first:secon]
+            if (first>secon):
+                fir = fullSequence[first:]
+                sec = fullSequence[:secon]
+                seq = fir+sec
+            else:
+                seq = fullSequence[first:secon]            
             name=data["data"][1]["name"]
             descrp=data["data"][1]["description"]
 
@@ -320,15 +325,16 @@ class DnaComponentForm(forms.ModelForm):
             dnaAnnot.componentType = subCtVectorType
             dnaAnnot.save()
             stra = utilLabrack.getStrand(fullSequence,seq)
-            an2db = DnaSequenceAnnotation(uri ='', bioStart = first, bioEnd = secon, strand = stra, subComponent = instance, componentAnnotated = dnaAnnot)
-            an2db.save()	
+            try:
+                an2db = DnaSequenceAnnotation(uri ='', bioStart = first, bioEnd = secon, strand = stra, subComponent = instance, componentAnnotated = dnaAnnot)
+                an2db.save()	
+            except err:
+                print err                
 
         try:
             #if (dna2db is None):
                 #dna2db = DnaComponent(displayId=self.cleaned_data['displayId'],description=self.cleaned_data['description'], name =self.cleaned_data['name'], sequence = self.cleaned_data['sequence'],status = self.cleaned_data['status'], GenBankfile = self.cleaned_data['GenBankfile'])
-                #dna2db.save()
-            #delete all the entry for annotation for this component ID and recreate if needed
-            DnaSequenceAnnotation.deleteRelated(instance.displayId)
+                #dna2db.save()            
             if (selectedAnnotFromDB):
                 try:                       
                     for id in selectedAnnotFromDB:
@@ -353,7 +359,13 @@ class DnaComponentForm(forms.ModelForm):
                         coverage = coverage.split('-')
                         first = int(coverage[0])
                         secon = int(coverage[1])
-                        seq = fullSequence[first:secon]
+                        #seq = fullSequence[first:secon]
+                        if (first>secon):
+                            fir = fullSequence[first:]
+                            sec = fullSequence[:secon]
+                            seq = fir+sec
+                        else:
+                            seq = fullSequence[first:secon]
                         name=obj["text3"]
                         descrp=obj["text4"]
                         dnatype=obj["text5"]

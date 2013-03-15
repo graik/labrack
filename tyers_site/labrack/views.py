@@ -50,6 +50,7 @@ from django.shortcuts import redirect
 from django import forms
 from django.forms.widgets import Input
 import django.utils.simplejson as json
+import utilLabrack
 
 
 
@@ -439,28 +440,46 @@ class HybridDetailView(JSONResponseMixin, SingleObjectTemplateResponseMixin, Bas
                 else:
                         return SingleObjectTemplateResponseMixin.render_to_response(self, context)
 
-def getVectorBySequence(sequence_text,strand):#local function
-        dnapartsVectorAll = DnaComponent.objects.filter(componentType__name='Vector')
+def getVectorBySequence(sequence_text,strand,displayIdDnaComponent):#local function
+        
+        dnapartsVectorAll = DnaComponent.objects.filter(componentType__name='Vector Backbone')
+        dnVectorId = -999 
+        try:
+                dnaComp = DnaComponent.objects.get(displayId =displayIdDnaComponent)
+                qSet = dnaComp.related_annotations()
+                for dn in qSet:
+                        if dn.componentAnnotated in dnapartsVectorAll:
+                                dnVectorId = dn.componentAnnotated.id                
+        except:
+                dnVectorId = -999       
+        
+         
         dnaparts = [dnapart for dnapart in DnaComponent.objects.all() if (dnapart in dnapartsVectorAll and dnapart.sequence is not None and dnapart.sequence != "" and dnapart.sequence in sequence_text)]
+         
         name = ''
         data = serializers.serialize('json', dnaparts)
         json_object = ''
+        isRelated = 'False'
         for dnapart in dnaparts :
                 id = dnapart.id
+                if (dnapart.id==dnVectorId):
+                        isRelated = 'True'
+                else:
+                        isRelated = 'False'
                 name = dnapart.name
                 displayid = dnapart.displayId
                 sequence = dnapart.sequence
                 description = dnapart.description
                 if json_object == '':
-                        json_object = '{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'","strand":"'+strand+'"}'
+                        json_object = '{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'","strand":"'+strand+'","isRelated":"'+isRelated+'"}'
                 else:
-                        json_object = json_object+',{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'","strand":"'+strand+'"}'
+                        json_object = json_object+',{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'","strand":"'+strand+'","isRelated":"'+isRelated+'"}'
         json_object = '['+json_object+']'
         return json_object
 
 def getInsertDBAnnotationBySequence(sequence_text,strand,displayIdDnaComponent):#local function
-        dnapartsVectorAll  = DnaComponent.objects.filter(componentType__name='Vector')
-        dnapartsInsertsAll = DnaComponent.objects.filter(componentType__name='Vector')
+        dnapartsVectorAll  = DnaComponent.objects.filter(componentType__name='Vector Backbone')
+        dnapartsInsertsAll = DnaComponent.objects.filter(componentType__name='Vector Backbone')
         dnaparts = [dnapart for dnapart in DnaComponent.objects.all() if (dnapart not in dnapartsVectorAll and dnapart.sequence is not None and dnapart.sequence != "" and dnapart.sequence in sequence_text)]
         name = ''
         data = serializers.serialize('json', dnaparts)
@@ -482,7 +501,7 @@ def getInsertDBAnnotationBySequence(sequence_text,strand,displayIdDnaComponent):
                 try:
                         isRelated = DnaSequenceAnnotation.isRelated(displayid,displayIdDnaComponent)
                 except:
-                        print 'not related'
+                        print ''
                 
                 if (strand=='-'):
                         firstPos = firstposition
@@ -517,6 +536,8 @@ def getAnnotToBeDeleted(request, jsonAmmpt,displayIdDnaComponent):
         
         data2 = json.loads(jsonAmmpt)
         sumDna = ""
+        missingAnnot = ''
+        
         selectedAnnotFromDB = json.loads(data2["selected_annot"][0]["db_checked"])
         if (selectedAnnotFromDB):
                         try:                       
@@ -525,27 +546,30 @@ def getAnnotToBeDeleted(request, jsonAmmpt,displayIdDnaComponent):
                         except:
                                 print 'error'        
         
-        
-        dnacomp = DnaComponent.objects.get(displayId = displayIdDnaComponent)
-        missingAnnot = ''
-        for qannot in DnaSequenceAnnotation.objects.filter( subComponent=dnacomp.id):
-                test = qannot.componentAnnotated.displayId
-                if (sumDna.find(test)==-1):
-                        if (missingAnnot ==''):
-                                missingAnnot = test
-                        else:
-                                missingAnnot = missingAnnot + ","+ test
-   
+        try:
+                dnacomp = DnaComponent.objects.get(displayId = displayIdDnaComponent)
+                for qannot in DnaSequenceAnnotation.objects.filter( subComponent=dnacomp.id):
+                        test = qannot.componentAnnotated.displayId
+                        if( not utilLabrack.isDnaTypeVector(qannot.componentAnnotated)):
+                                if (sumDna.find(test)==-1):
+                                        if (missingAnnot ==''):
+                                                missingAnnot = test
+                                        else:
+                                                missingAnnot = missingAnnot + ","+ test
+        except:
+                print ''
         json = simplejson.dumps(missingAnnot)
         return HttpResponse(json, mimetype='application/json') 
 
 def search_dna_parts(request, sequence_text,displayIdDnaComponent):
-        coo = sequence_text;
-        rs = sequence_text.split('__');
-        sequence_text = rs[0];
-        sequence_vector = rs[1];
+        coo = sequence_text
+        rs = sequence_text.split('__')
+        sequence_text = rs[0]
+        sequence_vector = rs[1]
+        f = len(sequence_vector)
+        r = len(sequence_text)
         seq_exceptVector = sequence_text.replace(sequence_vector, '')
-        
+        s = len(seq_exceptVector)
         
         message = {"list_dnas": "", "extra_values": "","parttypes_values": "","optimizedfor_values": "","reverse_list_dnas": "","reverse_extra_values": ""}
         if request.is_ajax():
@@ -560,8 +584,8 @@ def search_dna_parts(request, sequence_text,displayIdDnaComponent):
                 my_seq_exceptVect = Seq(seq_exceptVector, IUPAC.unambiguous_dna)
                 revseq_exceptVect = my_seq_exceptVect.reverse_complement()
                 
-                message['list_dnas'] = getVectorBySequence(sequence_textDuplicate,'+')
-                message['reverse_list_dnas'] = getVectorBySequence(revseqDuplicate,'-')
+                message['list_dnas'] = getVectorBySequence(sequence_textDuplicate,'+',displayIdDnaComponent)
+                message['reverse_list_dnas'] = getVectorBySequence(revseqDuplicate,'-',displayIdDnaComponent)
 
                 #part for retriving potential Inserts
                 message['extra_values'] = getInsertDBAnnotationBySequence(seq_exceptVector,'+',displayIdDnaComponent)
@@ -729,20 +753,21 @@ def retrieveGenBankInfo(filename):
                                 isParsingDone = True
                                 #gb_features += '\n'+ repr(gb_record.features[ind].type) + " Location start : "+ repr(gb_record.features[ind].location._start.position) + " Location end : "+ repr(gb_record.features[ind].location._end.position)
                                 strandValue = repr(gb_record.features[ind].strand)
-                                startPos = repr(gb_record.features[ind].location._start.position+1)
+                                startPos = repr(gb_record.features[ind].location._start.position)
                                 endPos = repr(gb_record.features[ind].location._end.position)
                                 pos = str(startPos)+'-'+str(endPos)
                                 strandValue = repr(gb_record.features[ind].strand)
-                                fullSequence = gb_record.seq.tostring()
+                                origFullSequence = gb_record.seq.tostring()
+                                featureSeq = gb_record.features[ind].extract(gb_record).seq.tostring()
                                 coverage = pos
                                 description = ''
                                 label = repr(gb_record.features[ind].qualifiers.get('label')).replace("['","").replace("']","").replace("\\"," ")
-                                if (label == 'None' ):
+                                if (label == 'None'):
                                         label = repr(gb_record.features[ind].qualifiers.get('gene')).replace("['","").replace("']","").replace("\\"," ")
 
                                 if json_Insertobject == '':
-                                        json_Insertobject = '{ "id":"'+str(label)+'","name":"'+nameType+'","sequence":"'+fullSequence+'","displayid":"'+label+'","description":"'+description+'","coverage":"'+coverage+'","startPos":"'+startPos+'","endPos":"'+endPos+'","strandValue":"'+strandValue+'"}' 
+                                        json_Insertobject = '{ "id":"'+str(label)+'","name":"'+nameType+'","sequence":"'+origFullSequence+'","displayid":"'+label+'","description":"'+description+'","coverage":"'+coverage+'","startPos":"'+startPos+'","endPos":"'+endPos+'","strandValue":"'+strandValue+'","featureSeq":"'+featureSeq+'"}' 
                                 else:
-                                        json_Insertobject = json_Insertobject+',{ "id":"'+str(label)+'","name":"'+nameType+'","sequence":"'+fullSequence+'","displayid":"'+label+'","description":"'+description+'","coverage":"'+coverage+'","startPos":"'+startPos+'","endPos":"'+endPos+'","strandValue":"'+strandValue+'"}' 
+                                        json_Insertobject = json_Insertobject+',{ "id":"'+str(label)+'","name":"'+nameType+'","sequence":"'+origFullSequence+'","displayid":"'+label+'","description":"'+description+'","coverage":"'+coverage+'","startPos":"'+startPos+'","endPos":"'+endPos+'","strandValue":"'+strandValue+'","featureSeq":"'+featureSeq+'"}' 
         json_Insertobject = '['+json_Insertobject+']' 
         return json_Insertobject

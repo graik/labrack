@@ -239,7 +239,7 @@ class DnaComponentAdmin(ComponentAdmin):
 
     #raw_id_fields = ComponentAdmin.raw_id_fields.__add__(('translatesTo',))
     #raw_id_fields = ('componentType', 'variantOf',)
-    raw_id_fields = ('componentType', 'variantOf',)
+    raw_id_fields = ('variantOf',)
     
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'created_by':
@@ -260,6 +260,7 @@ class DnaComponentAdmin(ComponentAdmin):
         #if (proposedDisplayId==''):
         #    proposedDisplayId = initialUser+'0001a'
         data['displayId'] = proposedDisplayId
+
         
         request.GET = data
         return super(DnaComponentAdmin, self).add_view(request, form_url="", extra_context=extra_context)
