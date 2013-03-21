@@ -534,11 +534,10 @@ def getInsertDBAnnotationBySequence(sequence_text,strand,displayIdDnaComponent):
 def getAnnotToBeDeleted(request, jsonAmmpt,displayIdDnaComponent):
         import django.utils.simplejson as json
         
-        data2 = json.loads(jsonAmmpt)
+        data2 = json.loads('['+jsonAmmpt+']')
         sumDna = ""
         missingAnnot = ''
-        
-        selectedAnnotFromDB = json.loads(data2["selected_annot"][0]["db_checked"])
+        selectedAnnotFromDB = json.loads(data2[0]["selected_annot"][0]["db_checked"])
         if (selectedAnnotFromDB):
                         try:                       
                             for id in selectedAnnotFromDB:    

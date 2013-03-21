@@ -157,8 +157,10 @@ class DnaComponentForm(forms.ModelForm):
         
             
         regExp = r'^[a-zA-Z][a-zA-Z]\d\d\d\d[a-zA-Z]?$'
+        regExp2 = r'^[a-zA-Z][a-zA-Z]\d\d\d\d?$'
         if (compTypeName=='Vector Backbone'):
             regExp = r'^[vV]\d\d\d?$'
+            regExp2 = r'^[vV]\d\d\d?$'
             
         if not(re.match(regExp, dispId)):
             if (compTypeName=='Vector Backbone'):
@@ -211,7 +213,8 @@ class DnaComponentForm(forms.ModelForm):
                         
                         idAnnot=obj["text2"]
                         regExp = r'^[a-zA-Z][a-zA-Z]\d\d\d\d[a-zA-Z]?$'
-                        if not(re.match(regExp, idAnnot)):
+                        regExp2 = r'^[a-zA-Z][a-zA-Z]\d\d\d\d?$'
+                        if not(re.match(regExp, idAnnot)) or not(re.match(regExp2, idAnnot)):
                             errorMessage = "ID Annotations Error: "+idAnnot+" doesn't respect the pattern XX1234X, example : sb0001A where sb for initial and A for version"
                             errors.setdefault('',[]).append(errorMessage)                        
                         

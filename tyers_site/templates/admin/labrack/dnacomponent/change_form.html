@@ -88,7 +88,6 @@
 		 HideShowElement('backbone_db','visible');
 		 HideShowElement('backbone_genbank','hidden');
 		 
-		 
 		 repopulateVectorChoice();
 		 repopulateCheckBox();
 		
@@ -166,7 +165,6 @@ function repopulateVectorChoice(){
 		}
 		// populate Vectors fields
 		// db part
-		
 		document.getElementById("inputDataList").selectedIndex = myObject.data[0].db_listSelectedIndex;
 
 		// gb part		
@@ -220,6 +218,7 @@ function checkDeletionAnnotBeforeAfter(json){
 	displayId = document.getElementById("id_displayId").value;
 	answer = "";
 	choice = false;
+
 $.ajax({
      async: false,
      type: 'GET',
@@ -367,12 +366,14 @@ function update_dnaBackbone(selectedItem,fullsequence){
      success: function(data){
        var values = data.list_dnas;
         var jsonObject = eval(values);
-        $("#vectorName").html(jsonObject[0].name);
-        $("#vectorDescription").html(jsonObject[0].description);
-        //$("#idExtra").html(data.extra_values);
-		
-		//update annot base on the vector sequence
-		currSelectedVectorSeq = jsonObject[0].sequence;
+		if (jsonObject!=null){
+			$("#vectorName").html(jsonObject[0].name);
+			$("#vectorDescription").html(jsonObject[0].description);
+			//$("#idExtra").html(data.extra_values);
+			
+			//update annot base on the vector sequence
+			currSelectedVectorSeq = jsonObject[0].sequence;
+		}
     }
 	
 	});	
@@ -454,6 +455,7 @@ var jsonObject = eval(data.list_dnas);
 				optn.text = arrayOfObjects[i].displayid;
 				optn.value = arrayOfObjects[i].displayid;
 				optn.id = arrayOfObjects[i].id;
+				if (arrayOfObjects[i].isRelated=='True') {optn.selected = true;}
 				dataList.options.add(optn);
 				
 				}
@@ -476,6 +478,7 @@ var jsonObject = eval(data.list_dnas);
 
 // populate inserts part base on the main sequence and the vector selections
 function populateInserts(data){
+
 reverse_jsonInsertObject = eval(data.reverse_extra_values);
 jsonObjectPartTypes = eval(data.parttypes_values);
 //alert('just populate ');
@@ -516,7 +519,7 @@ ta = t+"__"+a;
 $.ajax({
      async: false,
      type: 'GET',
-     url: "/test/"+ta+"/"+idComp+"/",
+     url: "/search_dna_parts/"+ta+"/"+idComp+"/",
      success: function(data) {
           if (isUpdateVector) {populateVectorBackbone(data);}
 		  currSelectedAnnot = data;
@@ -618,15 +621,14 @@ function getIndexTypeDropdownlistType(name){
 function getTypeDropdownlistType(){
 //alert('populating getTypeDropdownlistType');
 selectedIndex = 0;
-		 var textnode = document.createElement('select');
-          textnode.setAttribute('name','parttype_select');
+		var textnode = document.createElement('select');
+            textnode.setAttribute('name','parttype_select');
  		if (typeof jsonObjectPartTypes !== "undefined") {
 			if(jsonObjectPartTypes.length) {
 				for(var i=0, len=jsonObjectPartTypes.length; i<len; i++) {
 					textnode.options[i] = new Option(jsonObjectPartTypes[i].name, 'value',jsonObjectPartTypes[i].name);               
-					if 	(jsonObjectPartTypes[i].name=='Region') 
-							{selectedIndex = i;}
-				   }
+						if 	(jsonObjectPartTypes[i].name=='Region')	{selectedIndex = i;}
+				    }
 				}
 		}
 		textnode.options.selectedIndex = selectedIndex;
@@ -867,13 +869,18 @@ function buildGenBankTable(jsontext){
                     send_request(true);
                     }
                     //addRowToAnnotationTable(1,'',arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].name,arrayOfInsertObjects[i].componentType_name,arrayOfInsertObjects[i].coverage,'',i);			
-					initialNameGB = 'gb'+intialnumber+String.fromCharCode(65+i);
-					addRowToAnnotationTable(1,'',initialNameGB,arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].name,arrayOfInsertObjects[i].componentType_name,arrayOfInsertObjects[i].coverage,'',i);			
+					if (arrayOfInsertObjects[i].name.toUpperCase()!='VECTOR' && arrayOfInsertObjects[i].name.toUpperCase()!='VECTOR BACKBONE') {
+						initialNameGB = 'gb'+intialnumber+String.fromCharCode(65+i);
+						addRowToAnnotationTable(1,'',initialNameGB,arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].name,arrayOfInsertObjects[i].componentType_name,arrayOfInsertObjects[i].coverage,'',i);			
+					}
 					var optn = document.createElement("OPTION");
 					optn.text = arrayOfInsertObjects[i].displayid;
 					optn.value = arrayOfInsertObjects[i].id+'<>'+arrayOfInsertObjects[i].displayid+'<>'+arrayOfInsertObjects[i].description+'<>'+arrayOfInsertObjects[i].componentType_name+'<>'+arrayOfInsertObjects[i].coverage;
 					optn.id = arrayOfInsertObjects[i].id;
-					dataList_gen.options.add(optn);
+					//alert(optn.text+optn.value+optn.id);
+					if (arrayOfInsertObjects[i].name.toUpperCase()=='VECTOR' || arrayOfInsertObjects[i].name.toUpperCase()=='VECTOR BACKBONE') {
+						dataList_gen.options.add(optn);
+					}
                 }
             }
 }
@@ -1153,6 +1160,66 @@ style="border:1px solid #000000;">
         <p></p>
 </div>
 
+<div class="module aligned">
+  <h2>Annotations</h2>
+        <div class="description">
+          Note, clicking any of the links below will open a new window/tab!
+        </div>
+        
+        <p></p>
+        
+        {% if original %}
+          <ul class="object-tools">
+            <li><a href="../../dnasequenceannotation/add/?subComponent={{original.id}}" target="_blank">
+                Add Annotation</a></li> 
+          </ul>                  
+        {% endif %}
+        
+               
+        {% if original and original.related_annotations %}
+          <table cellspacing="0">
+            <thead>
+              <tr>
+                <th>ID</th><th>Start</th><th>End</th><th>Strand</th><th>DNA</th><th>Type</th>
+              </tr>
+            </thead>
+            <tbody>
+        
+            {% for dnasequenceannotation in original.related_annotations %}
+        
+              <tr class="{% cycle 'row1' 'row2' %}">
+        
+                <td><b><a href="../../{{dnasequenceannotation.get_relative_url}}" target="_blank">
+                      {{dnasequenceannotation.id}}</a></b></td><td>{{dnasequenceannotation.bioStart}}</td>   
+                      <td>{{dnasequenceannotation.bioEnd}}</td>
+                      <td>{% if dnasequenceannotation.strand == "-1" %}
+                      (-)</td>
+                    {% else %}
+                          (+)</td>
+                    {% endif %}
+                <td>{% if dnasequenceannotation.componentAnnotated %}
+                      <a href="../{{dnasequenceannotation.componentAnnotated.id}}" target="_blank">
+                      {{dnasequenceannotation.componentAnnotated}}</a></td>
+                    {% else %}
+                          --</td>
+                    {% endif %}
+					<td>{% if dnasequenceannotation.componentAnnotated %}
+                      {{dnasequenceannotation.componentAnnotated.show_component_type}}</td>
+                    {% else %}
+                          --</td>
+                    {% endif %}
+              </tr>
+        
+            {% endfor %}
+        
+            </tbody>
+          </table>
+          
+        {% else %}
+          <div class="description"><b>No Sequence Annotations found for this item.</b></div>
+        {% endif %}
+        <p></p>
+</div>
 
 
 {% endblock %}
