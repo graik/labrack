@@ -533,6 +533,14 @@ def getInsertDBAnnotationBySequence(sequence_text,strand,displayIdDnaComponent):
 
 def getAnnotToBeDeleted(request, jsonAmmpt,displayIdDnaComponent):
         import django.utils.simplejson as json
+        try:
+                dnacomp = DnaComponent.objects.get(displayId = displayIdDnaComponent)
+        except DnaComponent.DoesNotExist:
+                dnacomp = None
+                message = ""
+                json = simplejson.dumps(message)
+                return HttpResponse(json, mimetype='application/json')                
+
         
         data2 = json.loads('['+jsonAmmpt+']')
         sumDna = ""
@@ -540,7 +548,7 @@ def getAnnotToBeDeleted(request, jsonAmmpt,displayIdDnaComponent):
         selectedAnnotFromDB = json.loads(data2[0]["selected_annot"][0]["db_checked"])
         if (selectedAnnotFromDB):
                         try:                       
-                            for id in selectedAnnotFromDB:    
+                            for id in selectedAnnotFromDB:
                                     sumDna = sumDna+','+id["id"]
                         except:
                                 print 'error'        
@@ -554,7 +562,7 @@ def getAnnotToBeDeleted(request, jsonAmmpt,displayIdDnaComponent):
                                         if (missingAnnot ==''):
                                                 missingAnnot = test
                                         else:
-                                                missingAnnot = missingAnnot + ","+ test
+                                                missingAnnot = missingAnnot + "," + test
         except:
                 print ''
         json = simplejson.dumps(missingAnnot)
@@ -618,7 +626,7 @@ def search_dna_parts(request, sequence_text,displayIdDnaComponent):
                 json_chassisOptimizedAll = '['+json_chassisOptimizedAll+']'
                 message['optimizedfor_values'] = json_chassisOptimizedAll                
         else:
-                message = "You're the lying type, I can just tell."
+                message = "None"
         json = simplejson.dumps(message)
         return HttpResponse(json, mimetype='application/json')
 

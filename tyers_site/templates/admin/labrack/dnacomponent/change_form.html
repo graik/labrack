@@ -926,6 +926,7 @@ function buildGenBankTable(jsontext){
 	setJSON_genbankFile(jsonInsertObject);
     var arrayOfInsertObjects = jsonInsertObject;
     var sequence = '';
+	 
 	document.getElementById("id_sequence").value = '';
 	initialDisplayId = document.getElementById("id_displayId").value;
 	intialnumber = initialDisplayId.substring(2,6);
@@ -951,7 +952,8 @@ function buildGenBankTable(jsontext){
                 if (sequence=='') {
                 //call sequence change with the full sequence as a value
                     sequence = arrayOfInsertObjects[i].sequence;
-                    document.getElementById("id_sequence").value = sequence;
+					
+						document.getElementById("id_sequence").value = sequence;
                     send_request(true);
                     }
                     //addRowToAnnotationTable(1,'',arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].name,arrayOfInsertObjects[i].componentType_name,arrayOfInsertObjects[i].coverage,'',i);			

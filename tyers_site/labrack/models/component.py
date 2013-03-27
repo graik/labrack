@@ -107,7 +107,7 @@ class Component(PermissionModel,models.Model):
                        ('abandoned', 'abandoned'))
 
     displayId = models.CharField('ID', max_length=20, unique=True, 
-                                 help_text='Unique identification')
+        help_text='Unique identification')
 
     name = models.CharField('Name', max_length=200, blank=True, 
                             help_text='Descriptive name (e.g. "TEV protease")')
@@ -313,7 +313,9 @@ class Chassis(Component):
     componentType = models.ManyToManyField(ChassisComponentType, 
                                            blank=True, null=True, 
                                            verbose_name='Type', 
-                                           help_text='Classification of this part.')   
+                                           help_text='Classification of this part.')
+
+    
 
     def get_relative_url(self):
         """
@@ -607,8 +609,8 @@ class DnaComponent(Component):
 
     def save(self, *args, **kwargs):
         #Saving the sequence
-        if self.GenBankfile:
-            self.sequence = self.related_seq()
+        #if self.GenBankfile:
+        #    self.sequence = self.related_seq()
         super(DnaComponent, self).save(*args, **kwargs) # Call the "real" save() method.
         #if self.GenBankfile:
         #    self.save_annotation()

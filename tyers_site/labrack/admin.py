@@ -742,8 +742,8 @@ class DnaSampleAdmin(PermissionAdmin, admin.ModelAdmin):
                          ('sampleCollection','reference_status'),
                          ('concentration','concentrationUnit','amount','amountUnit',),
                          ('solvent','aliquotNr',),
-                         ('description'),
                          ('created_by','owners'),
+                         ('description'),
                          )
                         )
         }
@@ -936,6 +936,12 @@ class ChassisAdmin(PermissionAdmin,ComponentAdmin):
                                  ('Current location','location_url'),
                                  ])
                                  """
+    """
+    formfield_overrides = {
+        models.CharField: {'widget': TextInput(attrs={'size':'20'})},
+        models.TextField: {'widget': Textarea(attrs={'rows':4, 'cols':40})},
+    }
+    """
     
     fieldsets = (
             (None, {
@@ -961,6 +967,7 @@ class ChassisAdmin(PermissionAdmin,ComponentAdmin):
     #list_filter = ComponentAdmin.list_filter.__add__(('componentType',))
      
     raw_id_fields = ('componentType', 'variantOf',)
+ 
     
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'created_by':
@@ -1049,8 +1056,9 @@ class ChassisSampleAdmin(PermissionAdmin, admin.ModelAdmin):
                          ('reference_status','sampleCollection'),
                          ('preparation_date','registration_date', 'status'),
                          ('solvent','concentration','concentrationUnit','amount','amountUnit','aliquotNr',),
-                         ('description'),
-                         ('created_by','owners')
+                         ('created_by','owners'),
+                         ('description')
+                         
                          )
                         
                         )
@@ -1077,7 +1085,7 @@ class ChassisSampleAdmin(PermissionAdmin, admin.ModelAdmin):
     list_display_links = ('showId',)
 
     list_filter = ('created_by', ContainerListFilter, 'container__rack__current_location', 
-                   'status', SampleCollectionListFilter
+                   'status', SampleCollectionListFilter, 'chassis__componentType'
                    )
 
     ordering       = ('container', 'displayId',)

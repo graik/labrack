@@ -196,7 +196,7 @@ class Sample( PermissionModel ):
     
     
     
-    historyDescription = models.CharField('Comment', null=True,blank=True,max_length = 255)    
+    historyDescription = models.TextField('Comment', null=True,blank=True,max_length = 255)    
 
     # custom properties (shortcuts)
     def _contentObjects( self, model=u'component' ):

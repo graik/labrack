@@ -96,9 +96,9 @@ class ChassisSampleForm(forms.ModelForm):
     ChassisDisplayID = forms.CharField(required=False,label="Display ID")
     ChassisName = forms.CharField(required=False,label="Name")  
     #Chassis_Description = forms.CharField(widget=forms.Textarea,required=False,label="Description")
-    ChassisDescription = forms.CharField(widget=forms.TextInput(attrs={'size':'80'}),required=False,label="Description")
+    ChassisDescription = forms.CharField(widget=forms.TextInput(attrs={'size':'40'}),required=False,label="Description")
 
-    description = forms.CharField(widget=forms.TextInput(attrs={'size':'80'}),required=False)
+    historyDescription = forms.CharField(widget=forms.TextInput(attrs={'size':'80'}),required=False,label="Description")
     class Meta:
         model = ChassisSample    
         
@@ -145,30 +145,40 @@ class DnaComponentForm(forms.ModelForm):
         except Exception, err:
             errorMessage = "ID field is mandatory!"
             errors.setdefault('',[]).append(errorMessage)                      
-            raise forms.ValidationError("ID field is mandatory!")              
+            raise forms.ValidationError("ID field is mandatory!")      
             commit=False
        
         dispId = self.cleaned_data['displayId']
         compType = self.cleaned_data['componentType']
-        compTypeName = ''        
+        compTypeName = 'Others DNA Type'        
         for s in compType:
             if s.name =='Vector Backbone':
                 compTypeName = 'Vector Backbone'
+            if s.name =='Primer':
+                compTypeName = 'Primer'                
         
             
         regExp = r'^[a-zA-Z][a-zA-Z]\d\d\d\d[a-zA-Z]?$'
         regExp2 = r'^[a-zA-Z][a-zA-Z]\d\d\d\d?$'
         if (compTypeName=='Vector Backbone'):
-            regExp = r'^[vV]\d\d\d?$'
-            regExp2 = r'^[vV]\d\d\d?$'
+            regExp = r'^[vV][a-zA-Z]\d\d\d?$'
+            regExp2 = r'^[vV][a-zA-Z]\d\d\d?$'
+        if (compTypeName=='Primer'):
+            regExp = r'^Pri\d\d\d\d[a-zA-Z]?$'
+            regExp2 = r'^Pri\d\d\d\d?$'            
             
         if not(re.match(regExp, dispId)):
             if (compTypeName=='Vector Backbone'):
-                errorMessage = "ID :"+dispId+" doesn't respect the vector pattern V123, example : v001 where v or V for Vector"
-                errors.setdefault('',[]).append(errorMessage)                      
-            #raise forms.ValidationError("ID :"+dispId+" doesn't respect the pattern XX1234X, example : sb0001A where sb for initial and A for version")
-            errorMessage = "ID :"+dispId+" doesn't respect the pattern XX1234X, example : sb0001A where sb for initial and A for version"
-            errors.setdefault('',[]).append(errorMessage)                      
+                errorMessage = "ID :"+dispId+" doesn't respect the naming convention for "+compTypeName
+                errors.setdefault('',[]).append(errorMessage)
+            else:
+                if (compTypeName=='Primer'):
+                    errorMessage = "ID :"+dispId+" doesn't respect the naming convention for "+compTypeName
+                    errors.setdefault('',[]).append(errorMessage)
+                else:
+                    #raise forms.ValidationError("ID :"+dispId+" doesn't respect the pattern XX1234X, example : sb0001A where sb for initial and A for version")
+                    errorMessage = "ID :"+dispId+" doesn't respect the naming convention for "+compTypeName
+                    errors.setdefault('',[]).append(errorMessage)                      
         
         
         cleanedData = super(DnaComponentForm, self).clean()
@@ -197,9 +207,9 @@ class DnaComponentForm(forms.ModelForm):
         # check if the name vector exist already in the DB
         if (isGbData=='true' and  data["data"][1]["name"]!=''):
             displayid_gb=data["data"][1]["displayid"]
-            regExp = r'^[vV]\d\d\d?$'
+            regExp = r'^[vV][a-zA-Z]\d\d\d?$'
             if not(re.match(regExp, displayid_gb)):
-                errorMessage = "ID :"+displayid_gb+" doesn't respect the vector pattern V123, example : v001 where v or V for Vector"
+                errorMessage = "ID :"+displayid_gb+" doesn't respect the vector naming convention"
                 errors.setdefault('',[]).append(errorMessage)
             
             if (DnaComponent.objects.filter(displayId=displayid_gb)):
@@ -212,10 +222,17 @@ class DnaComponentForm(forms.ModelForm):
                     for obj in selectedAnnotFromGB:
                         
                         idAnnot=obj["text2"]
+                        annotType=obj["text5"]
                         regExp = r'^[a-zA-Z][a-zA-Z]\d\d\d\d[a-zA-Z]?$'
                         regExp2 = r'^[a-zA-Z][a-zA-Z]\d\d\d\d?$'
-                        if not(re.match(regExp, idAnnot)) or not(re.match(regExp2, idAnnot)):
-                            errorMessage = "ID Annotations Error: "+idAnnot+" doesn't respect the pattern XX1234X, example : sb0001A where sb for initial and A for version"
+                        
+                        if (annotType=='Primer'):
+                            regExp = r'^Pri\d\d\d\d[a-zA-Z]?$'
+                            regExp2 = r'^Pri\d\d\d\d?$'                            
+                        
+                        
+                        if (not(re.match(regExp, idAnnot)) and not(re.match(regExp2, idAnnot))):
+                            errorMessage = "ID Annotations Error: "+idAnnot+" doesn't respect the naming convention for "+annotType
                             errors.setdefault('',[]).append(errorMessage)                        
                         
                         if (DnaComponent.objects.filter(displayId=idAnnot)):
