@@ -35,20 +35,19 @@
 				var elem = divs[i].children;
 					for(var j = 0; j < elem.length; j++){
 						var td = elem[j];
-						
 						scr = td.innerHTML;
 					}
-			 }
+				}
 		  }
 		  for(var i = 0; i < divs.length; i++){
-		   if (divs[i].className=='form-row field-sequence') {
-			 
-				txt=document.createTextNode('');
-				divs[i].id = 'id_GenBankfile_loaded';
-				//alert(scr.substring(scr.indexOf("<a href"),scr.indexOf("</a>")+4));
-				divs[i].innerHTML += "File : "+scr.substring(scr.indexOf("<a href"),scr.indexOf("</a>")+4);
-				divs[i].appendChild(txt);
-			 }
+				if (divs[i].className=='form-row field-sequence') {
+				   txt=document.createTextNode('');
+				   divs[i].id = 'id_GenBankfile_loaded';
+				}
+				if (divs[i].className=='field-box field-displayId') {
+				   
+				   divs[i].innerHTML += " <p class='help'>Naming convention for : <BR>  - Vector Bachbone -> Ve001<BR>  - Primer -> pri0000<BR>  - Others -> XX0001a or XX0001</p>";
+				}
 		  }
 
          uploadTheFile();
@@ -60,6 +59,11 @@
           
          textContent = document.getElementById("id_sequence");
          textContent.oninput=sequenceHandler;
+		 
+		 //add event on listbox selection
+		 listContent = document.getElementById("id_componentType");
+		 document.getElementById("id_componentType").selectedIndex = PlasmidIndexType();
+		 listContent.onchange = listTypeOnChange;
 		 
 		 
 		 //$('#id_GenBankfile').live('change', function(){ uploadFile(); });
@@ -77,6 +81,8 @@
 		 document.getElementById("id_htmlAttribute3").hidden="true";
 		 document.getElementById("id_htmlAttribute1").innerHTML = "";
 		 
+		 
+ 		 
 		  
 		 
 		 
@@ -300,6 +306,86 @@ function retrieveAndFeedDataHandler(e)
 					 
 		}
    }
+	function PlasmidIndexType(){
+		var selectobject=document.getElementById("id_componentType")
+			for (var i=0; i<selectobject.length; i++){
+				if (selectobject.options[i].text=='Plasmid') {
+						return i;
+					}
+			
+			//alert(selectobject.options[i].text+" "+selectobject.options[i].value)
+			}
+			return 0;
+		
+	}
+   
+	function listTypeOnChange(e){
+	
+		listContent = document.getElementById("id_componentType");
+		i = listContent.selectedIndex;
+		selectedValue = listContent.options[i].text;
+		updateVisualForm(selectedValue);
+	
+	}
+	
+	function updateVisualForm(selectedValue){
+	
+		switch(selectedValue)
+		{
+		case 'Vector Backbone':
+			document.getElementById("id_circular").checked = true;
+			ShowHide('HiddenDivVector','none');
+			document.getElementById("id_optimizedFor").disabled=true; 
+			document.getElementById("id_translatesTo").disabled=true; 
+			break;
+			
+		case 'Primer':
+			document.getElementById("id_circular").checked = false;
+			ShowHide('HiddenDivVector','none');
+			document.getElementById("id_optimizedFor").disabled=true; 
+			document.getElementById("id_translatesTo").disabled=true; 
+
+			break;
+		case 'dsDNA Fragment':
+			document.getElementById("id_circular").checked = false;
+			ShowHide('HiddenDivVector','none');
+			document.getElementById("id_optimizedFor").disabled=false; 
+			document.getElementById("id_translatesTo").disabled=false; 
+
+			break;
+			
+		case 'SelectionMarker':
+			document.getElementById("id_circular").checked = false;
+			ShowHide('HiddenDivVector','none');
+			document.getElementById("id_optimizedFor").disabled=false; 
+			document.getElementById("id_translatesTo").disabled=false; 
+			
+			break;
+			
+		case 'Plasmid':
+			document.getElementById("id_circular").checked = true;
+			ShowHide('HiddenDivVector','block');
+			document.getElementById("id_optimizedFor").disabled=false; 
+			document.getElementById("id_translatesTo").disabled=false; 
+			break;
+			
+		case 'Region':
+			document.getElementById("id_circular").checked = false;
+			ShowHide('HiddenDivVector','none');
+			document.getElementById("id_optimizedFor").disabled=false; 
+			document.getElementById("id_translatesTo").disabled=false; 
+			break;
+			
+		default:
+			document.getElementById("id_circular").checked = false;
+			ShowHide('HiddenDivVector','none');
+			document.getElementById("id_optimizedFor").disabled=false;
+			document.getElementById("id_translatesTo").disabled=false; 
+			
+	}
+	
+	}
+	
    
 	function sequenceHandlerFile(e)
 	{
@@ -917,6 +1003,15 @@ function uploadGBDataFileIfExist(){
 	}
 	
 }
+//show hide Vector Div parts mainly
+
+function ShowHide(divId,state)
+{
+
+document.getElementById(divId).style.display = state;
+
+}
+
 
 function uploadTheFile(){
     var uploader = new qq.FileUploader({
@@ -972,80 +1067,81 @@ function uploadTheFile(){
 style="border:1px solid #000000;">
 </canvas> 
 </fieldset>
-<h2>Specify vector backbone</h2>
- 
-
-<div class="form-row">
-            
-				<div class="myradio">
-				    <label><input id="radiodb" type="radio" name="group1" value="database" onchange="HideShowElement('backbone_db','visible');HideShowElement('backbone_genbank','hidden');" checked> Vector from Database</label>
-					<label><input id="radiogb" type="radio" name="group1" value="file" onchange="HideShowElement('backbone_db','hidden');HideShowElement('backbone_genbank','visible');"> Vector from Genbank file</label><BR><BR><BR>
-					<p class="help">choose the vector from the database or from the genbank file.</p><BR>
-				</div>
-<div class="form-row">
-					<div id="backbone_db"> 
-						<div class="field-box">
-								<label for="id_backbone_id">ID:</label>
-								<SELECT id = "inputDataList" NAME="datalist" onChange="selected_dnaBackbone();">
-								</SELECT>
-						</div>
+<div class="mid" id="HiddenDivVector" style="DISPLAY: block" >
+		<h2>Specify vector backbone</h2>
+		 
+		
+		<div class="form-row">
 					
-						<div class="field-box">
-								<label for="id_backbone_name" class="inline">Name:</label>
-									<input type="text" name="id_backbone_name" readonly id="id_backbone_name" />
+						<div class="myradio">
+							<label><input id="radiodb" type="radio" name="group1" value="database" onchange="HideShowElement('backbone_db','visible');HideShowElement('backbone_genbank','hidden');" checked> Vector from Database</label>
+							<label><input id="radiogb" type="radio" name="group1" value="file" onchange="HideShowElement('backbone_db','hidden');HideShowElement('backbone_genbank','visible');"> Vector from Genbank file</label><BR><BR><BR>
+							<p class="help">choose the vector from the database or from the genbank file.</p><BR>
+						</div>
+		<div class="form-row">
+							<div id="backbone_db"> 
+								<div class="field-box">
+										<label for="id_backbone_id">ID:</label>
+										<SELECT id = "inputDataList" NAME="datalist" onChange="selected_dnaBackbone();">
+										</SELECT>
+								</div>
+							
+								<div class="field-box">
+										<label for="id_backbone_name" class="inline">Name:</label>
+											<input type="text" name="id_backbone_name" readonly id="id_backbone_name" />
+								</div>
+								
+								
+								<div class="field-box">
+										<label for="id_backbone_description" class="inline">Description:</label>
+											<input type="text" name="id_backbone_description" readonly id="id_backbone_description" />
+								</div>
+								
+								<div class="field-box" style="visibility: hidden">
+										<label for="id_backbone_selectionmarkers" class="inline">Selection markers(s):</label>
+											<input type="text" name="id_backbone_selectionmarkers" readonly id="id_backbone_selectionmarkers"/>
+											
+								</div>
+								
+							</div> 
+						</div>				
+						<div class="form-row">
+							<div id="backbone_genbank"> 
+								<div class="field-box">
+										<label for="id_backbone_gen_id">List:</label>
+										<SELECT id = "datalist_gen" NAME="datalist_gen" onChange="updateJSON_accordingto_genbankFileSelection();">
+										</SELECT>
+								</div>
+								
+								<div class="field-box">
+										<label for="id_backbone_gen_displayid" class="inline">ID:</label>
+											<input type="text" name="id_backbone_gen_displayid" id="id_backbone_gen_displayid" />
+								</div>
+								
+								<div class="field-box">
+										<label for="id_backbone_gen_name" class="inline">Name:</label>
+											<input type="text" name="id_backbone_gen_name" id="id_backbone_gen_name" />
+								</div>
+								
+								<div class="field-box" style="visibility: hidden">
+										<label for="id_backbone_gen_selectionmarkers" class="inline">Selection markers(s):</label>
+											<input type="text" name="id_backbone_gen_selectionmarkers" id="id_backbone_gen_selectionmarkers" HIDDEN=TRUE />
+								</div>
+								
+								<div class="field-box">
+										<label for="id_backbone_gen_description" class="inline">Description:</label>
+											<input type="text" name="id_backbone_gen_description" id="id_backbone_gen_description"/>
+								</div>
+								<div class="field-box">
+										<label for="id_backbone_gen_coverage" class="inline">Position:</label>
+											<input type="text" name="id_backbone_gen_coverage" id="id_backbone_gen_coverage"/>
+								</div>
+							</div>
 						</div>
 						
-						
-						<div class="field-box">
-								<label for="id_backbone_description" class="inline">Description:</label>
-									<input type="text" name="id_backbone_description" readonly id="id_backbone_description" />
-						</div>
-						
-						<div class="field-box" style="visibility: hidden">
-								<label for="id_backbone_selectionmarkers" class="inline">Selection markers(s):</label>
-									<input type="text" name="id_backbone_selectionmarkers" readonly id="id_backbone_selectionmarkers"/>
-									
-						</div>
-						
-					</div> 
-				</div>				
-				<div class="form-row">
-					<div id="backbone_genbank"> 
-						<div class="field-box">
-								<label for="id_backbone_gen_id">List:</label>
-								<SELECT id = "datalist_gen" NAME="datalist_gen" onChange="updateJSON_accordingto_genbankFileSelection();">
-								</SELECT>
-						</div>
-						
-						<div class="field-box">
-								<label for="id_backbone_gen_displayid" class="inline">ID:</label>
-									<input type="text" name="id_backbone_gen_displayid" id="id_backbone_gen_displayid" />
-						</div>
-						
-						<div class="field-box">
-								<label for="id_backbone_gen_name" class="inline">Name:</label>
-									<input type="text" name="id_backbone_gen_name" id="id_backbone_gen_name" />
-						</div>
-						
-						<div class="field-box" style="visibility: hidden">
-								<label for="id_backbone_gen_selectionmarkers" class="inline">Selection markers(s):</label>
-									<input type="text" name="id_backbone_gen_selectionmarkers" id="id_backbone_gen_selectionmarkers" HIDDEN=TRUE />
-						</div>
-						
-						<div class="field-box">
-								<label for="id_backbone_gen_description" class="inline">Description:</label>
-									<input type="text" name="id_backbone_gen_description" id="id_backbone_gen_description"/>
-						</div>
-						<div class="field-box">
-								<label for="id_backbone_gen_coverage" class="inline">Position:</label>
-									<input type="text" name="id_backbone_gen_coverage" id="id_backbone_gen_coverage"/>
-						</div>
-					</div>
-				</div>
- 				
-			 
+					 
+		</div>
 </div>
-
 
 
 <fieldset class="module aligned collapse">
