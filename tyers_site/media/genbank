@@ -1,0 +1,21 @@
+from Bio import SeqIO
+gb_file = "rg2130_pJE411_reformatted.gbk"
+for gb_record in SeqIO.parse(open(gb_file,"r"), "genbank") :
+       # now do something with the record
+       print "Name %s, %i features" % (gb_record.name, len(gb_record.features))
+       print repr(gb_record.seq)
+       for ind in xrange(len(gb_record.features)) :
+              gb_feature = gb_record.features[ind]
+              print gb_feature
+
+from Bio import SeqIO
+gb_file = "pET52b.gbk"
+for gb_record in SeqIO.parse(open(gb_file,"r"), "genbank") :
+       # now do something with the record
+       print "Name %s, %i features" % (gb_record.name, len(gb_record.features))
+       print repr(gb_record.seq)
+       for ind in xrange(len(gb_record.features)) :
+              gb_feature = gb_record.features[ind]
+              print gb_feature
+              
+       

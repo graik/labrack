@@ -1,0 +1,1159 @@
+{% extends "admin/change_form.html" %}
+
+{% load i18n admin_modify adminmedia %}
+
+
+{% block after_field_sets %}
+
+
+
+<link rel="stylesheet" type="text/css" href="/media/js/fileuploader/fileuploader.css">
+<script type="text/javascript" src="/media/js/fileuploader/fileuploader.js"></script> 
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+<script src="/media/scribl/Scribl.1.1.3.min.js" ></script>
+<script type="text/javascript" src="/media/scribl/examples/js/dragscrollable.js"></script>
+
+
+<script language=javascript type='text/javascript'>
+
+       var txtContent;
+	   var currSelectedVectorSeq = '';
+	   var jsonObjectPartTypes;
+	   var jsonObjectOptimizedFor;
+
+      window.onload = function()
+      {
+		//blockAllTextFieldFromEditing();
+		var scr = "";
+		var divs = document.getElementsByTagName("div");
+		  for(var i = 0; i < divs.length; i++){
+			 //do something to each div like
+			 if (divs[i].className=='form-row field-GenBankfile') {
+				//alert(divs[i].className);
+				divs[i].id = 'id_GenBankfile';
+				var elem = divs[i].children;
+					for(var j = 0; j < elem.length; j++){
+						var td = elem[j];
+						
+						scr = td.innerHTML;
+					}
+			 }
+		  }
+		  for(var i = 0; i < divs.length; i++){
+		   if (divs[i].className=='form-row field-sequence') {
+			 
+				txt=document.createTextNode('');
+				divs[i].id = 'id_GenBankfile_loaded';
+				//alert(scr.substring(scr.indexOf("<a href"),scr.indexOf("</a>")+4));
+				divs[i].innerHTML += "File : "+scr.substring(scr.indexOf("<a href"),scr.indexOf("</a>")+4);
+				divs[i].appendChild(txt);
+			 }
+		  }
+
+         uploadTheFile();
+		 // reload charts if file has been selected already
+		 uploadGBDataFileIfExist();
+         //checkContent = document.getElementById("id_is_vector_backbone");
+         //checkContent.onchange = checkHandler;
+         
+          
+         textContent = document.getElementById("id_sequence");
+         textContent.oninput=sequenceHandler;
+		 
+		 
+		 //$('#id_GenBankfile').live('change', function(){ uploadFile(); });
+		 
+		 fileContent = document.getElementById("id_GenBankfile");
+		 fileContent.onchange=sequenceHandlerFile;
+		 
+		 
+		 savebutton = document.getElementsByName("_save");
+ 		 savebutton[0].onclick = retrieveAndFeedDataHandler;
+		 //savebutton[1].onclick = retrieveAndFeedDataHandler;
+		 
+		 //hide attrb1
+		 document.getElementById("id_htmlAttribute1").hidden="true";
+		 document.getElementById("id_htmlAttribute2").hidden="true";
+		 document.getElementById("id_htmlAttribute3").hidden="true";
+		 document.getElementById("id_htmlAttribute1").innerHTML = "";
+		 
+		  
+		 
+		 
+		 // reason for calling is to populate parttype and optimized for
+		 //send_request(true);
+		 send_request(true);
+          
+ 		 
+		 HideShowElement('backbone_db','visible');
+		 HideShowElement('backbone_genbank','hidden');
+		 
+		 
+		 repopulateVectorChoice();
+		 repopulateCheckBox();
+		
+		
+    };
+	
+ 
+
+function blockAllTextFieldFromEditing(){
+		$('form input[class="vManyToManyRawIdAdminField"]').each(function(){
+				// Do your magic here
+				this.readonly=true;
+		});
+
+}
+function selectallchecked_gb(){
+ var fieldName='gb_checkbox';
+ var fieldNameText2='gb_text2';
+ var fieldNameText3='gb_text3';
+ var fieldNameText4='gb_text4';
+ var fieldNameText5='gb_text5';
+ var fieldNameText6='gb_text6';
+ var fieldNameText7='gb_text7';
+
+  var i=document.getElementsByName(fieldName).length;
+  var e=document.getElementsByName(fieldName);
+  
+  var name=new Array();
+  var value=new Array();
+  var jsonObj = []; //declare array
+  
+	var j=0;
+	 for(var k=0;k<i;k++)
+	{
+	   if(e[k].checked==true){
+ 
+			jsonObj.push({id: e[k].id,text2: et2[k].value,text3: et3[k].value,text4: et4[k].value,text5:et5[k].options[et5[k].selectedIndex].text,text6: et6[k].value,text7:et7[k].options[et7[k].selectedIndex].text});
+			 
+		  }    
+	}	 
+	return JSON.stringify(jsonObj);
+}
+
+
+
+function repopulateVectorChoice(){
+	test = '('+document.getElementById("id_htmlAttribute1").value+')';
+	if (test!='()') {
+		var myObject = eval(test);
+		test_db_checked = myObject.data[0].db_data;
+		test_gb_checked = myObject.data[1].gb_data;
+		// populate radio button
+		document.getElementById("radiodb").checked = test_db_checked
+		document.getElementById("radiogb").checked = test_gb_checked
+		if (test_db_checked=='true') {
+		HideShowElement('backbone_db','visible');
+		HideShowElement('backbone_genbank','hidden');
+		}
+		if (test_gb_checked=='true') {
+		HideShowElement('backbone_db','hidden');
+		HideShowElement('backbone_genbank','visible');
+		}
+		// populate Vectors fields
+		// db part
+		
+		document.getElementById("inputDataList").selectedIndex = myObject.data[0].db_listSelectedIndex;
+
+		// gb part		
+		document.getElementById("datalist_gen").selectedIndex = myObject.data[1].gb_listSelectedIndex;
+		document.getElementById("id_backbone_gen_displayid").value = myObject.data[1].displayid;
+		document.getElementById("id_backbone_gen_name").value = myObject.data[1].name;
+		document.getElementById("id_backbone_gen_description").value = myObject.data[1].description;
+		document.getElementById("id_backbone_gen_coverage").value = myObject.data[1].coverage;
+		
+	
+	}
+}
+function repopulateCheckBox(){
+	test = '('+document.getElementById("id_htmlAttribute2").value+')';
+ 
+	if (test!='()') {
+		var myObject = eval(test);
+		test_db_checked = myObject.selected_annot[0].db_checked;
+		test_gb_checked = myObject.selected_annot[1].gb_checked;
+		data_db = '({"data":'+test_db_checked+'})';
+		data_gb = '({"data":'+test_gb_checked+'})';
+		var myObject_db = eval(data_db);
+		var myObject_gb = eval(data_gb);
+		//db repopulating
+		//alert(document.getElementById(myObject_db.data[0].id).id);
+		if (myObject_db) {
+			for (var i = 0; i < myObject_db.data.length; i++) {
+ 				document.getElementById(myObject_db.data[i].id).checked = true;
+			}
+		}
+		//gb repopulating
+		if (myObject_gb) {
+			for (var i = 0; i < myObject_gb.data.length; i++) {
+				//alert(myObject_gb.data[i].id);
+				document.getElementById(myObject_gb.data[i].id).checked = true;
+				document.getElementById('text2_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text2;
+				document.getElementById('text3_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text3;
+				document.getElementById('text4_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text4;
+				//document.getElementById('text5_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text5;
+				document.getElementById('text5_'+myObject_gb.data[i].id).selectedIndex = getIndexTypeDropdownlistType(myObject_gb.data[i].text5);
+				document.getElementById('text6_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text6;
+				//document.getElementById('text7_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text7;
+				document.getElementById('text7_'+myObject_gb.data[i].id).selectedIndex = getIndexNameDropdownlistOptimizedFor(myObject_gb.data[i].text7);  
+			}
+		}
+	}
+}
+
+
+
+function retrieveAndFeedDataHandler(e)
+   {
+		textContent = document.getElementById("id_htmlAttribute1");
+		textContent2 = document.getElementById("id_htmlAttribute2");
+
+		
+		is_db_data = document.getElementById("radiodb").checked;
+		db_data_displayid = document.getElementById("inputDataList").value;
+		db_data_listIdSelectedIndex = document.getElementById("inputDataList").selectedIndex;		
+
+		is_gb_data = document.getElementById("radiogb").checked;
+		gb_data_displayid = document.getElementById("id_backbone_gen_displayid").value;
+		gb_data_listIdSelectedIndex = document.getElementById("datalist_gen").selectedIndex;
+		gb_data_name = document.getElementById("id_backbone_gen_name").value;
+		gb_data_description = document.getElementById("id_backbone_gen_description").value;
+		gb_data_coverage = document.getElementById("id_backbone_gen_coverage").value;
+
+ 
+		var json_ele = {"data": [
+				 {"db_data": ""+is_db_data+"", "db_listSelectedIndex": ""+db_data_listIdSelectedIndex+"", "name": ""+db_data_displayid+"", "description": ""},
+				 {"gb_data": ""+is_gb_data+"", "gb_listSelectedIndex": ""+gb_data_listIdSelectedIndex+"", "displayid": ""+gb_data_displayid+"", "name": ""+gb_data_name+"", "description": ""+gb_data_description+"", "coverage": ""+gb_data_coverage+""}
+				 ]
+		};
+		
+		
+		var json_ele2 = {"selected_annot": [
+				  {"db_checked": ""+selectallchecked_db()+""},
+				  {"gb_checked": ""+selectallchecked_gb()+""}
+				 ]
+		};
+		textContent.value = JSON.stringify(json_ele);
+		textContent2.value = JSON.stringify(json_ele2);
+		
+	
+   }
+   
+   
+   
+   function checkHandler(e)
+   {
+		if (document.getElementById("id_is_vector_backbone").checked) {
+					hidediv();
+					HideShowElement('backbone_db','hidden');
+					HideShowElement('backbone_genbank','hidden');
+				 }
+				 else {
+					showdiv();
+					if (document.getElementById("radiodb").checked){
+						HideShowElement('backbone_db','visible');
+						HideShowElement('backbone_genbank','hidden');
+					} else {
+						HideShowElement('backbone_db','hidden');
+						HideShowElement('backbone_genbank','visible');
+					};
+
+					 
+		}
+   }
+   
+	function sequenceHandlerFile(e)
+	{
+	uploadTheFile();
+	}
+   
+   function sequenceHandler(e)
+   {
+		send_request(true);		
+   }
+			 
+function HideShowElement(elementName,status) {
+	if (document.getElementById) { // DOM3 = IE5, NS6
+	document.getElementById(elementName).style.visibility = status;
+	}
+}
+
+
+function hidediv() {
+	if (document.getElementById) { // DOM3 = IE5, NS6
+	document.getElementById('hideShow').style.visibility = 'hidden';
+	}
+	else {
+		if (document.layers) { // Netscape 4
+			document.hideShow.visibility = 'hidden';
+		}
+		else { // IE 4
+			document.all.hideShow.style.visibility = 'hidden';
+		}
+	}
+}
+
+function showdiv() {
+	if (document.getElementById) { // DOM3 = IE5, NS6
+		document.getElementById('hideShow').style.visibility = 'visible';
+	}
+	else {
+			if (document.layers) { // Netscape 4
+			document.hideShow.visibility = 'visible';
+			}
+			else { // IE 4
+			document.all.hideShow.style.visibility = 'visible';
+			}
+	}
+}
+</script> 
+<script type="text/javascript">
+//global  variables
+var arrayOfJSON_AnnotationsFile = null;
+
+function selected_dnaBackbone(){
+	var fullsequence = this.document.getElementById("id_sequence").value;
+    var input = document.getElementById("inputDataList");
+    update_dnaBackbone(input.value,fullsequence);
+}
+
+// get the information regarding the DNA Backbone vector from the server
+function update_dnaBackbone(selectedItem,fullsequence){
+
+	$.ajax({
+     async: false,
+     type: 'GET',
+     url: "/get_dna_info/"+selectedItem+"/",
+     success: function(data){
+       var values = data.list_dnas;
+        var jsonObject = eval(values);
+        $("#vectorName").html(jsonObject[0].name);
+        $("#vectorDescription").html(jsonObject[0].description);
+        //$("#idExtra").html(data.extra_values);
+		
+		//update annot base on the vector sequence
+		currSelectedVectorSeq = jsonObject[0].sequence;
+    }
+	
+	});	
+
+
+
+    <!--$.get("/get_dna_info/"+selectedItem+"/", function(data){-->
+       <!--var values = data.list_dnas;-->
+        <!--var jsonObject = eval(values);-->
+        <!--$("#vectorName").html(jsonObject[0].name);-->
+        <!--$("#vectorDescription").html(jsonObject[0].description);-->
+        <!--//$("#idExtra").html(data.extra_values);-->
+		
+		<!--//update annot base on the vector sequence-->
+		<!--currSelectedVectorSeq = jsonObject[0].sequence;-->
+    <!--});-->
+	send_request(false);
+	
+}
+
+
+ 
+
+function checkIfElementExistInJson(elem,jsonStruct){
+var jsonObject = jsonStruct;
+	for(var i=0, len=jsonObject.length; i<len; i++) {
+			if (jsonObject[i].displayid==elem) {
+				return true;
+			}
+	}
+	return false;
+}
+
+// Vector backbone section populating the list of vector that sequence are part of the main sequence
+function populateVectorBackbone(data){
+reverse_jsonObject = eval(data.reverse_list_dnas);
+ 
+
+var jsonObject = eval(data.list_dnas);
+	var arrayOfObjects = jsonObject;
+    //alert(data.list_dnas);
+	$("#input").html("");
+    //dataList.empty();
+	
+	var dataList_gen = document.getElementById("datalist_gen");
+	//dataList_gen.options.length = 0;
+	/*var optn = document.createElement("OPTION");
+				optn.text = "";
+				optn.value = "";
+				optn.id = -999;
+				dataList_gen.options.add(optn);
+	*/
+    var dataList = document.getElementById("inputDataList");
+	dataList.options.length = 0;
+	var optn = document.createElement("OPTION");
+				optn.text = "";
+				optn.value = "";
+				optn.id = -999;
+				dataList.options.add(optn);
+    if(arrayOfObjects) {
+		for(var i=0, len=arrayOfObjects.length; i<len; i++) {
+ 		var optn = document.createElement("OPTION");
+				optn.text = arrayOfObjects[i].displayid;
+				optn.value = arrayOfObjects[i].displayid;
+				optn.id = arrayOfObjects[i].id;
+				dataList.options.add(optn);
+				
+				}
+            }
+			
+	//add the reverse if existing
+					
+	if(reverse_jsonObject) {
+			for(var i=0, len=reverse_jsonObject.length; i<len; i++) {
+				if (!checkIfElementExistInJson(reverse_jsonObject[i].displayid,arrayOfObjects)) {
+					var optn = document.createElement("OPTION");
+						optn.text = reverse_jsonObject[i].displayid;
+						optn.value = reverse_jsonObject[i].displayid;
+						optn.id = reverse_jsonObject[i].id;
+						dataList.options.add(optn);
+					}
+				}
+            }
+}
+
+// populate inserts part base on the main sequence and the vector selections
+function populateInserts(data){
+reverse_jsonInsertObject = eval(data.reverse_extra_values);
+jsonObjectPartTypes = eval(data.parttypes_values);
+//alert('just populate ');
+jsonObjectOptimizedFor = eval(data.optimizedfor_values);
+//alert(jsonObjectOptimizedFor);
+    emptyRowsTable(0);
+    var jsonInsertObject = eval(data.extra_values);
+    var arrayOfInsertObjects = jsonInsertObject;
+		if(arrayOfInsertObjects) {
+            for(var i=0, len=arrayOfInsertObjects.length; i<len; i++) {
+					positionStrand = arrayOfInsertObjects[i].coverage + '('+arrayOfInsertObjects[i].strand+')';
+					addRowToAnnotationTable(0,'',arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].name,arrayOfInsertObjects[i].description,arrayOfInsertObjects[i].componentType_name,positionStrand,arrayOfInsertObjects[i].optimizedFor_name,'');
+               }
+		}
+		
+    var revarrayOfInsertObjects = reverse_jsonInsertObject;
+		if(revarrayOfInsertObjects) {
+            for(var i=0, len=revarrayOfInsertObjects.length; i<len; i++) {
+				if (!checkIfElementExistInJson(revarrayOfInsertObjects[i].displayid,arrayOfInsertObjects)) {
+					addRowToAnnotationTable(0,'',revarrayOfInsertObjects[i].id,revarrayOfInsertObjects[i].displayid,revarrayOfInsertObjects[i].description,revarrayOfInsertObjects[i].componentType_name,revarrayOfInsertObjects[i].coverage,revarrayOfInsertObjects[i].optimizedFor_name,'');
+					}
+               }
+            }
+			
+}
+// send the request to the server with the sequence to retrieve all the annotation or vectors in the database
+function send_request(isUpdateVector){
+t = this.document.getElementById("id_sequence").value;
+a = currSelectedVectorSeq;
+if ((t.length>0) & (t.match(/[ACTGactg]+/) != t)) {
+	alert("Error : this not a DNA Sequence!");
+return;
+}
+ta = t+"__"+a;
+	
+
+$.ajax({
+     async: false,
+     type: 'GET',
+     url: "/test/"+ta+"/",
+     success: function(data) {
+          if (isUpdateVector) {populateVectorBackbone(data);}
+		  populateInserts(data);
+     }
+});
+
+}
+	
+// emtpy table genbank and database annotation 
+function emptyRowsTable(tableNumber){
+	var Parent = document.getElementsByTagName("TBODY").item(tableNumber);
+    while(Parent.hasChildNodes()  & Parent.getElementsByTagName('tr').length>1)
+    {
+		Parent.removeChild(Parent.lastChild);
+    }
+}
+
+ 
+
+function selectallchecked_db(){
+ var fieldName='db_checkbox';
+ var fieldName6='db_text6';
+  var i=document.getElementsByName(fieldName).length;
+  var e=document.getElementsByName(fieldName);
+  var it6=document.getElementsByName(fieldName6).length;
+  var et6=document.getElementsByName(fieldName6);
+  var name=new Array();
+  var value=new Array();
+  var jsonObj = []; //declare array
+  
+	var j=0;
+	 for(var k=0;k<i;k++)
+	{
+	   if(e[k].checked==true){
+		  
+			jsonObj.push({id: e[k].id,text6: et6[k].value});
+			 
+		  }    
+	}
+	 
+	return JSON.stringify(jsonObj);
+  
+}
+
+function selectallchecked_gb(){
+ var fieldName='gb_checkbox';
+ var fieldNameText2='gb_text2';
+ var fieldNameText3='gb_text3';
+ var fieldNameText4='gb_text4';
+ var fieldNameText5='gb_text5';
+ var fieldNameText6='gb_text6';
+ var fieldNameText7='gb_text7';
+
+  var i=document.getElementsByName(fieldName).length;
+  var e=document.getElementsByName(fieldName);
+  var it2=document.getElementsByName(fieldNameText2).length;
+  var et2=document.getElementsByName(fieldNameText2);
+  var it3=document.getElementsByName(fieldNameText3).length;
+  var et3=document.getElementsByName(fieldNameText3);
+  var it4=document.getElementsByName(fieldNameText4).length;
+  var et4=document.getElementsByName(fieldNameText4);
+  var it5=document.getElementsByName(fieldNameText5).length;
+  var et5=document.getElementsByName(fieldNameText5);
+  var it6=document.getElementsByName(fieldNameText6).length;
+  var et6=document.getElementsByName(fieldNameText6);
+  var it7=document.getElementsByName(fieldNameText7).length;
+  var et7=document.getElementsByName(fieldNameText7);
+  
+  
+  
+  var name=new Array();
+  var value=new Array();
+  var jsonObj = []; //declare array
+  
+	var j=0;
+	 for(var k=0;k<i;k++)
+	{
+	   if(e[k].checked==true){
+			jsonObj.push({id: e[k].id,text2: et2[k].value,text3: et3[k].value,text4: et4[k].value,text5:et5[k].options[et5[k].selectedIndex].text,text6: et6[k].value,text7:et7[k].options[et7[k].selectedIndex].text});
+		  }    
+	}
+	 
+	return JSON.stringify(jsonObj);
+}
+
+
+function getIndexTypeDropdownlistType(name){
+//alert('populating getTypeDropdownlistType');
+ 		if (typeof jsonObjectPartTypes !== "undefined") {
+			if(jsonObjectPartTypes.length) {
+				for(var i=0, len=jsonObjectPartTypes.length; i<len; i++) {
+						if (jsonObjectPartTypes[i].name==name) { return i;}
+				   }
+				}
+		}
+		return 0;
+}
+
+function getTypeDropdownlistType(){
+//alert('populating getTypeDropdownlistType');
+selectedIndex = 0;
+		 var textnode = document.createElement('select');
+          textnode.setAttribute('name','parttype_select');
+ 		if (typeof jsonObjectPartTypes !== "undefined") {
+			if(jsonObjectPartTypes.length) {
+				for(var i=0, len=jsonObjectPartTypes.length; i<len; i++) {
+					textnode.options[i] = new Option(jsonObjectPartTypes[i].name, 'value',jsonObjectPartTypes[i].name);               
+					if 	(jsonObjectPartTypes[i].name=='Region') 
+							{selectedIndex = i;}
+				   }
+				}
+		}
+		textnode.options.selectedIndex = selectedIndex;
+		return textnode ;
+}
+
+ 
+function getIndexNameDropdownlistOptimizedFor(name){
+		if (typeof jsonObjectOptimizedFor !== "undefined") {
+			if(jsonObjectOptimizedFor.length) {
+				for(var i=0, len=jsonObjectOptimizedFor.length; i<len; i++) {
+						if (jsonObjectOptimizedFor[i].name==name) { return i;}
+				   }
+			}  
+		}
+		return 0;
+}
+
+
+function getTypeDropdownlistOptimizedFor(){
+//alert('populating getTypeDropdownlistOptimizedFor');
+		  var textnode = document.createElement('select');
+          textnode.setAttribute('name','optimizedfor_select');
+		//textnode.options[0] = new Option('', '','');               
+
+  		if (typeof jsonObjectOptimizedFor !== "undefined") {
+			if(jsonObjectOptimizedFor.length) {
+				for(var i=0, len=jsonObjectOptimizedFor.length; i<len; i++) {
+					if (jsonObjectOptimizedFor[i].name== "") { showId = ''; } else { 
+						showId = jsonObjectOptimizedFor[i].displayId+' - '+jsonObjectOptimizedFor[i].name;
+					}
+					textnode.options[i] = new Option(showId, 'value',jsonObjectOptimizedFor[i].name);               
+					if 	(showId=='') 
+							{selectedIndex = i;}
+				   }
+			}  
+		}
+		textnode.options.selectedIndex = selectedIndex;				
+		return textnode ;
+}
+
+function addRowToAnnotationTable(tableNumber,content1,content2,content3,content4,content5,content6,content7,contentId)
+{
+		var prefix = 'db_';
+		var readonlyattr = true;
+		 if (tableNumber==0){
+			prefix = 'db_';
+			readonlyattr = true;
+			contentId = content2
+		 }else{
+			prefix = 'gb_';
+			readonlyattr = false;
+			contentId = 'checked_gb_'+contentId
+
+		 }
+         if (!document.getElementsByTagName) return;
+         tabBody=document.getElementsByTagName("TBODY").item(tableNumber);
+         row=document.createElement("TR");
+         cell1 = document.createElement("TD");
+         cell2 = document.createElement("TD");
+         cell3 = document.createElement("TD");
+         cell4 = document.createElement("TD");
+         cell5 = document.createElement("TD");
+         cell6 = document.createElement("TD");
+		 cell7 = document.createElement("TD");
+		 
+         checkboxnode1= document.createElement('input');
+		 checkboxnode1.type = 'checkbox';
+		 checkboxnode1.id = contentId;
+		 checkboxnode1.name = prefix+'checkbox';
+		 
+		 textnode2= document.createElement('input');
+		 textnode2.type = 'text';	
+		 textnode2.value = content2;
+		 textnode2.name = prefix+'text2';
+		 textnode2.id = 'text2_'+contentId;
+		 textnode2.readOnly = readonlyattr;
+ 		 
+         //textnode2=document.createTextNode(content2);
+         //textnode3=document.createTextNode(content3);
+		 textnode3= document.createElement('input');
+		 textnode3.type = 'text';
+		 textnode3.value = content3;
+		 textnode3.name = prefix+'text3';
+		 textnode3.id = 'text3_'+contentId;
+		 textnode3.readOnly = readonlyattr;
+		 
+         //textnode4=document.createTextNode(content4);
+		 textnode4= document.createElement('input');
+		 textnode4.type = 'text';	
+		 textnode4.value = content4;
+		 textnode4.name = prefix+'text4';
+		 textnode4.id = 'text4_'+contentId;
+		 textnode4.readOnly = readonlyattr;
+		 
+         //textnode5=document.createTextNode(content5);
+		 if (tableNumber==0){
+		 textnode5=document.createTextNode(content5);
+		 textnode5.id = 'text5_'+contentId;		 
+		 } else {
+		  
+		 textnode5 = getTypeDropdownlistType();
+		 textnode5.name = prefix+'text5';
+		 textnode5.id = 'text5_'+contentId;	
+		 }
+		   
+		 
+		//textnode6=document.createTextNode(content6);
+		 textnode6= document.createElement('input');
+		 textnode6.type = 'text';
+		 textnode6.value = content6;
+		 textnode6.name = prefix+'text6';
+		 textnode6.id = 'text6_'+contentId;	
+		 textnode6.readOnly = readonlyattr;		
+		  
+		 if (tableNumber==0){
+		 textnode7=document.createTextNode(content7);
+		 textnode7.id = 'text7_'+contentId;	
+		 }
+		 else{
+		  
+		 textnode7=getTypeDropdownlistOptimizedFor();
+		 textnode7.name = prefix+'text7';
+		 textnode7.id = 'text7_'+contentId;	
+		 }
+         
+         cell1.appendChild(checkboxnode1);
+         cell2.appendChild(textnode2);
+         cell3.appendChild(textnode3);
+         cell4.appendChild(textnode4);
+         cell5.appendChild(textnode5);
+         cell6.appendChild(textnode6);
+		 cell7.appendChild(textnode7);
+
+         row.appendChild(cell1);
+         row.appendChild(cell2);
+         row.appendChild(cell3);
+         row.appendChild(cell4);
+         row.appendChild(cell5);
+         row.appendChild(cell6);
+		 row.appendChild(cell7);
+
+         tabBody.appendChild(row);
+
+
+}
+ 
+function buildChartGeneBank(){
+	var canvas = document.getElementById('canvas');
+	canvas.width = canvas.width;
+	chart1 = new Scribl(canvas, 400);
+	return chart1
+}
+
+// method used to draw the different annotation on the genbank file 
+// providing json object of annotation and the chart where to draw 
+
+function drawGenBank(jsontext,chart){
+    var jsonInsertObject = eval(jsontext);
+    var arrayOfInsertObjects = jsonInsertObject;
+
+            if(arrayOfInsertObjects.length) {
+                for(var i=0, len=arrayOfInsertObjects.length; i<len; i++) {
+					var start = parseInt(arrayOfInsertObjects[i].startPos,10);
+					var strand = parseInt(arrayOfInsertObjects[i].strandValue,10);
+					var strandStr = '';
+					if (end==0) { end = 1;}
+					if (strand==-1) {strandStr='-';} else {strandStr='+';}
+					var end = parseInt(arrayOfInsertObjects[i].endPos,10) - start;
+					if (end==0) { end = 1;}
+					//alert(strandStr);
+					var gene = chart1.addGene( start,    end , strandStr);
+					gene.name = arrayOfInsertObjects[i].id;
+					
+					gene.onMouseover = gene.name+": Start:"+start+" Length:"+end;
+				    gene.onClick = function() {alert(gene.name);}
+					// 
+                }
+            }
+	//chart.scrollable = true;
+	//chart.scrollValues = [200000, 250000];
+	chart.draw();
+}
+function setJSON_genbankFile(jsontext) {
+	var jsonInsertObject = eval(jsontext);
+	arrayOfJSON_AnnotationsFile = jsonInsertObject;
+}
+
+function updateJSON_accordingto_genbankFileSelection() {
+ 	var index = document.getElementById('datalist_gen').selectedIndex -1;
+	 
+ 		document.getElementById('id_backbone_gen_name').value = arrayOfJSON_AnnotationsFile[index].displayid;
+		document.getElementById('id_backbone_gen_description').value = arrayOfJSON_AnnotationsFile[index].description;
+		document.getElementById('id_backbone_gen_coverage').value = arrayOfJSON_AnnotationsFile[index].coverage;
+		
+		var fullsequence = this.document.getElementById("id_sequence").value;
+		n=arrayOfJSON_AnnotationsFile[index].coverage.split("-"); 
+		currSelectedVectorSeq = fullsequence.substring(n[0],n[1]);
+		send_request(false);
+
+}
+
+ 
+function buildGenBankTable(jsontext){
+    var jsonInsertObject = eval(jsontext);
+	setJSON_genbankFile(jsonInsertObject);
+    var arrayOfInsertObjects = jsonInsertObject;
+    var sequence = '';
+	document.getElementById("id_sequence").value = '';
+	initialDisplayId = document.getElementById("id_displayId").value;
+	intialnumber = initialDisplayId.substring(2,6);
+	
+	// update parttype and optimizedFor dropdownlist in new fragment
+		//feedTypeDropdownlist();
+		//feedOptimizwedForDropdownlist();
+	//
+	
+ 	emptyRowsTable(1);
+	// reset and add empty row to Genbank vector list
+ 	datalist_gen.options.length = 0;
+	var optn = document.createElement("OPTION");
+					optn.text = "";
+					optn.value = "";
+					optn.id = -999;
+					datalist_gen.options.add(optn);
+					
+	var dataList_gen = document.getElementById("datalist_gen");
+	//alert = function() {};
+            if(arrayOfInsertObjects.length) {
+                for(var i=0, len= arrayOfInsertObjects.length; i<len; i++) {
+                if (sequence=='') {
+                //call sequence change with the full sequence as a value
+                    sequence = arrayOfInsertObjects[i].sequence;
+                    document.getElementById("id_sequence").value = sequence;
+                    send_request(true);
+                    }
+                    //addRowToAnnotationTable(1,'',arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].name,arrayOfInsertObjects[i].componentType_name,arrayOfInsertObjects[i].coverage,'',i);			
+					initialNameGB = 'gb'+intialnumber+String.fromCharCode(65+i);
+					addRowToAnnotationTable(1,'',initialNameGB,arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].name,arrayOfInsertObjects[i].componentType_name,arrayOfInsertObjects[i].coverage,'',i);			
+					var optn = document.createElement("OPTION");
+					optn.text = arrayOfInsertObjects[i].displayid;
+					optn.value = arrayOfInsertObjects[i].id+'<>'+arrayOfInsertObjects[i].displayid+'<>'+arrayOfInsertObjects[i].description+'<>'+arrayOfInsertObjects[i].componentType_name+'<>'+arrayOfInsertObjects[i].coverage;
+					optn.id = arrayOfInsertObjects[i].id;
+					dataList_gen.options.add(optn);
+                }
+            }
+}
+function uploadGBDataFileIfExist(){
+    pathFile = document.getElementById("id_htmlAttribute3").value;
+	
+	if (pathFile!="") {	
+	
+	$.ajax({
+     async: false,
+     type: 'GET',
+     url: "/getGBDataFromFile/"+pathFile+"/",
+     success: function(responseJSON){
+	// set parttypes objects
+	
+			try
+			{
+			   var json = JSON.parse(responseJSON);
+				//send_request(true);			
+			
+			   buildGenBankTable(json.test);
+			   drawGenBank(json.test,buildChartGeneBank());
+			   document.getElementById("id_GenBankfile_loaded").innerHTML += "<br>Last File :"+pathFile;
+			   
+
+			}
+			catch(e)
+			{
+			   alert('invalid json');
+			}	
+			
+			}
+			});	
+	}
+	
+}
+
+function uploadTheFile(){
+    var uploader = new qq.FileUploader({
+		action: "{% url ajax_upload %}",
+		element: $('#id_GenBankfile')[0],
+		//element: document.getElementById('id_GenBankfile'), 
+		multiple: false,
+		onComplete: function( id, fileName, responseJSON ) {
+		document.getElementById("id_htmlAttribute3").value = fileName;
+		document.getElementById("id_GenBankfile_loaded").innerHTML += "<br>Last File :"+fileName;
+		buildGenBankTable(responseJSON.test);
+		
+		drawGenBank(responseJSON.test,buildChartGeneBank());
+		
+		if( responseJSON.success ){
+			//alert( "success!" ) ;
+			}
+		else
+			alert("upload failed!");
+		},
+		onAllComplete: function( uploads ) {
+		  // uploads is an array of maps
+		  // the maps look like this: { file: FileObject, response: JSONServerResponse }
+		  //alert( "All complete!" ) ;
+		},
+		params: {
+		  'csrf_token': '{{ csrf_token }}',
+		  'csrf_name': 'csrfmiddlewaretoken',
+		  'csrf_xname': 'X-CSRFToken',
+		},
+	  } ) ;
+	  
+      
+  }
+</script>
+
+
+
+</head>
+<body>
+<div id="file-uploader">      
+    <noscript> 
+		<p>Please enable JavaScript to use file uploader.</p>
+    </noscript>        
+</div>
+<div id="hideShow">
+<fieldset class="module aligned ">
+ 
+
+<fieldset class="module aligned collapse">
+	<h2>Sequence Graph</h2>
+<canvas id="canvas" width="800" height="200"
+style="border:1px solid #000000;">
+</canvas> 
+</fieldset>
+<h2>Specify vector backbone</h2>
+ 
+
+<div class="form-row">
+            
+				<div class="myradio">
+				    <label><input id="radiodb" type="radio" name="group1" value="database" onchange="HideShowElement('backbone_db','visible');HideShowElement('backbone_genbank','hidden');" checked> Vector from Database</label>
+					<label><input id="radiogb" type="radio" name="group1" value="file" onchange="HideShowElement('backbone_db','hidden');HideShowElement('backbone_genbank','visible');"> Vector from Genbank file</label><BR><BR><BR>
+					<p class="help">choose the vector from the database or from the genbank file.</p><BR>
+				</div>
+<div class="form-row">
+					<div id="backbone_db"> 
+						<div class="field-box">
+								<label for="id_backbone_id">ID:</label>
+								<SELECT id = "inputDataList" NAME="datalist" onChange="selected_dnaBackbone();">
+								</SELECT>
+						</div>
+					
+						<div class="field-box">
+								<label for="id_backbone_name" class="inline">Name:</label>
+									<input type="text" name="id_backbone_name" readonly id="id_backbone_name" />
+						</div>
+						
+						
+						<div class="field-box">
+								<label for="id_backbone_description" class="inline">Description:</label>
+									<input type="text" name="id_backbone_description" readonly id="id_backbone_description" />
+						</div>
+						
+						<div class="field-box" style="visibility: hidden">
+								<label for="id_backbone_selectionmarkers" class="inline">Selection markers(s):</label>
+									<input type="text" name="id_backbone_selectionmarkers" readonly id="id_backbone_selectionmarkers"/>
+									
+						</div>
+						
+					</div> 
+				</div>				
+				<div class="form-row">
+					<div id="backbone_genbank"> 
+						<div class="field-box">
+								<label for="id_backbone_gen_id">List:</label>
+								<SELECT id = "datalist_gen" NAME="datalist_gen" onChange="updateJSON_accordingto_genbankFileSelection();">
+								</SELECT>
+						</div>
+						
+						<div class="field-box">
+								<label for="id_backbone_gen_displayid" class="inline">ID:</label>
+									<input type="text" name="id_backbone_gen_displayid" id="id_backbone_gen_displayid" />
+						</div>
+						
+						<div class="field-box">
+								<label for="id_backbone_gen_name" class="inline">Name:</label>
+									<input type="text" name="id_backbone_gen_name" id="id_backbone_gen_name" />
+						</div>
+						
+						<div class="field-box" style="visibility: hidden">
+								<label for="id_backbone_gen_selectionmarkers" class="inline">Selection markers(s):</label>
+									<input type="text" name="id_backbone_gen_selectionmarkers" id="id_backbone_gen_selectionmarkers" HIDDEN=TRUE />
+						</div>
+						
+						<div class="field-box">
+								<label for="id_backbone_gen_description" class="inline">Description:</label>
+									<input type="text" name="id_backbone_gen_description" id="id_backbone_gen_description"/>
+						</div>
+						<div class="field-box">
+								<label for="id_backbone_gen_coverage" class="inline">Position:</label>
+									<input type="text" name="id_backbone_gen_coverage" id="id_backbone_gen_coverage"/>
+						</div>
+					</div>
+				</div>
+ 				
+			 
+</div>
+
+
+
+<fieldset class="module aligned collapse">
+
+ <h2>Specify insert annotations</h2>
+
+<table border="1">
+<CAPTION><EM>From database</EM></CAPTION>
+	<TBODY>
+		<tr>
+		<th></th>
+		<th>ID</th>
+		<th>Name</th>
+		<th>Description</th>
+		<th>Type</th>
+		<th>Position</th>
+		<th>Optimized for</th>
+		</tr>
+	</TBODY>
+
+<BR><BR>
+<table border="1">
+<CAPTION><EM>From genbank file</EM></CAPTION>
+	<TBODY>
+		<tr>
+				<th></th>
+				<th>ID</th>
+				<th>Name</th>
+				<th>Description</th>
+				<th>Type</th>
+				<th>Position</th>
+				<th>Optimized for</th>
+		</tr>
+	</TBODY>
+</table>
+
+
+ 
+  
+</fieldset>
+ 
+<div class="module aligned">
+  <h2>Annotations</h2>
+        <div class="description">
+          Note, clicking any of the links below will open a new window/tab!
+        </div>
+        
+        <p></p>
+        
+        {% if original %}
+          <ul class="object-tools">
+            <li><a href="../../dnasequenceannotation/add/?subComponent={{original.id}}" target="_blank">
+                Add Annotation</a></li> 
+          </ul>                  
+        {% endif %}
+        
+               
+        {% if original and original.related_annotations %}
+          <table cellspacing="0">
+            <thead>
+              <tr>
+                <th>ID</th><th>Start</th><th>End</th><th>Strand</th><th>DNA</th><th>Type</th>
+              </tr>
+            </thead>
+            <tbody>
+        
+            {% for dnasequenceannotation in original.related_annotations %}
+        
+              <tr class="{% cycle 'row1' 'row2' %}">
+        
+                <td><b><a href="../../{{dnasequenceannotation.get_relative_url}}" target="_blank">
+                      {{dnasequenceannotation.id}}</a></b></td><td>{{dnasequenceannotation.bioStart}}</td>   
+                      <td>{{dnasequenceannotation.bioEnd}}</td>
+                      <td>{% if dnasequenceannotation.strand == "-1" %}
+                      (-)</td>
+                    {% else %}
+                          (+)</td>
+                    {% endif %}
+                <td>{% if dnasequenceannotation.componentAnnotated %}
+                      <a href="../{{dnasequenceannotation.componentAnnotated.id}}" target="_blank">
+                      {{dnasequenceannotation.componentAnnotated}}</a></td>
+                    {% else %}
+                          --</td>
+                    {% endif %}
+					<td>{% if dnasequenceannotation.componentAnnotated %}
+                      {{dnasequenceannotation.componentAnnotated.show_component_type}}</td>
+                    {% else %}
+                          --</td>
+                    {% endif %}
+              </tr>
+        
+            {% endfor %}
+        
+            </tbody>
+          </table>
+          
+        {% else %}
+          <div class="description"><b>No Sequence Annotations found for this item.</b></div>
+        {% endif %}
+        <p></p>
+</div>
+<div class="module aligned">
+  <h2>DNA Samples</h2>
+        <div class="description">
+          Note, clicking any of the links below will open a new window/tab!
+        </div>
+        
+        <p></p>
+        
+        {% if original %} 
+          <ul class="object-tools">
+            <li><a href="../../dnasample/add/?dnaConstruct={{original.id}}" target="_blank">
+                Add DNA Sample</a></li> 
+          </ul>          
+        {% endif %}
+        
+        {% if original and original.related_dnaSamples %}
+          <table cellspacing="0">
+            <thead>
+              <tr>
+                <th>ID</th><th>Type</th><th>dna</th><th>in vector</th><th>in cell</th>
+                <th>concentration</th>
+                <th>created</th><th>by</th><th>comments</th>
+              </tr>
+            </thead>
+            <tbody>
+        
+            {% for sample in original.related_dnaSamples %}
+        
+              <tr class="{% cycle 'row1' 'row2' %}">
+        
+                <td><b><a href="../../{{sample.get_relative_url}}" target="_blank">
+                      {{sample.showId}}</a></b></td>
+        
+                <td>{{sample.showSampleType}}</td>
+        
+                <td>{{sample.showDna|default:"--"}}
+                {% if sample.dnas|length > 1 %}
+                 (out of {{sample.dnas|length}})
+                {% endif %}
+                </td>
+        
+                <td>{% if sample.vector %}
+                      <a href="../../{{sample.vector.get_relative_url}}" target="_blank">
+                      {{sample.vector}}</a></td>
+                    {% else %}
+                          --</td>
+                    {% endif %}
+        
+                <td>{% if sample.chassis %}
+                      {{sample.showCellLink|safe}}
+                      
+                    {% else %}
+                          --</td>
+                    {% endif %}
+        
+                <td>{{sample.showConcentration}}</td>
+                <td>{{sample.creation_date|date:"d M Y"}}</td>
+                <td>{{sample.created_by}}</td>
+                <td>{{sample.showComment|default:""}}</td>
+        
+              </tr>
+        
+            {% endfor %}
+        
+            </tbody>
+          </table>
+          
+        {% else %}
+          <div class="description"><b>No Samples found for this item.</b></div>
+        {% endif %}
+        <p></p>
+</div>
+
+
+
+{% endblock %}
