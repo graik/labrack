@@ -61,8 +61,11 @@
          textContent.oninput=sequenceHandler;
 		 
 		 //add event on listbox selection
+		 
 		 listContent = document.getElementById("id_componentType");
-		 document.getElementById("id_componentType").selectedIndex = PlasmidIndexType();
+		 if (listContent.selectedIndex==-1){
+			document.getElementById("id_componentType").selectedIndex = PlasmidIndexType();
+		 }
 		 listContent.onchange = listTypeOnChange;
 		 
 		 
@@ -1184,7 +1187,69 @@ style="border:1px solid #000000;">
  
   
 </fieldset>
- 
+
+<div class="module aligned">
+  <h2>Annotations</h2>
+        <div class="description">
+          Note, clicking any of the links below will open a new window/tab!
+        </div>
+        
+        <p></p>
+        
+        {% if original %}
+          <ul class="object-tools">
+            <li><a href="../../dnasequenceannotation/add/?subComponent={{original.id}}" target="_blank">
+                Add Annotation</a></li> 
+          </ul>                  
+        {% endif %}
+        
+               
+        {% if original and original.related_annotations %}
+          <table cellspacing="0">
+            <thead>
+              <tr>
+                <th>ID</th><th>Start</th><th>End</th><th>Strand</th><th>DNA</th><th>Type</th>
+              </tr>
+            </thead>
+            <tbody>
+        
+            {% for dnasequenceannotation in original.related_annotations %}
+        
+              <tr class="{% cycle 'row1' 'row2' %}">
+        
+                <td><b><a href="../../{{dnasequenceannotation.get_relative_url}}" target="_blank">
+                      {{dnasequenceannotation.id}}</a></b></td><td>{{dnasequenceannotation.bioStart}}</td>   
+                      <td>{{dnasequenceannotation.bioEnd}}</td>
+                      <td>{% if dnasequenceannotation.strand == "-1" %}
+                      (-)</td>
+                    {% else %}
+                          (+)</td>
+                    {% endif %}
+                <td>{% if dnasequenceannotation.componentAnnotated %}
+                      <a href="../{{dnasequenceannotation.componentAnnotated.id}}" target="_blank">
+                      {{dnasequenceannotation.componentAnnotated}}</a></td>
+                    {% else %}
+                          --</td>
+                    {% endif %}
+					<td>{% if dnasequenceannotation.componentAnnotated %}
+                      {{dnasequenceannotation.componentAnnotated.show_component_type}}</td>
+                    {% else %}
+                          --</td>
+                    {% endif %}
+              </tr>
+        
+            {% endfor %}
+        
+            </tbody>
+          </table>
+          
+        {% else %}
+          <div class="description"><b>No Sequence Annotations found for this item.</b></div>
+        {% endif %}
+        <p></p>
+</div>
+
+
 <div class="module aligned">
   <h2>DNA Samples</h2>
         <div class="description">
@@ -1258,66 +1323,6 @@ style="border:1px solid #000000;">
         <p></p>
 </div>
 
-<div class="module aligned">
-  <h2>Annotations</h2>
-        <div class="description">
-          Note, clicking any of the links below will open a new window/tab!
-        </div>
-        
-        <p></p>
-        
-        {% if original %}
-          <ul class="object-tools">
-            <li><a href="../../dnasequenceannotation/add/?subComponent={{original.id}}" target="_blank">
-                Add Annotation</a></li> 
-          </ul>                  
-        {% endif %}
-        
-               
-        {% if original and original.related_annotations %}
-          <table cellspacing="0">
-            <thead>
-              <tr>
-                <th>ID</th><th>Start</th><th>End</th><th>Strand</th><th>DNA</th><th>Type</th>
-              </tr>
-            </thead>
-            <tbody>
-        
-            {% for dnasequenceannotation in original.related_annotations %}
-        
-              <tr class="{% cycle 'row1' 'row2' %}">
-        
-                <td><b><a href="../../{{dnasequenceannotation.get_relative_url}}" target="_blank">
-                      {{dnasequenceannotation.id}}</a></b></td><td>{{dnasequenceannotation.bioStart}}</td>   
-                      <td>{{dnasequenceannotation.bioEnd}}</td>
-                      <td>{% if dnasequenceannotation.strand == "-1" %}
-                      (-)</td>
-                    {% else %}
-                          (+)</td>
-                    {% endif %}
-                <td>{% if dnasequenceannotation.componentAnnotated %}
-                      <a href="../{{dnasequenceannotation.componentAnnotated.id}}" target="_blank">
-                      {{dnasequenceannotation.componentAnnotated}}</a></td>
-                    {% else %}
-                          --</td>
-                    {% endif %}
-					<td>{% if dnasequenceannotation.componentAnnotated %}
-                      {{dnasequenceannotation.componentAnnotated.show_component_type}}</td>
-                    {% else %}
-                          --</td>
-                    {% endif %}
-              </tr>
-        
-            {% endfor %}
-        
-            </tbody>
-          </table>
-          
-        {% else %}
-          <div class="description"><b>No Sequence Annotations found for this item.</b></div>
-        {% endif %}
-        <p></p>
-</div>
 
 
 {% endblock %}
