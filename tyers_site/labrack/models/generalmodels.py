@@ -322,8 +322,8 @@ class SequenceAnnotation(models.Model):
                                           help_text='End position counting from 1')
 
    
-    precedes = models.ManyToManyField( 'self', symmetrical=False,
-                                       null=True, blank=True )
+    #precedes = models.ManyToManyField( 'self', symmetrical=False,
+    #                                   null=True, blank=True )
 
    
     # override Django object methods

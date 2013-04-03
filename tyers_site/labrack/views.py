@@ -541,32 +541,37 @@ def getAnnotToBeDeleted(request, jsonAmmpt,displayIdDnaComponent):
                 json = simplejson.dumps(message)
                 return HttpResponse(json, mimetype='application/json')                
 
-        
-        data2 = json.loads('['+jsonAmmpt+']')
-        sumDna = ""
-        missingAnnot = ''
-        selectedAnnotFromDB = json.loads(data2[0]["selected_annot"][0]["db_checked"])
-        if (selectedAnnotFromDB):
-                        try:                       
-                            for id in selectedAnnotFromDB:
-                                    sumDna = sumDna+','+id["id"]
-                        except:
-                                print 'error'        
-        
         try:
-                dnacomp = DnaComponent.objects.get(displayId = displayIdDnaComponent)
-                for qannot in DnaSequenceAnnotation.objects.filter( subComponent=dnacomp.id):
-                        test = qannot.componentAnnotated.displayId
-                        if( not utilLabrack.isDnaTypeVector(qannot.componentAnnotated)):
-                                if (sumDna.find(test)==-1):
-                                        if (missingAnnot ==''):
-                                                missingAnnot = test
-                                        else:
-                                                missingAnnot = missingAnnot + "," + test
+                data2 = json.loads('['+jsonAmmpt+']')
+                sumDna = ""
+                missingAnnot = ''
+                selectedAnnotFromDB = json.loads(data2[0]["selected_annot"][0]["db_checked"])
+                if (selectedAnnotFromDB):
+                                try:                       
+                                    for id in selectedAnnotFromDB:
+                                            sumDna = sumDna+','+id["id"]
+                                except:
+                                        print 'error'        
+                
+                try:
+                        dnacomp = DnaComponent.objects.get(displayId = displayIdDnaComponent)
+                        for qannot in DnaSequenceAnnotation.objects.filter( subComponent=dnacomp.id):
+                                test = qannot.componentAnnotated.displayId
+                                if( not utilLabrack.isDnaTypeVector(qannot.componentAnnotated)):
+                                        if (sumDna.find(test)==-1):
+                                                if (missingAnnot ==''):
+                                                        missingAnnot = test
+                                                else:
+                                                        missingAnnot = missingAnnot + "," + test
+                except:
+                        print ''
+                json = simplejson.dumps(missingAnnot)
+                return HttpResponse(json, mimetype='application/json') 
         except:
-                print ''
-        json = simplejson.dumps(missingAnnot)
-        return HttpResponse(json, mimetype='application/json') 
+                dnacomp = None
+                message = ""
+                json = simplejson.dumps(message)
+                return HttpResponse(json, mimetype='application/json')                 
 
 def search_dna_parts(request, sequence_text,displayIdDnaComponent):
         coo = sequence_text

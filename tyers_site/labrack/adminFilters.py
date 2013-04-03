@@ -55,10 +55,7 @@ class ContainerListFilter(SimpleListFilter):
         if request.user.is_superuser:
             pass
         else:
-            qs = qs.filter(Q(owners=request.user) |
-                           Q(group_read=request.user.groups.all()) |
-                           Q(group_write=request.user.groups.all()) 
-                           ).distinct()
+            pass
         
         if(self.value() == None):
             return qs
