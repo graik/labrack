@@ -1,25 +1,17 @@
-from django.db import models
-from tyers_site.labrack.models.generalmodels import DnaSequenceAnnotation
-
-from django.utils.safestring import mark_safe
-from django.utils.safestring import SafeUnicode 
-from tyers_site import settings   
+from datetime import datetime
 import os
  
+from django.db import models
+from django.utils.safestring import mark_safe
+from django.utils.safestring import SafeUnicode 
+from django.core.exceptions import ValidationError
 
 from Bio import SeqIO
 from Bio.Seq import Seq
+
+from generalmodels import DnaSequenceAnnotation
 from permissionModel import PermissionModel
-from django.core.exceptions import ValidationError
-from datetime import datetime
-
-
-
-
-
-
-
-
+from tyers_site import settings   
 
 
 class ComponentType( models.Model ):

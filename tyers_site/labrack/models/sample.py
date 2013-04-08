@@ -1,79 +1,18 @@
+import os
+import urllib
 from django.db import models
-from permissionModel import PermissionModel
-from labrack.models.generalmodels import Container
-from labrack.models.component import DnaComponent
-from labrack.models.component import Chassis
-from labrack.models.generalmodels import ContentType
-from django.contrib.contenttypes import generic
-from labrack.models.unit import Unit
-
-
+from django.db.models import Q
 from csvImporter.model import CsvModel
 from csvImporter import fields
-
-from django.db.models import Q
-
-
 from datetime import datetime
 
-
 ## importing custom models
+from permissionModel import PermissionModel
+from labrack.models.generalmodels import Container
+from labrack.models.component import DnaComponent, Chassis
+from labrack.models.unit import Unit
 
-import os
-
-
-import urllib
 import tyers_site.settings as S
-
-
-
-class SampleContent(models.Model):
-    """
-    Helper class to define the content that the sample is made of.
-    """
-    COMPONENT_LIMITS = {'model__in':('component',
-                                     'chemicalcomponent', 
-                                     'dnacomponent', 
-                                     'peptidecomponent', 
-                                     'proteincomponent',
-                                     'chassis'
-                                     )
-                        }   
-
-    sample = models.ForeignKey('Sample', related_name='sampleContent')
-
-    content_type = models.ForeignKey(ContentType, 
-                                     verbose_name='Type of content',
-                                     limit_choices_to=COMPONENT_LIMITS)
-
-    object_id = models.PositiveIntegerField('Content')
-
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
-
-    solvent = models.CharField('Solvent/Buffer', max_length=100, 
-                               blank=True)
-
-    concentration = models.FloatField('Concentration', null=True, blank=True)
-
-    concentrationUnit = models.ForeignKey(Unit, 
-                                          verbose_name='Concentration Unit',
-                                          related_name='concentrationUnit', 
-                                          null=True, blank=True, 
-                                          limit_choices_to = {'unitType': 'concentration'})
-
-    amount = models.FloatField('Amount', null=True, blank=True)
-
-    amountUnit = models.ForeignKey(Unit, verbose_name='Amount Unit',
-                                   related_name='amountUnit', 
-                                   null=True, blank=True, 
-                                   limit_choices_to=\
-                                   Q(unitType='volume') | Q(unitType='mass') | \
-                                   Q(unitType='number')
-                                   )
-
-    class Meta:
-        app_label = 'labrack'     
-
 
 
 
