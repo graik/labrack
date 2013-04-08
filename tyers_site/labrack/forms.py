@@ -269,6 +269,10 @@ class DnaComponentForm(forms.ModelForm):
         try:
             created_by = self.cleaned_data['created_by']
         except Exception, err:
+            try:
+                created_by = instance.created_by
+            except Exception, err:            
+                print err
             print err
         data = json.loads(jsonFromWeb)
 

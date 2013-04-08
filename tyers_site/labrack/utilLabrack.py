@@ -9,26 +9,26 @@ def getStrand(fullSeq,seq):
 
     first = fullSeq.find(seq)
     if first >= 0:
-        return '1'
+        return '+'
 
     my_seq = Seq(seq, IUPAC.unambiguous_dna)
     revseq = my_seq.reverse_complement()     ## import this module
     first = fullSeq.find(str(revseq))
     if first >= 0:
-        return '-1'
+        return '-'
     else:
         fullSeq = fullSeq + fullSeq
         first = fullSeq.find(seq)
         if first >= 0:
-            return '1'
+            return '+'
     
         my_seq = Seq(seq, IUPAC.unambiguous_dna)
         revseq = my_seq.reverse_complement()     ## import this module
         first = fullSeq.find(str(revseq))
         if first >= 0:
-            return '-1'
+            return '-'
         else:
-            return '+1'
+            return '+'
             
 def isDnaTypeVector(dnaComponent):
     dnapartsVectorAll = DnaComponent.objects.filter(componentType__name='Vector Backbone')

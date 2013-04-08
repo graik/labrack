@@ -579,7 +579,7 @@ jsonObjectOptimizedFor = eval(data.optimizedfor_values);
 		if(arrayOfInsertObjects) {
             for(var i=0, len=arrayOfInsertObjects.length; i<len; i++) {
 	 				positionStrand = arrayOfInsertObjects[i].coverage + '('+arrayOfInsertObjects[i].strand+')';
-					addRowToAnnotationTable(0,'',arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].name,arrayOfInsertObjects[i].description,arrayOfInsertObjects[i].componentType_name,positionStrand,arrayOfInsertObjects[i].optimizedFor_name,'',arrayOfInsertObjects[i].isRelated);
+					addRowToAnnotationTable(0,arrayOfInsertObjects[i].id,arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].name,arrayOfInsertObjects[i].description,arrayOfInsertObjects[i].componentType_name,positionStrand,arrayOfInsertObjects[i].optimizedFor_name,'',arrayOfInsertObjects[i].isRelated);
                }
 		}
 		
@@ -588,7 +588,7 @@ jsonObjectOptimizedFor = eval(data.optimizedfor_values);
             for(var i=0, len=revarrayOfInsertObjects.length; i<len; i++) {
 				if (!checkIfElementExistInJson(revarrayOfInsertObjects[i].displayid,arrayOfInsertObjects)) {
 					positionStrand = revarrayOfInsertObjects[i].coverage + '('+revarrayOfInsertObjects[i].strand+')';
-					addRowToAnnotationTable(0,'',revarrayOfInsertObjects[i].displayid,revarrayOfInsertObjects[i].name,revarrayOfInsertObjects[i].description,revarrayOfInsertObjects[i].componentType_name,positionStrand,revarrayOfInsertObjects[i].optimizedFor_name,'',revarrayOfInsertObjects[i].isRelated);
+					addRowToAnnotationTable(0,arrayOfInsertObjects[i].id,revarrayOfInsertObjects[i].displayid,revarrayOfInsertObjects[i].name,revarrayOfInsertObjects[i].description,revarrayOfInsertObjects[i].componentType_name,positionStrand,revarrayOfInsertObjects[i].optimizedFor_name,'',revarrayOfInsertObjects[i].isRelated);
 					}
                }
             }
@@ -792,30 +792,47 @@ function addRowToAnnotationTable(tableNumber,content1,content2,content3,content4
 			checkboxnode1.checked = true;
 			} 
 		 
-		 textnode2= document.createElement('input');
-		 textnode2.type = 'text';	
-		 textnode2.value = content2;
-		 textnode2.name = prefix+'text2';
+		 if (tableNumber==0){
+		 textnode2=document.createTextNode(content2);
 		 textnode2.id = 'text2_'+contentId;
-		 textnode2.readOnly = readonlyattr;
+		 textnode2.value = content2;
+		 textnode2.text = prefix+'text2';
+		 } else {
+			textnode2= document.createElement('input');
+			textnode2.type = 'text';	
+			textnode2.value = content2;
+			textnode2.name = prefix+'text2';
+			textnode2.id = 'text2_'+contentId;
+			textnode2.readOnly = readonlyattr;		 
+		 }
  		 
-         //textnode2=document.createTextNode(content2);
-         //textnode3=document.createTextNode(content3);
+          if (tableNumber==0){
+		 textnode3=document.createTextNode(content3);
+		 textnode3.id = 'text3_'+contentId;	
+		 textnode3.value = content3;
+		 textnode3.text = prefix+'text3';		 
+		 } else {
 		 textnode3= document.createElement('input');
 		 textnode3.type = 'text';
 		 textnode3.value = content3;
 		 textnode3.name = prefix+'text3';
 		 textnode3.id = 'text3_'+contentId;
 		 textnode3.readOnly = readonlyattr;
-		 
+		 }
          //textnode4=document.createTextNode(content4);
+		  if (tableNumber==0){
+		 textnode4=document.createTextNode(content4);
+		 textnode4.id = 'text4_'+contentId;	
+		 textnode4.value = content4;
+		 textnode4.text = prefix+'text4';		 
+		 } else {
 		 textnode4= document.createElement('input');
 		 textnode4.type = 'text';	
 		 textnode4.value = content4;
 		 textnode4.name = prefix+'text4';
 		 textnode4.id = 'text4_'+contentId;
 		 textnode4.readOnly = readonlyattr;
-		 
+		 }
          //textnode5=document.createTextNode(content5);
 		 if (tableNumber==0){
 		 textnode5=document.createTextNode(content5);
@@ -849,6 +866,10 @@ function addRowToAnnotationTable(tableNumber,content1,content2,content3,content4
          
          cell1.appendChild(checkboxnode1);
          cell2.appendChild(textnode2);
+		 if (tableNumber==0){
+			cell2.innerHTML = '<a href="../'+content1+'"> '+contentId+' </a>';
+		 }		 
+		 
          cell3.appendChild(textnode3);
          cell4.appendChild(textnode4);
          cell5.appendChild(textnode5);
@@ -961,6 +982,9 @@ function buildGenBankTable(jsontext){
                     }
                     //addRowToAnnotationTable(1,'',arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].name,arrayOfInsertObjects[i].componentType_name,arrayOfInsertObjects[i].coverage,'',i);			
 					if (arrayOfInsertObjects[i].name.toUpperCase()!='VECTOR' && arrayOfInsertObjects[i].name.toUpperCase()!='VECTOR BACKBONE') {
+						strTemp = String('0000'+intialnumber);
+						intialnumber = strTemp.substring(strTemp.length,strTemp.length-4);
+						
 						initialNameGB = 'gb'+intialnumber+String.fromCharCode(65+i);
 						addRowToAnnotationTable(1,'',initialNameGB,arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].name,arrayOfInsertObjects[i].componentType_name,arrayOfInsertObjects[i].coverage,'',i);			
 					}
@@ -1188,66 +1212,66 @@ style="border:1px solid #000000;">
   
 </fieldset>
 
-<div class="module aligned">
-  <h2>Annotations</h2>
-        <div class="description">
-          Note, clicking any of the links below will open a new window/tab!
-        </div>
+<!--<div class="module aligned">-->
+  <!--<h2>Annotations</h2>-->
+        <!--<div class="description">-->
+          <!--Note, clicking any of the links below will open a new window/tab!-->
+        <!--</div>-->
         
-        <p></p>
+        <!--<p></p>-->
         
-        {% if original %}
-          <ul class="object-tools">
-            <li><a href="../../dnasequenceannotation/add/?subComponent={{original.id}}" target="_blank">
-                Add Annotation</a></li> 
-          </ul>                  
-        {% endif %}
+        <!--{% if original %}-->
+          <!--<ul class="object-tools">-->
+            <!--<li><a href="../../dnasequenceannotation/add/?subComponent={{original.id}}" target="_blank">-->
+                <!--Add Annotation</a></li> -->
+          <!--</ul>                  -->
+        <!--{% endif %}-->
         
                
-        {% if original and original.related_annotations %}
-          <table cellspacing="0">
-            <thead>
-              <tr>
-                <th>ID</th><th>Start</th><th>End</th><th>Strand</th><th>DNA</th><th>Type</th>
-              </tr>
-            </thead>
-            <tbody>
+        <!--{% if original and original.related_annotations %}-->
+          <!--<table cellspacing="0">-->
+            <!--<thead>-->
+              <!--<tr>-->
+                <!--<th>ID</th><th>Start</th><th>End</th><th>Strand</th><th>DNA</th><th>Type</th>-->
+              <!--</tr>-->
+            <!--</thead>-->
+            <!--<tbody>-->
         
-            {% for dnasequenceannotation in original.related_annotations %}
+            <!--{% for dnasequenceannotation in original.related_annotations %}-->
         
-              <tr class="{% cycle 'row1' 'row2' %}">
+              <!--<tr class="{% cycle 'row1' 'row2' %}">-->
         
-                <td><b><a href="../../{{dnasequenceannotation.get_relative_url}}" target="_blank">
-                      {{dnasequenceannotation.id}}</a></b></td><td>{{dnasequenceannotation.bioStart}}</td>   
-                      <td>{{dnasequenceannotation.bioEnd}}</td>
-                      <td>{% if dnasequenceannotation.strand == "-1" %}
-                      (-)</td>
-                    {% else %}
-                          (+)</td>
-                    {% endif %}
-                <td>{% if dnasequenceannotation.componentAnnotated %}
-                      <a href="../{{dnasequenceannotation.componentAnnotated.id}}" target="_blank">
-                      {{dnasequenceannotation.componentAnnotated}}</a></td>
-                    {% else %}
-                          --</td>
-                    {% endif %}
-					<td>{% if dnasequenceannotation.componentAnnotated %}
-                      {{dnasequenceannotation.componentAnnotated.show_component_type}}</td>
-                    {% else %}
-                          --</td>
-                    {% endif %}
-              </tr>
+                <!--<td><b><a href="../../{{dnasequenceannotation.get_relative_url}}" target="_blank">-->
+                      <!--{{dnasequenceannotation.id}}</a></b></td><td>{{dnasequenceannotation.bioStart}}</td>   -->
+                      <!--<td>{{dnasequenceannotation.bioEnd}}</td>-->
+                      <!--<td>{% if dnasequenceannotation.strand == "-1" %}-->
+                      <!--(-)</td>-->
+                    <!--{% else %}-->
+                          <!--(+)</td>-->
+                    <!--{% endif %}-->
+                <!--<td>{% if dnasequenceannotation.componentAnnotated %}-->
+                      <!--<a href="../{{dnasequenceannotation.componentAnnotated.id}}" target="_blank">-->
+                      <!--{{dnasequenceannotation.componentAnnotated}}</a></td>-->
+                    <!--{% else %}-->
+                          <!----</td>-->
+                    <!--{% endif %}-->
+					<!--<td>{% if dnasequenceannotation.componentAnnotated %}-->
+                      <!--{{dnasequenceannotation.componentAnnotated.show_component_type}}</td>-->
+                    <!--{% else %}-->
+                          <!----</td>-->
+                    <!--{% endif %}-->
+              <!--</tr>-->
         
-            {% endfor %}
+            <!--{% endfor %}-->
         
-            </tbody>
-          </table>
+            <!--</tbody>-->
+          <!--</table>-->
           
-        {% else %}
-          <div class="description"><b>No Sequence Annotations found for this item.</b></div>
-        {% endif %}
-        <p></p>
-</div>
+        <!--{% else %}-->
+          <!--<div class="description"><b>No Sequence Annotations found for this item.</b></div>-->
+        <!--{% endif %}-->
+        <!--<p></p>-->
+<!--</div>-->
 
 
 <div class="module aligned">
