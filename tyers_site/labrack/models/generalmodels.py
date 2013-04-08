@@ -27,12 +27,7 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from tyers_site import settings   
 
-from tyers_site.labrack.models.component import *
 from permissionModel import PermissionModel
-
-
-
-
 
 
 
