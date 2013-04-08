@@ -1050,6 +1050,7 @@ function uploadTheFile(){
         element: $('#id_GenBankfile')[0],
         //element: document.getElementById('id_GenBankfile'), 
         multiple: false,
+        
         onComplete: function( id, fileName, responseJSON ) {
         document.getElementById("id_htmlAttribute3").value = fileName;
         document.getElementById("id_GenBankfile_loaded").innerHTML += "<br>Last File :"+fileName;
