@@ -20,7 +20,6 @@ from labrack.models.component import ChemicalComponent
 from labrack.models.component import PeptideComponent
 from labrack.models.component import ProteinComponent
 from labrack.models.component import DNAComponentType
-from labrack.models.sample import SampleContent
 from labrack.models.unit import Unit
 from django.contrib.contenttypes.models import ContentType
 from django.contrib import messages

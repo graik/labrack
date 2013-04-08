@@ -63,8 +63,8 @@ from labrack.models.component import ChemicalComponent
 from labrack.models.generalmodels import DnaSequenceAnnotation
 from labrack.models.generalmodels import ProteinSequenceAnnotation
 
-from labrack.models.generalmodels import Collection
-from labrack.models.generalmodels import Chassis 
+#from labrack.models.generalmodels import Collection
+#from labrack.models.generalmodels import Chassis 
 import utilLabrack
  
 
@@ -466,13 +466,6 @@ class RackAdmin(PermissionAdmin,admin.ModelAdmin):
 
 
 
-class SampleContentInline(GenericCollectionTabularInline):
-
-    extra = 1
-
-    import labrack.models as M
-
-    model = M.SampleContent 
 
 class DnaConstructInline(GenericCollectionTabularInline):
     extra = 1
@@ -575,7 +568,7 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
 
 
     #inlines = [SampleContentInline, SampleProvenanceInline]
-    inlines = [SampleContentInline, SampleProvenanceInline]
+    #inlines = [SampleContentInline, SampleProvenanceInline]
 
     list_display   = ('showId', 'location_url', 
                       'created_by', 'preparation_date',
