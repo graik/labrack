@@ -10,7 +10,7 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 
 from generalmodels import DnaSequenceAnnotation
-from permissionModel import PermissionModel
+from entityModel import EntityModel
 from tyers_site import settings   
 
 
@@ -84,7 +84,7 @@ class PeptideComponentType( ComponentType ):
 
 
         
-class Component(PermissionModel,models.Model):
+class Component(EntityModel,models.Model):
     """
     Base class for cells, nucleic acids, proteins, and chemicals.
     Not shown to the user (currently) but the table exists and collects

@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.models import Group
 
 
-class PermissionModel( models.Model ):
+class EntityModel( models.Model ):
     #: Permissions
 
     created_by = models.ForeignKey(User, null=True, blank=True, 
