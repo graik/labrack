@@ -55,7 +55,7 @@ from labrack.models.generalmodels import Rack
 from labrack.models.component import ProteinComponentType
 from labrack.models.component import ProteinComponent
 from labrack.models.component import DnaComponent
-from labrack.models.component import DNAComponentType
+from labrack.models.component import DnaComponentType
 from labrack.models.component import ChassisComponentType
 from labrack.models.component import PeptideComponent
 from labrack.models.component import Component
@@ -121,8 +121,7 @@ class ComponentAdmin( admin.ModelAdmin):
         }
          ),
         ('Details', {
-            'fields' : (('variantOf'),
-                        ('description',)),
+            'fields' : (('description',)),
 
         }
          ),
@@ -1320,7 +1319,7 @@ admin.site.register(ProteinComponentType, ComponentTypeAdmin)
 admin.site.register(PeptideComponent, PeptideComponentAdmin)
 admin.site.register(ProteinComponent, ProteinComponentAdmin)
 admin.site.register(DnaComponent, DnaComponentAdmin)
-admin.site.register(DNAComponentType, ComponentTypeAdmin) 
+admin.site.register(DnaComponentType, ComponentTypeAdmin) 
 admin.site.register(Component, ComponentAdmin)
 admin.site.register(ChemicalComponent, ComponentAdmin)
 admin.site.register(DnaSequenceAnnotation, DnaSequenceAnnotationAdmin)

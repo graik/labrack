@@ -59,6 +59,11 @@
 
     textContent = document.getElementById("id_sequence");
     textContent.oninput=sequenceHandler;
+    textContent.keyup=alert('keyup');
+    textContent.oncut=sequenceHandler;
+    textContent.oncopy=sequenceHandler;
+    textContent.onpaste=sequenceHandler;
+
 
     //add event on listbox selection
 
@@ -331,15 +336,16 @@ function retrieveAndFeedDataHandler(e)
 
     }
 
+
     function updateVisualForm(selectedValue){
 
     switch(selectedValue)
     {
     case 'Vector Backbone':
-        document.getElementById("id_circular").checked = true;
+        document.getElementById("id_circular").checked = false;
         ShowHide('HiddenDivVector','none');
-        document.getElementById("id_optimizedFor").disabled=true; 
-        document.getElementById("id_translatesTo").disabled=true; 
+        document.getElementById("id_optimizedFor").disabled=false; 
+        document.getElementById("id_translatesTo").disabled=false; 
         break;
 
     case 'Primer':
@@ -582,13 +588,12 @@ jsonObjectOptimizedFor = eval(data.optimizedfor_values);
             addRowToAnnotationTable(0,arrayOfInsertObjects[i].id,arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].name,arrayOfInsertObjects[i].description,arrayOfInsertObjects[i].componentType_name,positionStrand,arrayOfInsertObjects[i].optimizedFor_name,'',arrayOfInsertObjects[i].isRelated);
             }
         }
-
     var revarrayOfInsertObjects = reverse_jsonInsertObject;
         if(revarrayOfInsertObjects) {
             for(var i=0, len=revarrayOfInsertObjects.length; i<len; i++) {
                 if (!checkIfElementExistInJson(revarrayOfInsertObjects[i].displayid,arrayOfInsertObjects)) {
                     positionStrand = revarrayOfInsertObjects[i].coverage + '('+revarrayOfInsertObjects[i].strand+')';
-                    addRowToAnnotationTable(0,arrayOfInsertObjects[i].id,revarrayOfInsertObjects[i].displayid,revarrayOfInsertObjects[i].name,revarrayOfInsertObjects[i].description,revarrayOfInsertObjects[i].componentType_name,positionStrand,revarrayOfInsertObjects[i].optimizedFor_name,'',revarrayOfInsertObjects[i].isRelated);
+                    addRowToAnnotationTable(0,revarrayOfInsertObjects[i].id,revarrayOfInsertObjects[i].displayid,revarrayOfInsertObjects[i].name,revarrayOfInsertObjects[i].description,revarrayOfInsertObjects[i].componentType_name,positionStrand,revarrayOfInsertObjects[i].optimizedFor_name,'',revarrayOfInsertObjects[i].isRelated);
                     }
             }
             }
@@ -986,7 +991,8 @@ if (arrayOfInsertObjects[i].name.toUpperCase()!='VECTOR' && arrayOfInsertObjects
     strTemp = String('0000'+intialnumber);
     intialnumber = strTemp.substring(strTemp.length,strTemp.length-4);
 
-    initialNameGB = 'gb'+intialnumber+String.fromCharCode(65+i);
+    //initialNameGB = 'gb'+intialnumber+String.fromCharCode(65+i);
+    initialNameGB = '(AUTO)';
     addRowToAnnotationTable(1,'',initialNameGB,arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].name,arrayOfInsertObjects[i].componentType_name,arrayOfInsertObjects[i].coverage,'',i);			
 }
 var optn = document.createElement("OPTION");

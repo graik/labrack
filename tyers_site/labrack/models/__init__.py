@@ -6,7 +6,7 @@ from labrack.models.generalmodels import \
      SelectiveMarker, Document
 
 from labrack.models.component import \
-     ComponentType, DNAComponentType, ProteinComponentType, \
+     ComponentType, DnaComponentType, ProteinComponentType, \
      ChemicalComponentType, ChassisComponentType, PeptideComponentType, \
      Component, DnaComponent, ProteinComponent, ChemicalComponent, \
      Chassis, PeptideComponent, Collection

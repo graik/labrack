@@ -19,7 +19,7 @@ from labrack.models.component import Component
 from labrack.models.component import ChemicalComponent
 from labrack.models.component import PeptideComponent
 from labrack.models.component import ProteinComponent
-from labrack.models.component import DNAComponentType
+from labrack.models.component import DnaComponentType
 from labrack.models.unit import Unit
 from django.contrib.contenttypes.models import ContentType
 from django.contrib import messages
@@ -603,7 +603,7 @@ def search_dna_parts(request, sequence_text,displayIdDnaComponent):
                 message['reverse_extra_values'] = getInsertDBAnnotationBySequence(str(revseq_exceptVect),'-',displayIdDnaComponent)
                 
                 #paret retrieving all partTypes
-                dnapartstypesAll = DNAComponentType.objects.all()
+                dnapartstypesAll = DnaComponentType.objects.all()
                 json_dnaparttype = ''
                 for dnaparttype in dnapartstypesAll :
                         id = dnaparttype.id

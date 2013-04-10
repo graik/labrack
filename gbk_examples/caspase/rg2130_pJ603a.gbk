@@ -8,6 +8,8 @@ FEATURES             Location/Qualifiers
      Misc._feature   1..601
                      /product="CMV promoter"
                      /label="CMV promoter"
+     Misc.           1..1
+                     /label=Guanine
      Misc.           682..684
                      /label=Start
      Gene            685..2136

@@ -35,7 +35,7 @@ class ComponentType( models.Model ):
         abstract = True
 
 
-class DNAComponentType( ComponentType ):
+class DnaComponentType( ComponentType ):
 
     #: required ? directional relationship to parent type or types
     subTypeOf = models.ManyToManyField('self', symmetrical=False, blank=True, 
@@ -117,11 +117,6 @@ class Component(EntityModel,models.Model):
     status = models.CharField( max_length=30, choices=STATUS_CHOICES, 
                                default='planning')
 
-    variantOf = models.ManyToManyField( 'self', symmetrical=False, 
-                                        blank=True, null=True, 
-                                        verbose_name='Variant of', 
-                                        help_text='Specify part(s) this part is derived from, if any.' )
-    
 
     def formatedUrl(self):
         name = self.name if self.name else ''
@@ -283,6 +278,11 @@ class ChemicalComponent(Component):
                                            blank=True, null=True, 
                                            verbose_name='Part type', 
                                            help_text='Classification of this part.')   
+    variantOf = models.ManyToManyField( 'self', symmetrical=False, 
+                                            blank=True, null=True, 
+                                            verbose_name='Variant of', 
+                                            help_text='Specify part(s) this part is derived from, if any.' )
+        
 
     def get_relative_url(self):
         """
@@ -306,7 +306,11 @@ class Chassis(Component):
                                            blank=True, null=True, 
                                            verbose_name='Type', 
                                            help_text='Classification of this part.')
-
+    variantOf = models.ManyToManyField( 'self', symmetrical=False, 
+                                            blank=True, null=True, 
+                                            verbose_name='Variant of', 
+                                            help_text='Specify part(s) this part is derived from, if any.' )
+        
     
 
     def get_relative_url(self):
@@ -392,7 +396,11 @@ class PeptideComponent(Component):
                                            blank=True, null=True, 
                                            verbose_name='Part type', 
                                            help_text='Classification of this part.')   
-
+    variantOf = models.ManyToManyField( 'self', symmetrical=False, 
+                                            blank=True, null=True, 
+                                            verbose_name='Variant of', 
+                                            help_text='Specify part(s) this part is derived from, if any.' )
+        
 
     def get_relative_url(self):
         """
@@ -432,6 +440,12 @@ class ProteinComponent(Component):
                                             help_text='Classification of this part.')   
     
     GenBankfile = models.FileField(upload_to='documents/GenBank/%Y/%m/%d',blank=True,null=True)
+    
+    variantOf = models.ManyToManyField( 'self', symmetrical=False, 
+                                            blank=True, null=True, 
+                                            verbose_name='Variant of', 
+                                            help_text='Specify part(s) this part is derived from, if any.' )
+    
     
     def get_relative_url(self):
         """
@@ -483,7 +497,7 @@ class DnaComponent(Component):
     #myfield=forms.CharField( widget=forms.TextInput(attrs={'class':'disabled', 'readonly':'readonly'}))
 
 
-    componentType = models.ManyToManyField(DNAComponentType, 
+    componentType = models.ManyToManyField(DnaComponentType, 
                                            blank=True, null=True, 
                                            verbose_name='Type', 
                                            help_text='Classification of this part.')
@@ -495,6 +509,10 @@ class DnaComponent(Component):
     GenBankfile = models.FileField(upload_to='documents/GenBank/%Y/%m/%d',blank=True,null=True)
     
     
+    variantOf = models.ManyToManyField( 'self', symmetrical=False, 
+                                            blank=True, null=True, 
+                                            verbose_name='Variant of', 
+                                            help_text='Specify part(s) this part is derived from, if any.' )
     
     def get_relative_url(self):
         """
@@ -670,14 +688,14 @@ class DnaComponent(Component):
 
                             # the reason to save it twice is to get a unique ID to be able to put it in DisplayId
                             # retrieve the part type, if not existing create it
-                            if (not DNAComponentType.objects.filter(name='GenebankType')):
-                                subCtGenebankType = DNAComponentType(name = 'GenebankType')
+                            if (not DnaComponentType.objects.filter(name='GenebankType')):
+                                subCtGenebankType = DnaComponentType(name = 'GenebankType')
                                 subCtGenebankType.save() 
-                            subCtGenebankType = DNAComponentType.objects.get(name='GenebankType')
-                            if (not DNAComponentType.objects.filter(name=nameType)):
-                                ct = DNAComponentType(name = nameType)
+                            subCtGenebankType = DnaComponentType.objects.get(name='GenebankType')
+                            if (not DnaComponentType.objects.filter(name=nameType)):
+                                ct = DnaComponentType(name = nameType)
                                 ct.save()
-                            ct = DNAComponentType.objects.filter(name=nameType)
+                            ct = DnaComponentType.objects.filter(name=nameType)
                             ct.subTypeOf = subCtGenebankType
                             # save the dna
                             #if (not DnaComponent.objects.filter(sequence=partOfSequence)):

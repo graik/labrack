@@ -5,7 +5,7 @@ from labrack.models.sample import ChassisSample
 from labrack.models.generalmodels import Document
 from labrack.models.component import DnaComponent
 from labrack.models.component import Component
-from labrack.models.component import DNAComponentType
+from labrack.models.component import DnaComponentType
 from labrack.models.component import Chassis
 from labrack.models.generalmodels import DnaSequenceAnnotation
 from labrack.models.generalmodels import ProteinSequenceAnnotation
@@ -230,11 +230,11 @@ class DnaComponentForm(forms.ModelForm):
                             regExp = r'^Pri\d\d\d\d[a-zA-Z]?$'
                             regExp2 = r'^Pri\d\d\d\d?$'                            
                         
-                        
-                        if (not(re.match(regExp, idAnnot)) and not(re.match(regExp2, idAnnot))):
-                            errorMessage = "ID Annotations Error: "+idAnnot+" doesn't respect the naming convention for "+annotType
-                            errors.setdefault('',[]).append(errorMessage)                        
-                        
+                        if (idAnnot.upper()<>'(AUTO)'):
+                            if (not(re.match(regExp, idAnnot)) and not(re.match(regExp2, idAnnot))):
+                                errorMessage = "ID Annotations Error: "+idAnnot+" doesn't respect the naming convention for "+annotType
+                                errors.setdefault('',[]).append(errorMessage)                        
+                            
                         if (DnaComponent.objects.filter(displayId=idAnnot)):
                             errorMessage = "ID Annotations Error: Please reload the GB file and choose another name for the Annotation "+idAnnot+" since it already exist in the DB!"
                             errors.setdefault('',[]).append(errorMessage)
@@ -297,10 +297,10 @@ class DnaComponentForm(forms.ModelForm):
 
         #self.is_vector_backbone = isVectorBackbone
         #get the partytypeVector
-        if (not DNAComponentType.objects.filter(name='Vector Backbone')):
-            subCtType = DNAComponentType(name = 'Vector Backbone')
+        if (not DnaComponentType.objects.filter(name='Vector Backbone')):
+            subCtType = DnaComponentType(name = 'Vector Backbone')
             subCtType.save()
-        subCtVectorType = DNAComponentType.objects.filter(name='Vector Backbone')
+        subCtVectorType = DnaComponentType.objects.filter(name='Vector Backbone')
 
         isGbData = data["data"][1]["gb_data"]
         vectorIdFromGB_displayid = data["data"][1]["displayid"]
@@ -398,9 +398,15 @@ class DnaComponentForm(forms.ModelForm):
                             chassisOptimizedFor = Chassis.objects.get(displayId=optimizedfor[0])
                         except Chassis.DoesNotExist:
                             chassisOptimizedFor = None
-                        subCtVectorType = DNAComponentType.objects.filter(name=dnatype)	
+                        subCtVectorType = DnaComponentType.objects.filter(name=dnatype)	
                         dnaAnnot = DnaComponent(displayId=id,description=descrp, name =name, sequence = seq,optimizedFor = chassisOptimizedFor, created_by = created_by)
                         dnaAnnot.save()
+                        if (id.upper()=='(AUTO)'):
+                            pkUsed = dnaAnnot.pk
+                            stringId = '00000000'+str(pkUsed)
+                            stringId = stringId[-4:]
+                            dnaAnnot.displayId = 'gb'+stringId
+                            dnaAnnot.save()
                         dnaAnnot.componentType = subCtVectorType
                         dnaAnnot.save()
                         stra = utilLabrack.getStrand(fullSequence,dnaAnnot.sequence)
