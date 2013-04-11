@@ -118,6 +118,8 @@ class DnaComponentForm(forms.ModelForm):
     
     
     
+    
+    
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request', None)
         # Voila, now you can access request anywhere in your form methods by using self.request!
@@ -401,12 +403,19 @@ class DnaComponentForm(forms.ModelForm):
                         subCtVectorType = DnaComponentType.objects.filter(name=dnatype)	
                         dnaAnnot = DnaComponent(displayId=id,description=descrp, name =name, sequence = seq,optimizedFor = chassisOptimizedFor, created_by = created_by)
                         dnaAnnot.save()
-                        if (id.upper()=='(AUTO)'):
-                            pkUsed = dnaAnnot.pk
-                            stringId = '00000000'+str(pkUsed)
-                            stringId = stringId[-4:]
-                            dnaAnnot.displayId = 'gb'+stringId
-                            dnaAnnot.save()
+                        if (id.upper()=='(AUTO)' or id.upper()==''):
+                            if (dnatype=='Vector Backbone' or dnatype=='Vector'):
+                                pkUsed = dnaAnnot.pk
+                                stringId = '00000000'+str(pkUsed)                                
+                                stringId = stringId[-3:]
+                                dnaAnnot.displayId = 'Ve'+stringId
+                                dnaAnnot.save()
+                            else:
+                                pkUsed = dnaAnnot.pk
+                                stringId = '00000000'+str(pkUsed)                                
+                                stringId = stringId[-4:]
+                                dnaAnnot.displayId = 'gb'+stringId
+                                dnaAnnot.save()                                
                         dnaAnnot.componentType = subCtVectorType
                         dnaAnnot.save()
                         stra = utilLabrack.getStrand(fullSequence,dnaAnnot.sequence)

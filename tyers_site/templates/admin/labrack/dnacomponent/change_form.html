@@ -38,17 +38,17 @@
                             scr = td.innerHTML;
                         }
                     }
-            }
-            for(var i = 0; i < divs.length; i++){
+            <!--}-->
+            <!--for(var i = 0; i < divs.length; i++){-->
                 if (divs[i].className=='form-row field-sequence') {
                     txt=document.createTextNode('');
                     divs[i].id = 'id_GenBankfile_loaded';
+                     divs[i].innerHTML += "<ul class='object-tools'><input type='button' align='center' onclick='send_request(true);' value='Update Annotations'/></ul>";
                 }
                 if (divs[i].className=='field-box field-displayId') {
-
-    divs[i].innerHTML += " <p class='help'>Naming convention for : <BR>  - Vector Bachbone -> Ve001<BR>  - Primer -> pri0000<BR>  - Others -> XX0001a or XX0001</p>";
-}
-}
+                    divs[i].innerHTML += " <p class='help'>Naming convention for : <BR>  - Vector Bachbone -> Ve001<BR>  - Primer -> pri0000<BR>  - Others -> XX0001a or XX0001</p>";
+                }
+            }
 
     uploadTheFile();
     // reload charts if file has been selected already
@@ -59,7 +59,6 @@
 
     textContent = document.getElementById("id_sequence");
     textContent.oninput=sequenceHandler;
-    textContent.keyup=alert('keyup');
     textContent.oncut=sequenceHandler;
     textContent.oncopy=sequenceHandler;
     textContent.onpaste=sequenceHandler;
@@ -98,6 +97,8 @@
     //send_request(true);
     send_request(true);
 
+    // hide Vector part to be removed in the future
+    ShowHide('HiddenDivVector','none');
 
     HideShowElement('backbone_db','visible');
     HideShowElement('backbone_genbank','hidden');
@@ -373,7 +374,7 @@ case 'dsDNA Fragment':
 
     case 'Plasmid':
         document.getElementById("id_circular").checked = true;
-        ShowHide('HiddenDivVector','block');
+        ShowHide('HiddenDivVector','none');
         document.getElementById("id_optimizedFor").disabled=false; 
         document.getElementById("id_translatesTo").disabled=false; 
         break;
@@ -618,6 +619,7 @@ $.ajax({
         if (isUpdateVector) {populateVectorBackbone(data);}
         currSelectedAnnot = data;
         populateInserts(data);
+        drawGenBankCurrentData(data,buildChartGeneBank());
     }
 });
 
@@ -901,10 +903,53 @@ function buildChartGeneBank(){
     return chart1
 }
 
+
+// method used to draw the different annotation on the current data
+
+function drawGenBankCurrentData(jsontext,chart){
+    
+
+    data = jsontext;
+    var jsonInsertObject = eval(data.extra_values);
+    var arrayOfInsertObjects = jsonInsertObject;
+        if(arrayOfInsertObjects) {
+            for(var i=0, len=arrayOfInsertObjects.length; i<len; i++) {
+                positionStrand = arrayOfInsertObjects[i].coverage + '('+arrayOfInsertObjects[i].strand+')';
+                //addRowToAnnotationTable(0,arrayOfInsertObjects[i].id,arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].name,arrayOfInsertObjects[i].description,arrayOfInsertObjects[i].componentType_name,positionStrand,arrayOfInsertObjects[i].optimizedFor_name,'',arrayOfInsertObjects[i].isRelated);
+                position = arrayOfInsertObjects[i].coverage.split("-");
+                strand   = arrayOfInsertObjects[i].strand;
+                //alert(position[0]+' '+position[1]+' '+arrayOfInsertObjects[i].displayid+' '+arrayOfInsertObjects[i].isRelated);
+                var strandStr = arrayOfInsertObjects[i].strand;                
+                startPos = parseInt(position[0],10);;      
+                endPos = parseInt(position[1],10);;      
+                if  (startPos>endPos) {strandStr='-';temp = startPos; startPos=endPos; endPos=temp;};
+                var start = startPos;
+                
+                var end = endPos - start;
+                if (end==0) { end = 1;}
+                //alert(strandStr);
+                var gene = chart1.addGene( start,    end , strandStr);
+                gene.name = arrayOfInsertObjects[i].name;
+                if (arrayOfInsertObjects[i].isRelated=='True') {
+                    gene.setColorGradient('rgb(154,205,50)','rgb(173,255,47)');
+                    gene.roundness = 0;
+                    }
+                //alert(gene.name+": Start:"+start+" Length:"+end);
+                gene.onMouseover = gene.name+": Start:"+start+" Length:"+end;
+                gene.onClick = function() {alert(gene.name);}
+            }
+        }
+    //chart.scrollable = true;
+    //chart.scrollValues = [200000, 250000];
+    chart.draw();
+}
+
+
 // method used to draw the different annotation on the genbank file 
 // providing json object of annotation and the chart where to draw 
 
 function drawGenBank(jsontext,chart){
+    
     var jsonInsertObject = eval(jsontext);
     var arrayOfInsertObjects = jsonInsertObject;
 
@@ -923,12 +968,12 @@ function drawGenBank(jsontext,chart){
 
     gene.onMouseover = gene.name+": Start:"+start+" Length:"+end;
     gene.onClick = function() {alert(gene.name);}
-    // 
-}
-}
-//chart.scrollable = true;
-//chart.scrollValues = [200000, 250000];
-chart.draw();
+        // 
+        }
+    }
+    //chart.scrollable = true;
+    //chart.scrollValues = [200000, 250000];
+    chart.draw();
 }
 function setJSON_genbankFile(jsontext) {
     var jsonInsertObject = eval(jsontext);
@@ -987,14 +1032,14 @@ var optn = document.createElement("OPTION");
 send_request(true);
 }
 //addRowToAnnotationTable(1,'',arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].name,arrayOfInsertObjects[i].componentType_name,arrayOfInsertObjects[i].coverage,'',i);			
-if (arrayOfInsertObjects[i].name.toUpperCase()!='VECTOR' && arrayOfInsertObjects[i].name.toUpperCase()!='VECTOR BACKBONE') {
+//if (arrayOfInsertObjects[i].name.toUpperCase()!='VECTOR' && arrayOfInsertObjects[i].name.toUpperCase()!='VECTOR BACKBONE') {
     strTemp = String('0000'+intialnumber);
     intialnumber = strTemp.substring(strTemp.length,strTemp.length-4);
 
     //initialNameGB = 'gb'+intialnumber+String.fromCharCode(65+i);
     initialNameGB = '(AUTO)';
     addRowToAnnotationTable(1,'',initialNameGB,arrayOfInsertObjects[i].displayid,arrayOfInsertObjects[i].name,arrayOfInsertObjects[i].componentType_name,arrayOfInsertObjects[i].coverage,'',i);			
-}
+//}
 var optn = document.createElement("OPTION");
 optn.text = arrayOfInsertObjects[i].displayid;
 optn.value = arrayOfInsertObjects[i].id+'<>'+arrayOfInsertObjects[i].displayid+'<>'+arrayOfInsertObjects[i].description+'<>'+arrayOfInsertObjects[i].componentType_name+'<>'+arrayOfInsertObjects[i].coverage;
@@ -1002,10 +1047,11 @@ optn.id = arrayOfInsertObjects[i].id;
 //alert(optn.text+optn.value+optn.id);
 if (arrayOfInsertObjects[i].name.toUpperCase()=='VECTOR' || arrayOfInsertObjects[i].name.toUpperCase()=='VECTOR BACKBONE') {
     dataList_gen.options.add(optn);
+            }
+        }
+    }
 }
-}
-}
-}
+
 function uploadGBDataFileIfExist(){
     pathFile = document.getElementById("id_htmlAttribute3").value;
 
@@ -1061,7 +1107,7 @@ function uploadTheFile(){
         document.getElementById("id_GenBankfile_loaded").innerHTML += "<br>Last File :"+fileName;
         buildGenBankTable(responseJSON.test);
 
-    drawGenBank(responseJSON.test,buildChartGeneBank());
+        drawGenBank(responseJSON.test,buildChartGeneBank());
 
     if( responseJSON.success ){
         //alert( "success!" ) ;
@@ -1102,7 +1148,16 @@ function uploadTheFile(){
     <h2>Sequence Graph</h2>
 <canvas id="canvas" width="800" height="200"
 style="border:1px solid #000000;">
+ 
 </canvas> 
+ 
+<div style="background-color:rgb(154,205,50);border:0px solid black;padding:10px;width:100px; height:5px;">
+<p>Registered</p>
+</div>
+<div style="background-color:rgb(100,149,237);border:0px solid black;padding:10px;width:100px; height:5px;">
+<p>Unregistered</p>
+</div>
+							
 </fieldset>
 <div class="mid" id="HiddenDivVector" style="DISPLAY: block" >
     <h2>Specify vector backbone</h2>

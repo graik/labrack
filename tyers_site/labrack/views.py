@@ -477,9 +477,14 @@ def getVectorBySequence(sequence_text,strand,displayIdDnaComponent):#local funct
         return json_object
 
 def getInsertDBAnnotationBySequence(sequence_text,strand,displayIdDnaComponent):#local function
+        lenSimple = len(sequence_text)        
+        sequence_text = sequence_text + sequence_text
+        
         dnapartsVectorAll  = DnaComponent.objects.filter(componentType__name='Vector Backbone')
         dnapartsInsertsAll = DnaComponent.objects.filter(componentType__name='Vector Backbone')
-        dnaparts = [dnapart for dnapart in DnaComponent.objects.all() if (dnapart not in dnapartsVectorAll and dnapart.sequence is not None and dnapart.sequence != "" and dnapart.sequence in sequence_text)]
+        # removed because Vector selection was removed for now, therefore add Vector selection within the annotations
+        #dnaparts = [dnapart for dnapart in DnaComponent.objects.all() if (dnapart not in dnapartsVectorAll and dnapart.sequence is not None and dnapart.sequence != "" and dnapart.sequence in sequence_text)]
+        dnaparts = [dnapart for dnapart in DnaComponent.objects.all() if (dnapart.sequence is not None and dnapart.sequence != "" and dnapart.sequence in sequence_text and dnapart.displayId!=displayIdDnaComponent)]
         name = ''
         data = serializers.serialize('json', dnaparts)
         json_Insertobject = ''
@@ -493,7 +498,11 @@ def getInsertDBAnnotationBySequence(sequence_text,strand,displayIdDnaComponent):
                 secondpeace = len(sequence_text)
                 rslt = fisrtPeace/float(secondpeace)
                 firstposition = sequence_text.find(sequence)
-                lastposition = firstposition+len(sequence)
+                # check if the sequence was found over circular dna sequence by cmopare the lentgh of simpleSequence and not duplicate
+                lastposition = firstposition+len(sequence)                
+                if (firstposition+len(sequence)>lenSimple):
+                        lastposition = fisrtPeace - (lenSimple - firstposition)                       
+                
                 
                 # check if the annotation are already related
                 isRelated = False
