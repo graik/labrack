@@ -484,7 +484,7 @@ def getInsertDBAnnotationBySequence(sequence_text,strand,displayIdDnaComponent):
         dnapartsInsertsAll = DnaComponent.objects.filter(componentType__name='Vector Backbone')
         # removed because Vector selection was removed for now, therefore add Vector selection within the annotations
         #dnaparts = [dnapart for dnapart in DnaComponent.objects.all() if (dnapart not in dnapartsVectorAll and dnapart.sequence is not None and dnapart.sequence != "" and dnapart.sequence in sequence_text)]
-        dnaparts = [dnapart for dnapart in DnaComponent.objects.all() if (dnapart.sequence is not None and dnapart.sequence != "" and dnapart.sequence in sequence_text and dnapart.displayId!=displayIdDnaComponent)]
+        dnaparts = [dnapart for dnapart in DnaComponent.objects.all()  if (dnapart.sequence is not None and dnapart.sequence != "" and dnapart.sequence in sequence_text and dnapart.displayId!=displayIdDnaComponent)]
         name = ''
         data = serializers.serialize('json', dnaparts)
         json_Insertobject = ''

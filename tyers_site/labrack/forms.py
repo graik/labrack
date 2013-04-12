@@ -275,7 +275,6 @@ class DnaComponentForm(forms.ModelForm):
                 created_by = instance.created_by
             except Exception, err:            
                 print err
-            print err
         data = json.loads(jsonFromWeb)
 
 
@@ -318,44 +317,50 @@ class DnaComponentForm(forms.ModelForm):
         #delete all the entry for annotation for this component ID and recreate if needed
         DnaSequenceAnnotation.deleteRelated(instance.displayId)        
 
+
+        id = DnaComponent.objects.get(displayId=instance.displayId)                
+        coun = DnaSequenceAnnotation.objects.filter( subComponent=id)
+        
+        
         ### saving Vector annotation
-        if (isDbData=='true' and  data["data"][0]["name"]!='') :
-            vectorIdFromDB = data["data"][0]["name"]
-            dnaVector = DnaComponent.objects.get(displayId=vectorIdFromDB)
-            first = fullSequence.find(dnaVector.sequence)
+        # commented 12 April because selecting Vector alone was deprecated
+        #if (isDbData=='true' and  data["data"][0]["name"]!='') :
+            #vectorIdFromDB = data["data"][0]["name"]
+            #dnaVector = DnaComponent.objects.get(displayId=vectorIdFromDB)
+            #first = fullSequence.find(dnaVector.sequence)
             
                                 
-            second = first + len(dnaVector.sequence)
-            stra = utilLabrack.getStrand(fullSequence,dnaVector.sequence)
-            an2db = DnaSequenceAnnotation(uri ='', bioStart = first, bioEnd = second, strand = stra, subComponent = instance, componentAnnotated = dnaVector)
+            #second = first + len(dnaVector.sequence)
+            #stra = utilLabrack.getStrand(fullSequence,dnaVector.sequence)
+            #an2db = DnaSequenceAnnotation(uri ='', bioStart = first, bioEnd = second, strand = stra, subComponent = instance, componentAnnotated = dnaVector)
             
-            an2db.save()		    
+            #an2db.save()		    
 
-        if (isGbData=='true' and  data["data"][1]["name"]!='') :
-            coverage=data["data"][1]["coverage"]
-            id=data["data"][1]["displayid"]
-            coverage = coverage.split('-')
-            first = int(coverage[0])
-            secon = int(coverage[1])
-            if (first>secon):
-                fir = fullSequence[first:]
-                sec = fullSequence[:secon]
-                seq = fir+sec
-            else:
-                seq = fullSequence[first:secon]            
-            name=data["data"][1]["name"]
-            descrp=data["data"][1]["description"]
+        #if (isGbData=='true' and  data["data"][1]["name"]!='') :
+            #coverage=data["data"][1]["coverage"]
+            #id=data["data"][1]["displayid"]
+            #coverage = coverage.split('-')
+            #first = int(coverage[0])
+            #secon = int(coverage[1])
+            #if (first>secon):
+                #fir = fullSequence[first:]
+                #sec = fullSequence[:secon]
+                #seq = fir+sec
+            #else:
+                #seq = fullSequence[first:secon]            
+            #name=data["data"][1]["name"]
+            #descrp=data["data"][1]["description"]
 
-            dnaAnnot = DnaComponent(displayId=id,description=descrp, name =name, sequence = seq, created_by = created_by)
-            dnaAnnot.save()
-            dnaAnnot.componentType = subCtVectorType
-            dnaAnnot.save()
-            stra = utilLabrack.getStrand(fullSequence,seq)
-            try:
-                an2db = DnaSequenceAnnotation(uri ='', bioStart = first, bioEnd = secon, strand = stra, subComponent = instance, componentAnnotated = dnaAnnot)
-                an2db.save()	
-            except err:
-                print err                
+            #dnaAnnot = DnaComponent(displayId=id,description=descrp, name =name, sequence = seq, created_by = created_by)
+            #dnaAnnot.save()
+            #dnaAnnot.componentType = subCtVectorType
+            #dnaAnnot.save()
+            #stra = utilLabrack.getStrand(fullSequence,seq)
+            #try:
+                #an2db = DnaSequenceAnnotation(uri ='', bioStart = first, bioEnd = secon, strand = stra, subComponent = instance, componentAnnotated = dnaAnnot)
+                #an2db.save()	
+            #except err:
+                #print err                
 
         try:
             #if (dna2db is None):
@@ -400,18 +405,35 @@ class DnaComponentForm(forms.ModelForm):
                             chassisOptimizedFor = Chassis.objects.get(displayId=optimizedfor[0])
                         except Chassis.DoesNotExist:
                             chassisOptimizedFor = None
-                        subCtVectorType = DnaComponentType.objects.filter(name=dnatype)	
+                        subCtVectorType = DnaComponentType.objects.filter(name__in=[dnatype,'Annotation'])	
+     
                         dnaAnnot = DnaComponent(displayId=id,description=descrp, name =name, sequence = seq,optimizedFor = chassisOptimizedFor, created_by = created_by)
                         dnaAnnot.save()
                         if (id.upper()=='(AUTO)' or id.upper()==''):
+                            
                             if (dnatype=='Vector Backbone' or dnatype=='Vector'):
-                                pkUsed = dnaAnnot.pk
+                                lastComponent = DnaComponent.objects.filter(displayId__regex='^Ve.*').order_by('-displayId')[:1]
+                                leng = len(lastComponent)
+                                if leng>0:
+                                    lastComponentDisplayID = int(lastComponent[0].displayId[2:])
+                                else:
+                                    lastComponentDisplayID = 0                                
+                                
+                                #pkUsed = dnaAnnot.pk
+                                pkUsed = lastComponentDisplayID + 1
                                 stringId = '00000000'+str(pkUsed)                                
                                 stringId = stringId[-3:]
                                 dnaAnnot.displayId = 'Ve'+stringId
                                 dnaAnnot.save()
                             else:
-                                pkUsed = dnaAnnot.pk
+                                lastComponent = DnaComponent.objects.filter(displayId__regex='^gb.*').order_by('-displayId')[:1]
+                                leng = len(lastComponent)
+                                if leng>0:
+                                    lastComponentDisplayID = int(lastComponent[0].displayId[2:])
+                                else:
+                                    lastComponentDisplayID = 0  
+                                pkUsed = lastComponentDisplayID + 1                                
+                                #pkUsed = dnaAnnot.pk
                                 stringId = '00000000'+str(pkUsed)                                
                                 stringId = stringId[-4:]
                                 dnaAnnot.displayId = 'gb'+stringId

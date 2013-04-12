@@ -200,6 +200,28 @@ class PeptideComponentAdmin(ProteinComponentAdmin):
     raw_id_fields = ('componentType', 'variantOf',)
 
 
+class DnaComponentTypeFilter(SimpleListFilter):
+    title = 'cited book'
+    parameter_name = 'dnacomponent'
+
+    def lookups(self, request, model_admin):
+        dnacomponenttypes =  DnaComponentType.objects.all()
+        r = [(c.id, c.name) for c in dnacomponenttypes]
+        r.append((-1,'All including annotations'))
+        return r
+
+    def queryset(self, request, queryset):
+        if self.value():
+            val = self.value()
+            if (val == '-1'):
+                #return queryset.exclude(componentType__name__exact='Annotation')
+                return queryset
+            else:
+                #DnaComponent.objects.filter(componentType__name='Vector Backbone')
+                return queryset.filter(componentType__id__exact=self.value())
+        else:
+            return queryset.exclude(componentType__name__exact='Annotation')
+
 
 
 
@@ -234,7 +256,7 @@ class DnaComponentAdmin(ComponentAdmin):
                     'created_by', 'showComment', 'show_resistance', 
                     'size', 'number_related_samples', 'status')
 
-    list_filter = ComponentAdmin.list_filter.__add__(('optimizedFor','componentType',))
+    list_filter = ComponentAdmin.list_filter.__add__(('optimizedFor','componentType',DnaComponentTypeFilter))
 
     search_fields = ComponentAdmin.search_fields.__add__(('sequence',))
 
@@ -266,8 +288,6 @@ class DnaComponentAdmin(ComponentAdmin):
         request.GET = data
         return super(DnaComponentAdmin, self).add_view(request, form_url="", extra_context=extra_context)
     
-
-
 
 class ContainerAdmin(PermissionAdmin, admin.ModelAdmin):
 
