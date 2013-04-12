@@ -23,6 +23,7 @@ from django.db import models
 from django.db.models import Q
 from django.utils.safestring import mark_safe
 from django.utils.safestring import SafeUnicode
+from django.db import transaction
 from Bio import SeqIO
 from Bio.Seq import Seq
 from tyers_site import settings   
@@ -369,6 +370,7 @@ class DnaSequenceAnnotation(SequenceAnnotation):
         
         id = DnaComponent.objects.get(displayId=displayId)                
         DnaSequenceAnnotation.objects.filter( subComponent=id).delete()
+
         
         
         
