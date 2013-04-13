@@ -1,11 +1,18 @@
 from django.conf.urls.defaults import patterns, include, url
 
-# Uncomment the next two lines to enable the admin:
 from django.contrib import admin
-from labrack.views import getAnnotToBeDeleted,getGBDataFromFile,ajax_upload,upload_page,get_dna_info,dnalist,celllist,cellonlylist,contact,success,plasmidlist,search_dna_parts
-admin.autodiscover()
-from django.views.generic.simple import redirect_to
+
+from labrack.views import getAnnotToBeDeleted,getGBDataFromFile,ajax_upload,\
+     upload_page,get_dna_info,dnalist,celllist,cellonlylist,contact,success,\
+     plasmidlist,search_dna_parts
+
 import settings
+
+# deprecated in django 1.5: Use class-based views instead
+# http://stackoverflow.com/questions/11428427/no-module-named-simple-error-in-django
+# from django.views.generic.simple import redirect_to
+
+admin.autodiscover()
 
 urlpatterns = patterns('',
     # Examples:
