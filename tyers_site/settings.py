@@ -1,1 +1,1 @@
-tyers_site/settings_postgresql.py
+settings_sqlite.py
