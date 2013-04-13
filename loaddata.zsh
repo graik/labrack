@@ -6,3 +6,4 @@
 # ($DJANGO_SETTINGS_MODULE and labrack in $PYTHONPATH)
 
 python manage.py loaddata initial_units.json
+python manage.py loaddata initial_types.json
