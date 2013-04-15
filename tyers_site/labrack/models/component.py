@@ -69,7 +69,7 @@ class ChassisComponentType( ComponentType ):
                                        null=True, related_name='subTypes')
     class Meta:
         app_label = 'labrack'   
-        verbose_name = 'Chassis PartType'
+        verbose_name = 'Cell PartType'
         abstract = False   
 
 class PeptideComponentType( ComponentType ):

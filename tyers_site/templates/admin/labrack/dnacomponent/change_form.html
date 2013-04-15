@@ -1097,7 +1097,7 @@ document.getElementById(divId).style.display = state;
 
 function uploadTheFile(){
     var uploader = new qq.FileUploader({
-        action: "{% url ajax_upload %}",
+        action: "{% url "ajax_upload" %}",
         element: $('#id_GenBankfile')[0],
         //element: document.getElementById('id_GenBankfile'), 
         multiple: false,

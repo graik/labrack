@@ -615,7 +615,7 @@ document.getElementById('id_GenBankfile').Value = 'hello';
 
 //alert($('#file-uploader')[0]);
     var uploader = new qq.FileUploader({
-        action: "{% url ajax_upload %}",
+        action: "{% url "ajax_upload" %}",
         element: $('#file-uploader')[0],
 		//element: document.getElementById('id_GenBankfile'), 
         multiple: false,

@@ -16,13 +16,13 @@
 	
     <script type="text/javascript">
         // Definition of global variables for javascript context
-        var contact_url = '{% url contact %}';
+        var contact_url = '{% url "contact" %}';
     </script>
     
         
 </head>
 <body>
-    <form id="contact" action="{% url contact %}" method="post" class="niceform" novalidate>{% csrf_token %}
+    <form id="contact" action="{% url "contact" %}" method="post" class="niceform" novalidate>{% csrf_token %}
         <dl>
             <dt>{{ form.name.label_tag }} :</dt>
             <dd>{{ form.name }}</dd>

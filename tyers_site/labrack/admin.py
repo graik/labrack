@@ -82,16 +82,17 @@ class PermissionAdmin():
     
   
 
-    def save_related(self, request, form, formsets, change):
-        self.obj.owners.add(request.user)
-        self.obj.save()        
+    #def save_related(self, request, form, formsets, change):
+        #self.obj.owners.add(request.user)
+        #self.obj.save()        
 
     # Save the owner of the object
     def save_model(self, request, obj, form, change):
 
         self.obj = obj  # store the obj for save_related method
-        obj.created_by = request.user
-        obj.save()
+        self.obj.created_by = request.user
+        #self.obj.owners.add(request.user)
+        self.obj.save()
         
 
 
@@ -937,7 +938,7 @@ class DnaSampleAdmin(PermissionAdmin, admin.ModelAdmin):
         self.message_user(request, '%i samples were set to %s'  
                           % (i, status))
 
-
+#class ChassisAdmin(PermissionAdmin,ComponentAdmin):
 class ChassisAdmin(PermissionAdmin,ComponentAdmin):
     actions = ['make_csv']
     
