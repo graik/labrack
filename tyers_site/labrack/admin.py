@@ -202,7 +202,7 @@ class PeptideComponentAdmin(ProteinComponentAdmin):
 
 
 class DnaComponentTypeFilter(SimpleListFilter):
-    title = 'cited book'
+    title = 'Type'
     parameter_name = 'dnacomponent'
 
     def lookups(self, request, model_admin):
@@ -257,7 +257,7 @@ class DnaComponentAdmin(ComponentAdmin):
                     'created_by', 'showComment', 'show_resistance', 
                     'size', 'number_related_samples', 'status')
 
-    list_filter = ComponentAdmin.list_filter.__add__(('optimizedFor','componentType',DnaComponentTypeFilter))
+    list_filter = ComponentAdmin.list_filter.__add__(('optimizedFor',DnaComponentTypeFilter))
 
     search_fields = ComponentAdmin.search_fields.__add__(('sequence',))
 
