@@ -456,8 +456,13 @@ class RackAdmin(PermissionAdmin,admin.ModelAdmin):
         return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.container.__unicode__()))
 
     def location_url(self, obj):
-        url = obj.current_location.get_relative_url()
-        return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.current_location.__unicode__()))
+        if obj.current_location:
+            url = obj.current_location.get_relative_url()
+            locatAttr = obj.current_location.__unicode__()
+        else:
+            url = ''
+            locatAttr = ''
+        return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, locatAttr))
     location_url.allow_tags = True
 
     location_url.short_description = 'Location'              
