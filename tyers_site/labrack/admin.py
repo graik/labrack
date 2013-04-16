@@ -349,7 +349,11 @@ class ContainerAdmin(PermissionAdmin, admin.ModelAdmin):
     rack_url.short_description = 'Rack'   
     
     def location_url(self, obj):
-        url = obj.rack.current_location.get_relative_url()
+        if obj.rack.current_location:
+            url = obj.rack.current_location.get_relative_url()
+        else:
+            url = ''
+        
         return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.rack.current_location))
 
     location_url.allow_tags = True
@@ -818,9 +822,14 @@ class DnaSampleAdmin(PermissionAdmin, admin.ModelAdmin):
         con = obj.container
         rac = con.rack
         locat = rac.current_location
-        url = locat.get_relative_url()
+        if locat:
+            url = locat.get_relative_url()
+            locatAttr = obj.container.rack.current_location.__unicode__()
+        else:
+            url = ''
+            locatAttr = '' 
         #return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.container.rack.current_location.__unicode__()))
-        return mark_safe('<a href="%s/%s">%s, %s</a>' % (S.admin_root, url, obj.container.rack.__unicode__(),obj.container.rack.current_location.__unicode__()))
+        return mark_safe('<a href="%s/%s">%s, %s</a>' % (S.admin_root, url, obj.container.rack.__unicode__(),locatAttr))
     location_url.allow_tags = True
     location_url.short_description = 'Location'      
     
@@ -1177,9 +1186,14 @@ class ChassisSampleAdmin(PermissionAdmin, admin.ModelAdmin):
         con = obj.container
         rac = con.rack
         locat = rac.current_location
-        url = locat.get_relative_url()
+        if locat:
+            url = locat.get_relative_url()
+            locatAttr = obj.container.rack.current_location.__unicode__()
+        else:
+            url = ''
+            locatAttr = ''
         #return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.container.rack.current_location.__unicode__()))
-        return mark_safe('<a href="%s/%s">%s, %s</a>' % (S.admin_root, url, obj.container.rack.__unicode__(),obj.container.rack.current_location.__unicode__()))
+        return mark_safe('<a href="%s/%s">%s, %s</a>' % (S.admin_root, url, obj.container.rack.__unicode__(),locatAttr))
     location_url.allow_tags = True
     location_url.short_description = 'Location'   
 
