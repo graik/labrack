@@ -52,5 +52,14 @@
             "uri": null,
             "name": "Region"
         }
+    },
+    {
+        "pk": 15,
+        "model": "labrack.dnacomponenttype",
+        "fields": {
+            "subTypeOf": [],
+            "uri": null,
+            "name": "Annotation"
+        }
     }
 ]
