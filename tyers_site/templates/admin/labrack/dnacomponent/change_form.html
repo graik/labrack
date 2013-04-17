@@ -243,12 +243,13 @@ $.ajax({
 
     }
 });
+alert('answer from server regarding potential deleted annot'+answer);
 return answer;
 }
 
 function retrieveAndFeedDataHandler(e)
     {
-
+    alert('before retrieving annotation info');
     textContent = document.getElementById("id_htmlAttribute1");
     textContent2 = document.getElementById("id_htmlAttribute2");
     textContent2Before = textContent2.value;
@@ -280,14 +281,17 @@ function retrieveAndFeedDataHandler(e)
     };
     textContent.value = JSON.stringify(json_ele);
     textContent2.value = JSON.stringify(json_ele2);
+    alert('before checking deleted annotation ');
         textToShow = checkDeletionAnnotBeforeAfter(textContent2.value);
+    alert('done checking deleted annotation ');
         if (textToShow!="") {
     // retrieve current values of selected DB and send a blocking message if some will get deleted
         var r=confirm("Warning : If you continue those annotations: ("+textToShow+") will be removed!");
         if (r==false) { 
+            return false;			  
+        }
+    alert('done retrieving annotation info');
 
-    return false;			  
-} 
 }  
 
 
@@ -900,6 +904,8 @@ function buildChartGeneBank(){
     var canvas = document.getElementById('canvas');
     canvas.width = canvas.width;
     chart1 = new Scribl(canvas, 400);
+    chart1.scrollable = true;
+    chart1.scrollValues = [20, 25000];
     return chart1
 }
 
@@ -1146,10 +1152,9 @@ function uploadTheFile(){
 
 <fieldset class="module aligned collapse">
     <h2>Sequence Graph</h2>
-<canvas id="canvas" width="800" height="200"
-style="border:1px solid #000000;">
- 
-</canvas> 
+    <div id="container">
+            <canvas id="canvas" width="940px" height="400px"  style="margin-left:auto; margin-right:auto"></canvas>  
+            
  
 <div style="background-color:rgb(154,205,50);border:0px solid black;padding:10px;width:100px; height:5px;">
 <p>Registered</p>

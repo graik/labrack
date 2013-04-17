@@ -255,6 +255,7 @@ class DnaComponentForm(forms.ModelForm):
         return cleanedData 
 
     def save(self, commit=True):
+        print '+ methods done for dnaComponent'
         instance = super(DnaComponentForm, self).save(commit=False)
         fileName = self.cleaned_data['htmlAttribute3']
         
@@ -365,7 +366,8 @@ class DnaComponentForm(forms.ModelForm):
         try:
             #if (dna2db is None):
                 #dna2db = DnaComponent(displayId=self.cleaned_data['displayId'],description=self.cleaned_data['description'], name =self.cleaned_data['name'], sequence = self.cleaned_data['sequence'],status = self.cleaned_data['status'], GenBankfile = self.cleaned_data['GenBankfile'])
-                #dna2db.save()            
+                #dna2db.save()
+            print '+ start selectedAnnotFromDB'
             if (selectedAnnotFromDB):
                 try:                       
                     for id in selectedAnnotFromDB:
@@ -382,6 +384,8 @@ class DnaComponentForm(forms.ModelForm):
                 except Exception, err:
                     print err
                     commit=False
+            print '+ end selectedAnnotFromDB'
+            print '+ start selectedAnnotFromGB'
             if (selectedAnnotFromGB):                
                 try:                       
                     for obj in selectedAnnotFromGB:
@@ -453,7 +457,7 @@ class DnaComponentForm(forms.ModelForm):
         except Exception, err:
             print err
             commit=False                  
-
+        print '+ end selectedAnnotFromGB'
         return instance
 
     class Meta:
