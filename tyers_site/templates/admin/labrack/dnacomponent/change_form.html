@@ -124,12 +124,26 @@ function log(msg) {
 
 function updateTextBoxElementsAndCheckDeletionAnnotationMsg(){
     try{
-        savebutton = document.getElementsByName("_save");
+        /*savebutton = document.getElementsByName("_save");
         savebutton[0].onclick = retrieveAndFeedDataHandler;
         savebutton1 = document.getElementsByName("_addanother");
         savebutton1[0].onclick = retrieveAndFeedDataHandler;
         savebutton2 = document.getElementsByName("_continue");
-        savebutton2[0].onclick = retrieveAndFeedDataHandler;
+        savebutton2[0].onclick = retrieveAndFeedDataHandler;*/
+        
+        $('[name="_save"]').click( function() {
+            retrieveAndFeedDataHandler();
+        });
+        $('[name="_addanother"]').click( function() {
+            retrieveAndFeedDataHandler();
+        });
+        $('[name="_continue"]').click( function() {
+            retrieveAndFeedDataHandler();
+        });
+     
+        
+        
+        
     } catch (e) {
             log(e.message);
     }
@@ -249,7 +263,8 @@ function repopulateCheckBox(){
 
 
 function checkDeletionAnnotBeforeAfter(json){
-try {
+    log('checking deletion of annotation');    
+    try {
             displayId = document.getElementById("id_displayId").value;
             answer = "";
             choice = false;
@@ -265,11 +280,12 @@ try {
         });
         return answer;
     } catch (e) {
+        log('exception');
         log(e.message);
     }
 }
 
-function retrieveAndFeedDataHandler(e)
+function retrieveAndFeedDataHandler()
     {
     textContent = document.getElementById("id_htmlAttribute1");
     textContent2 = document.getElementById("id_htmlAttribute2");
@@ -302,16 +318,15 @@ function retrieveAndFeedDataHandler(e)
     };
     textContent.value = JSON.stringify(json_ele);
     textContent2.value = JSON.stringify(json_ele2);
-    textToShow = checkDeletionAnnotBeforeAfter(textContent2.value);
-        if (textToShow!="") {
+    textToShow = "None"
+    //textToShow = checkDeletionAnnotBeforeAfter(textContent2.value);
+        if (textToShow!="None" && textToShow!="") {
     // retrieve current values of selected DB and send a blocking message if some will get deleted
         var r=confirm("Warning : If you continue those annotations: ("+textToShow+") will be removed!");
         if (r==false) { 
             return false;			  
         }
-
-}  
-
+    }  
 
     }
 

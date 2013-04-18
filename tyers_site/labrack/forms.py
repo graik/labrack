@@ -266,7 +266,7 @@ class DnaComponentForm(forms.ModelForm):
                     commit=False                                 
         if  (len(errors)>0):
             raise forms.ValidationError(errors)
-        
+        print '+ methods clean is done'
         return cleanedData 
 
     def get_success_message(self, cleaned_data):
