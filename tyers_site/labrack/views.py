@@ -540,12 +540,12 @@ def getInsertDBAnnotationBySequence(sequence_text,strand,displayIdDnaComponent):
         return json_Insertobject
 
 def getAnnotToBeDeleted(request, jsonAmmpt,displayIdDnaComponent):
-        import django.utils.simplejson as json
+        #import django.utils.simplejson as json
         try:
                 dnacomp = DnaComponent.objects.get(displayId = displayIdDnaComponent)
         except DnaComponent.DoesNotExist:
                 dnacomp = None
-                message = ""
+                message = "None"
                 json = simplejson.dumps(message)
                 return HttpResponse(json, mimetype='application/json')                
 
@@ -577,7 +577,7 @@ def getAnnotToBeDeleted(request, jsonAmmpt,displayIdDnaComponent):
                 return HttpResponse(json, mimetype='application/json') 
         except:
                 dnacomp = None
-                message = ""
+                message = "None"
                 json = simplejson.dumps(message)
                 return HttpResponse(json, mimetype='application/json')                 
 

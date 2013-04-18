@@ -249,20 +249,24 @@ function repopulateCheckBox(){
 
 
 function checkDeletionAnnotBeforeAfter(json){
-    displayId = document.getElementById("id_displayId").value;
-    answer = "";
-    choice = false;
-
-$.ajax({
-    async: false,
-    type: 'GET',
-    url: "/checkAnnotToDelete/"+json+"/"+displayId+"/",
-    success: function(data) {
-        answer = data;
-
+try {
+            displayId = document.getElementById("id_displayId").value;
+            answer = "";
+            choice = false;
+        
+        $.ajax({
+            async: false,
+            type: 'GET',
+            url: "/checkAnnotToDelete/"+json+"/"+displayId+"/",
+            success: function(data) {
+                answer = data;
+        
+            }
+        });
+        return answer;
+    } catch (e) {
+        log(e.message);
     }
-});
-return answer;
 }
 
 function retrieveAndFeedDataHandler(e)
