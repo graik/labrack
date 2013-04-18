@@ -289,6 +289,12 @@ class DnaComponentAdmin(ComponentAdmin):
         request.GET = data
         return super(DnaComponentAdmin, self).add_view(request, form_url="", extra_context=extra_context)
     
+    def save_model(self, request, obj, form, change):
+        # add an additional message
+        if form.errorMessageForm<>"":
+            messages.warning(request, form.errorMessageForm)
+        super(DnaComponentAdmin, self).save_model(request, obj, form, change)    
+    
 
 class ContainerAdmin(PermissionAdmin, admin.ModelAdmin):
 

@@ -1,5 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from django.contrib import messages
 from labrack.models.sample import DnaSample
 from labrack.models.sample import ChassisSample
 from labrack.models.generalmodels import Document
@@ -17,6 +18,7 @@ from django.forms.extras.widgets import SelectDateWidget
 from django.forms.widgets import *
 import django.utils.simplejson as json
 from tyers_site import settings
+from django.contrib.messages.storage.fallback import FallbackStorage
 import os
 import re
 
@@ -77,7 +79,7 @@ class DnaSampleForm(forms.ModelForm):
                 instance.dnaConstruct = dna2db
             except:
                 commit=False
-        else:                    
+        else:
             instance.dnaConstruct = self.cleaned_data['dnaConstruct']
 
 
@@ -115,7 +117,7 @@ class DnaComponentForm(forms.ModelForm):
     htmlAttribute2 = forms.CharField(widget=forms.TextInput(attrs={'size':'1800','hidden':'true'}),required=False,label="")
     htmlAttribute3 = forms.CharField(widget=forms.TextInput(attrs={'size':'1800','hidden':'true'}),required=False,label="")
     
-    
+    errorMessageForm = ''
     
     
     
@@ -132,8 +134,9 @@ class DnaComponentForm(forms.ModelForm):
         errors = {}        
         
         jsonCancel = self.cleaned_data['htmlAttribute2']
-        dataCancel = json.loads(jsonCancel)
         try:
+            dataCancel = json.loads(jsonCancel)
+           
             gb_checked_cancel = json.loads(dataCancel["selected_annot"][2]["gb_checked_cancel"])        
             if (gb_checked_cancel=='True'):
                 errorMessage = "The user has cancel the saving procedure due to annotation deletions risks!"
@@ -188,22 +191,34 @@ class DnaComponentForm(forms.ModelForm):
         #retrieve vector GB information
         jsonFromWeb = self.cleaned_data['htmlAttribute1']
         fullSequence = self.cleaned_data['sequence']
-        data = json.loads(jsonFromWeb)
-        isGbData = data["data"][1]["gb_data"]
-        vectorIdFromGB_displayid = data["data"][1]["displayid"]
-        vectorIdFromGB_name = data["data"][1]["name"]
-        vectorIdFromGB_description = data["data"][1]["description"]
+        try:
+            data = json.loads(jsonFromWeb)
+            isGbData = data["data"][1]["gb_data"]
+            vectorIdFromGB_displayid = data["data"][1]["displayid"]
+            vectorIdFromGB_name = data["data"][1]["name"]
+            vectorIdFromGB_description = data["data"][1]["description"]
+        except:
+            isGbData=False
+            data=[]
+            self.errorMessageForm = 'no json data was submited and no annotation data was saved due to errors, contact administrator!' 
+            print 'no json data was submited and no annotation data was saved due to errors, contact administrator!'          
         
-        #retrieve annot GB information
-        jsonFromWeb2 = self.cleaned_data['htmlAttribute2']
-        data2 = json.loads(jsonFromWeb2)
-        selectedAnnotFromGB = json.loads(data2["selected_annot"][1]["gb_checked"])
-        
-        if (self.instance.id!=None):        
-            r = self.instance.number_related_ParentChildAnnotations()
-            if (fullSequence<>self.instance.sequence and self.instance.sequence<>"" and r>0) :
-                
-                print 'dooo'
+        try:            
+            #retrieve annot GB information
+            jsonFromWeb2 = self.cleaned_data['htmlAttribute2']
+            data2 = json.loads(jsonFromWeb2)
+            selectedAnnotFromGB = json.loads(data2["selected_annot"][1]["gb_checked"])
+            
+            if (self.instance.id!=None):        
+                r = self.instance.number_related_ParentChildAnnotations()
+                if (fullSequence<>self.instance.sequence and self.instance.sequence<>"" and r>0) :
+                    
+                    print ''
+        except:
+            selectedAnnotFromGB=[]
+            self.errorMessageForm = 'no json data was submited and no annotation data was saved due to errors, contact administrator!' 
+            print 'no GB json data was submited!'          
+               
         
         
         # check if the name vector exist already in the DB
@@ -254,6 +269,10 @@ class DnaComponentForm(forms.ModelForm):
         
         return cleanedData 
 
+    def get_success_message(self, cleaned_data):
+        return self.success_message % dict(cleaned_data,
+                                           calculated_field=self.object.calculated_field)
+    
     def save(self, commit=True):
         print '+ methods done for dnaComponent'
         instance = super(DnaComponentForm, self).save(commit=False)
@@ -276,20 +295,34 @@ class DnaComponentForm(forms.ModelForm):
                 created_by = instance.created_by
             except Exception, err:            
                 print err
-        data = json.loads(jsonFromWeb)
-
-
-        isDbData = data["data"][0]["db_data"]
-        isGbData = data["data"][1]["gb_data"]
+        
+        try:        
+            data = json.loads(jsonFromWeb)
+    
+    
+            isGbData = data["data"][0]["db_data"]
+            isGbData = data["data"][1]["gb_data"]
+        except:
+            isDbData=[]
+            isDbData=[]
+            self.errorMessageForm = 'no json data was submited and no annotation data was saved due to errors, contact administrator!' 
+            print 'no  json data was submited!'                
+        
 
 
 
    
 
         jsonFromWeb2 = self.cleaned_data['htmlAttribute2']
-        data2 = json.loads(jsonFromWeb2)
-        selectedAnnotFromDB = json.loads(data2["selected_annot"][0]["db_checked"])
-        selectedAnnotFromGB = json.loads(data2["selected_annot"][1]["gb_checked"])
+        try:
+            data2 = json.loads(jsonFromWeb2)
+            selectedAnnotFromDB = json.loads(data2["selected_annot"][0]["db_checked"])
+            selectedAnnotFromGB = json.loads(data2["selected_annot"][1]["gb_checked"])
+        except:
+            selectedAnnotFromDB=[]
+            selectedAnnotFromGB=[]
+            self.errorMessageForm = 'no json data was submited and no annotation data was saved due to errors, contact administrator!' 
+            print 'no  json data was submited!'                 
 
 
         #dnaConstructVector = self.cleaned_data['dnaConstructVector']
@@ -304,10 +337,18 @@ class DnaComponentForm(forms.ModelForm):
             subCtType.save()
         subCtVectorType = DnaComponentType.objects.filter(name='Vector Backbone')
 
-        isGbData = data["data"][1]["gb_data"]
-        vectorIdFromGB_displayid = data["data"][1]["displayid"]
-        vectorIdFromGB_name = data["data"][1]["name"]
-        vectorIdFromGB_description = data["data"][1]["description"]
+        try:
+            isGbData = data["data"][1]["gb_data"]
+            vectorIdFromGB_displayid = data["data"][1]["displayid"]
+            vectorIdFromGB_name = data["data"][1]["name"]
+            vectorIdFromGB_description = data["data"][1]["description"]
+        except:
+            isGbData=[]
+            vectorIdFromGB_displayid=[]
+            vectorIdFromGB_name=[]
+            vectorIdFromGB_description=[]
+            message = 'no json data was submited and no annotation data was saved due to errors, contact administrator'
+            print 'no  json data was submited!'         
 
 
 
@@ -458,6 +499,9 @@ class DnaComponentForm(forms.ModelForm):
             print err
             commit=False                  
         print '+ end selectedAnnotFromGB'
+
+            
+        
         return instance
 
     class Meta:

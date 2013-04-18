@@ -25,30 +25,34 @@
     window.onload = function()
     {
         //blockAllTextFieldFromEditing();
-        var scr = "";
-        var divs = document.getElementsByTagName("div");
-            for(var i = 0; i < divs.length; i++){
-                //do something to each div like
-                if (divs[i].className=='form-row field-GenBankfile') {
-                    //alert(divs[i].className);
-                    divs[i].id = 'id_GenBankfile';
-                    var elem = divs[i].children;
-                        for(var j = 0; j < elem.length; j++){
-                            var td = elem[j];
-                            scr = td.innerHTML;
+        try{
+            var scr = "";
+            var divs = document.getElementsByTagName("div");
+                for(var i = 0; i < divs.length; i++){
+                    //do something to each div like
+                    if (divs[i].className=='form-row field-GenBankfile') {
+                        //alert(divs[i].className);
+                        divs[i].id = 'id_GenBankfile';
+                        var elem = divs[i].children;
+                            for(var j = 0; j < elem.length; j++){
+                                var td = elem[j];
+                                scr = td.innerHTML;
+                            }
                         }
+                <!--}-->
+                <!--for(var i = 0; i < divs.length; i++){-->
+                    if (divs[i].className=='form-row field-sequence') {
+                        txt=document.createTextNode('');
+                        divs[i].id = 'id_GenBankfile_loaded';
+                         divs[i].innerHTML += "<ul class='object-tools'><input type='button' align='center' onclick='send_request(true);' value='Update Annotations'/></ul>";
                     }
-            <!--}-->
-            <!--for(var i = 0; i < divs.length; i++){-->
-                if (divs[i].className=='form-row field-sequence') {
-                    txt=document.createTextNode('');
-                    divs[i].id = 'id_GenBankfile_loaded';
-                     divs[i].innerHTML += "<ul class='object-tools'><input type='button' align='center' onclick='send_request(true);' value='Update Annotations'/></ul>";
+                    if (divs[i].className=='field-box field-displayId') {
+                        divs[i].innerHTML += " <p class='help'>Naming convention for : <BR>  - Vector Bachbone -> Ve001<BR>  - Primer -> pri0000<BR>  - Others -> XX0001a or XX0001</p>";
+                    }
                 }
-                if (divs[i].className=='field-box field-displayId') {
-                    divs[i].innerHTML += " <p class='help'>Naming convention for : <BR>  - Vector Bachbone -> Ve001<BR>  - Primer -> pri0000<BR>  - Others -> XX0001a or XX0001</p>";
-                }
-            }
+        } catch (e) {
+            log(e.message);
+        }
 
     uploadTheFile();
     // reload charts if file has been selected already
@@ -56,13 +60,15 @@
     //checkContent = document.getElementById("id_is_vector_backbone");
     //checkContent.onchange = checkHandler;
 
-
-    textContent = document.getElementById("id_sequence");
-    textContent.oninput=sequenceHandler;
-    textContent.oncut=sequenceHandler;
-    textContent.oncopy=sequenceHandler;
-    textContent.onpaste=sequenceHandler;
-
+    try{
+        textContent = document.getElementById("id_sequence");
+        textContent.oninput=sequenceHandler;
+        textContent.oncut=sequenceHandler;
+        textContent.oncopy=sequenceHandler;
+        textContent.onpaste=sequenceHandler;
+    } catch (e) {
+            log(e.message);
+    }
 
     //add event on listbox selection
 
@@ -79,7 +85,7 @@
     fileContent.onchange=sequenceHandlerFile;
 
 
-
+    
     updateTextBoxElementsAndCheckDeletionAnnotationMsg();
 
     //hide attrb1
@@ -109,19 +115,24 @@
 
     };
 
+function log(msg) {
+    setTimeout(function() {
+        throw new Error(msg);
+    }, 0);
+}
+
+
 function updateTextBoxElementsAndCheckDeletionAnnotationMsg(){
-
-    savebutton = document.getElementsByName("_save");
+    try{
+        savebutton = document.getElementsByName("_save");
         savebutton[0].onclick = retrieveAndFeedDataHandler;
-    savebutton1 = document.getElementsByName("_addanother");
-    savebutton1[0].onclick = retrieveAndFeedDataHandler;
-    savebutton2 = document.getElementsByName("_continue");
-    savebutton2[0].onclick = retrieveAndFeedDataHandler;
-    //savebutton[1].onclick = retrieveAndFeedDataHandler;
-
-
-
-
+        savebutton1 = document.getElementsByName("_addanother");
+        savebutton1[0].onclick = retrieveAndFeedDataHandler;
+        savebutton2 = document.getElementsByName("_continue");
+        savebutton2[0].onclick = retrieveAndFeedDataHandler;
+    } catch (e) {
+            log(e.message);
+    }
 }
 
 function blockAllTextFieldFromEditing(){
@@ -162,69 +173,77 @@ return JSON.stringify(jsonObj);
 
 
 function repopulateVectorChoice(){
-    test = '('+document.getElementById("id_htmlAttribute1").value+')';
-    if (test!='()') {
-        var myObject = eval(test);
-        test_db_checked = myObject.data[0].db_data;
-        test_gb_checked = myObject.data[1].gb_data;
-        // populate radio button
-        document.getElementById("radiodb").checked = test_db_checked
-        document.getElementById("radiogb").checked = test_gb_checked
-        if (test_db_checked=='true') {
-        HideShowElement('backbone_db','visible');
-        HideShowElement('backbone_genbank','hidden');
+    try{    
+        test = '('+document.getElementById("id_htmlAttribute1").value+')';
+        if (test!='()') {
+            var myObject = eval(test);
+            test_db_checked = myObject.data[0].db_data;
+            test_gb_checked = myObject.data[1].gb_data;
+            // populate radio button
+            document.getElementById("radiodb").checked = test_db_checked
+            document.getElementById("radiogb").checked = test_gb_checked
+            if (test_db_checked=='true') {
+            HideShowElement('backbone_db','visible');
+            HideShowElement('backbone_genbank','hidden');
+            }
+            if (test_gb_checked=='true') {
+            HideShowElement('backbone_db','hidden');
+            HideShowElement('backbone_genbank','visible');
+            }
+            // populate Vectors fields
+            // db part
+            document.getElementById("inputDataList").selectedIndex = myObject.data[0].db_listSelectedIndex;
+    
+        // gb part		
+        document.getElementById("datalist_gen").selectedIndex = myObject.data[1].gb_listSelectedIndex;
+        document.getElementById("id_backbone_gen_displayid").value = myObject.data[1].displayid;
+        document.getElementById("id_backbone_gen_name").value = myObject.data[1].name;
+        document.getElementById("id_backbone_gen_description").value = myObject.data[1].description;
+        document.getElementById("id_backbone_gen_coverage").value = myObject.data[1].coverage;
+    
+    
         }
-        if (test_gb_checked=='true') {
-        HideShowElement('backbone_db','hidden');
-        HideShowElement('backbone_genbank','visible');
-        }
-        // populate Vectors fields
-        // db part
-        document.getElementById("inputDataList").selectedIndex = myObject.data[0].db_listSelectedIndex;
-
-    // gb part		
-    document.getElementById("datalist_gen").selectedIndex = myObject.data[1].gb_listSelectedIndex;
-    document.getElementById("id_backbone_gen_displayid").value = myObject.data[1].displayid;
-    document.getElementById("id_backbone_gen_name").value = myObject.data[1].name;
-    document.getElementById("id_backbone_gen_description").value = myObject.data[1].description;
-    document.getElementById("id_backbone_gen_coverage").value = myObject.data[1].coverage;
-
-
+    } catch (e) {
+            log(e.message);
     }
 }
 function repopulateCheckBox(){
-    test = '('+document.getElementById("id_htmlAttribute2").value+')';
-
-    if (test!='()') {
-        var myObject = eval(test);
-        test_db_checked = myObject.selected_annot[0].db_checked;
-        test_gb_checked = myObject.selected_annot[1].gb_checked;
-        data_db = '({"data":'+test_db_checked+'})';
-        data_gb = '({"data":'+test_gb_checked+'})';
-        var myObject_db = eval(data_db);
-        var myObject_gb = eval(data_gb);
-        //db repopulating
-        //alert(document.getElementById(myObject_db.data[0].id).id);
-        if (myObject_db) {
-            for (var i = 0; i < myObject_db.data.length; i++) {
-                document.getElementById(myObject_db.data[i].id).checked = true;
+    try{
+        test = '('+document.getElementById("id_htmlAttribute2").value+')';
+    
+        if (test!='()') {
+            var myObject = eval(test);
+            test_db_checked = myObject.selected_annot[0].db_checked;
+            test_gb_checked = myObject.selected_annot[1].gb_checked;
+            data_db = '({"data":'+test_db_checked+'})';
+            data_gb = '({"data":'+test_gb_checked+'})';
+            var myObject_db = eval(data_db);
+            var myObject_gb = eval(data_gb);
+            //db repopulating
+            //alert(document.getElementById(myObject_db.data[0].id).id);
+            if (myObject_db) {
+                for (var i = 0; i < myObject_db.data.length; i++) {
+                    document.getElementById(myObject_db.data[i].id).checked = true;
+                }
+            }
+            //gb repopulating
+            if (myObject_gb) {
+                for (var i = 0; i < myObject_gb.data.length; i++) {
+                    //alert(myObject_gb.data[i].id);
+                    document.getElementById(myObject_gb.data[i].id).checked = true;
+                    document.getElementById('text2_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text2;
+                    document.getElementById('text3_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text3;
+                    document.getElementById('text4_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text4;
+                    //document.getElementById('text5_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text5;
+                    document.getElementById('text5_'+myObject_gb.data[i].id).selectedIndex = getIndexTypeDropdownlistType(myObject_gb.data[i].text5);
+                    document.getElementById('text6_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text6;
+                    //document.getElementById('text7_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text7;
+                    document.getElementById('text7_'+myObject_gb.data[i].id).selectedIndex = getIndexNameDropdownlistOptimizedFor(myObject_gb.data[i].text7);  
+                }
             }
         }
-        //gb repopulating
-        if (myObject_gb) {
-            for (var i = 0; i < myObject_gb.data.length; i++) {
-                //alert(myObject_gb.data[i].id);
-                document.getElementById(myObject_gb.data[i].id).checked = true;
-                document.getElementById('text2_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text2;
-                document.getElementById('text3_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text3;
-                document.getElementById('text4_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text4;
-                //document.getElementById('text5_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text5;
-                document.getElementById('text5_'+myObject_gb.data[i].id).selectedIndex = getIndexTypeDropdownlistType(myObject_gb.data[i].text5);
-                document.getElementById('text6_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text6;
-                //document.getElementById('text7_'+myObject_gb.data[i].id).value = myObject_gb.data[i].text7;
-                document.getElementById('text7_'+myObject_gb.data[i].id).selectedIndex = getIndexNameDropdownlistOptimizedFor(myObject_gb.data[i].text7);  
-            }
-        }
+    } catch (e) {
+            log(e.message);
     }
 }
 
@@ -243,13 +262,11 @@ $.ajax({
 
     }
 });
-alert('answer from server regarding potential deleted annot'+answer);
 return answer;
 }
 
 function retrieveAndFeedDataHandler(e)
     {
-    alert('before retrieving annotation info');
     textContent = document.getElementById("id_htmlAttribute1");
     textContent2 = document.getElementById("id_htmlAttribute2");
     textContent2Before = textContent2.value;
@@ -281,16 +298,13 @@ function retrieveAndFeedDataHandler(e)
     };
     textContent.value = JSON.stringify(json_ele);
     textContent2.value = JSON.stringify(json_ele2);
-    alert('before checking deleted annotation ');
-        textToShow = checkDeletionAnnotBeforeAfter(textContent2.value);
-    alert('done checking deleted annotation ');
+    textToShow = checkDeletionAnnotBeforeAfter(textContent2.value);
         if (textToShow!="") {
     // retrieve current values of selected DB and send a blocking message if some will get deleted
         var r=confirm("Warning : If you continue those annotations: ("+textToShow+") will be removed!");
         if (r==false) { 
             return false;			  
         }
-    alert('done retrieving annotation info');
 
 }  
 
@@ -606,26 +620,31 @@ jsonObjectOptimizedFor = eval(data.optimizedfor_values);
 }
 // send the request to the server with the sequence to retrieve all the annotation or vectors in the database
 function send_request(isUpdateVector){
-t = this.document.getElementById("id_sequence").value;
-idComp = this.document.getElementById("id_displayId").value;
-a = currSelectedVectorSeq;
-if ((t.length>0) & (t.match(/[ACTGactg]+/) != t)) {
-    alert("Error : this not a DNA Sequence!");
-return;
-}
-ta = t+"__"+a;
-
-$.ajax({
-    async: false,
-    type: 'GET',
-    url: "/search_dna_parts/"+ta+"/"+idComp+"/",
-    success: function(data) {
-        if (isUpdateVector) {populateVectorBackbone(data);}
-        currSelectedAnnot = data;
-        populateInserts(data);
-        drawGenBankCurrentData(data,buildChartGeneBank());
+    try
+    {
+        t = this.document.getElementById("id_sequence").value;
+        idComp = this.document.getElementById("id_displayId").value;
+        a = currSelectedVectorSeq;
+        if ((t.length>0) & (t.match(/[ACTGactg]+/) != t)) {
+            alert("Error : this not a DNA Sequence!");
+        return;
+        }
+        ta = t+"__"+a;
+        
+        $.ajax({
+            async: false,
+            type: 'GET',
+            url: "/search_dna_parts/"+ta+"/"+idComp+"/",
+            success: function(data) {
+                if (isUpdateVector) {populateVectorBackbone(data);}
+                currSelectedAnnot = data;
+                populateInserts(data);
+                drawGenBankCurrentData(data,buildChartGeneBank());
+            }
+        });
+    } catch (e) {
+            log(e.message);
     }
-});
 
 }
 
@@ -904,8 +923,6 @@ function buildChartGeneBank(){
     var canvas = document.getElementById('canvas');
     canvas.width = canvas.width;
     chart1 = new Scribl(canvas, 400);
-    chart1.scrollable = true;
-    chart1.scrollValues = [20, 25000];
     return chart1
 }
 
@@ -1102,37 +1119,40 @@ document.getElementById(divId).style.display = state;
 
 
 function uploadTheFile(){
-    var uploader = new qq.FileUploader({
-        action: "{% url "ajax_upload" %}",
-        element: $('#id_GenBankfile')[0],
-        //element: document.getElementById('id_GenBankfile'), 
-        multiple: false,
+    try{
+            var uploader = new qq.FileUploader({
+                action: "{% url "ajax_upload" %}",
+                element: $('#id_GenBankfile')[0],
+                //element: document.getElementById('id_GenBankfile'), 
+                multiple: false,
+                
+                onComplete: function( id, fileName, responseJSON ) {
+                document.getElementById("id_htmlAttribute3").value = fileName;
+                document.getElementById("id_GenBankfile_loaded").innerHTML += "<br>Last File :"+fileName;
+                buildGenBankTable(responseJSON.test);
         
-        onComplete: function( id, fileName, responseJSON ) {
-        document.getElementById("id_htmlAttribute3").value = fileName;
-        document.getElementById("id_GenBankfile_loaded").innerHTML += "<br>Last File :"+fileName;
-        buildGenBankTable(responseJSON.test);
-
-        drawGenBank(responseJSON.test,buildChartGeneBank());
-
-    if( responseJSON.success ){
-        //alert( "success!" ) ;
-        }
-    else
-        alert("upload failed!");
-    },
-    onAllComplete: function( uploads ) {
-        // uploads is an array of maps
-        // the maps look like this: { file: FileObject, response: JSONServerResponse }
-        //alert( "All complete!" ) ;
-    },
-    params: {
-        'csrf_token': '{{ csrf_token }}',
-        'csrf_name': 'csrfmiddlewaretoken',
-        'csrf_xname': 'X-CSRFToken',
-    },
-} ) ;
-
+                drawGenBank(responseJSON.test,buildChartGeneBank());
+        
+            if( responseJSON.success ){
+                //alert( "success!" ) ;
+                }
+            else
+                alert("upload failed!");
+            },
+            onAllComplete: function( uploads ) {
+                // uploads is an array of maps
+                // the maps look like this: { file: FileObject, response: JSONServerResponse }
+                //alert( "All complete!" ) ;
+            },
+            params: {
+                'csrf_token': '{{ csrf_token }}',
+                'csrf_name': 'csrfmiddlewaretoken',
+                'csrf_xname': 'X-CSRFToken',
+            },
+        } ) ;
+    } catch (e) {
+            log(e.message);
+    }
 
     }
 </script>
@@ -1153,8 +1173,7 @@ function uploadTheFile(){
 <fieldset class="module aligned collapse">
     <h2>Sequence Graph</h2>
     <div id="container">
-            <canvas id="canvas" width="940px" height="400px"  style="margin-left:auto; margin-right:auto"></canvas>  
-            
+            <canvas id="canvas" width="800" height="200" style="border:1px solid #000000;"></canvas>
  
 <div style="background-color:rgb(154,205,50);border:0px solid black;padding:10px;width:100px; height:5px;">
 <p>Registered</p>
