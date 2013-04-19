@@ -56,7 +56,7 @@
 
     uploadTheFile();
     // reload charts if file has been selected already
-    uploadGBDataFileIfExist();
+    ////////////////////////////////////////////uploadGBDataFileIfExist();
     //checkContent = document.getElementById("id_is_vector_backbone");
     //checkContent.onchange = checkHandler;
 
@@ -319,7 +319,7 @@ function retrieveAndFeedDataHandler()
     textContent.value = JSON.stringify(json_ele);
     textContent2.value = JSON.stringify(json_ele2);
     textToShow = "None"
-    //textToShow = checkDeletionAnnotBeforeAfter(textContent2.value);
+    textToShow = checkDeletionAnnotBeforeAfter(textContent2.value);
         if (textToShow!="None" && textToShow!="") {
     // retrieve current values of selected DB and send a blocking message if some will get deleted
         var r=confirm("Warning : If you continue those annotations: ("+textToShow+") will be removed!");
@@ -1054,7 +1054,7 @@ function buildGenBankTable(jsontext){
 
     emptyRowsTable(1);
 // reset and add empty row to Genbank vector list
-    datalist_gen.options.length = 0;
+    // datalist_gen.options.length = 0;
 var optn = document.createElement("OPTION");
     optn.text = "";
     optn.value = "";
