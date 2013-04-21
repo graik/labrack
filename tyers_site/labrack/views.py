@@ -1,6 +1,11 @@
 ## R: I tried to bring some order into the import statements
-## Please put all javascript-related methods into a separate viewJavascript module
-## the indentation was set to 8 -- normal coding style is 4.
+## Todo -- Code cleanup:
+## ** put all javascript-related methods into a separate viewJavascript module
+## ** put all CVS export / import methods into a separate viewCVS module
+## ** the indentation was set to 8 -- normal coding style is 4.
+## ** remove example, unused and commented-out code (see comments below)
+## ** simplify, shorten import statements (see comments)
+## ** remove un-used imports
 
 import os
 
