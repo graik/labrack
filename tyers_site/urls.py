@@ -6,24 +6,30 @@ from labrack.views import getAnnotToBeDeleted,getGBDataFromFile,ajax_upload,\
      upload_page,get_dna_info,dnalist,celllist,cellonlylist,contact,success,\
      plasmidlist,search_dna_parts
 
+import labrack.componentViews as CViews
+
 import settings
 
 # deprecated in django 1.5: Use class-based views instead
 # http://stackoverflow.com/questions/11428427/no-module-named-simple-error-in-django
 # from django.views.generic.simple import redirect_to
 
-admin.autodiscover()
+##admin.autodiscover()  ## duplicate registration 
 
 urlpatterns = patterns('',
-    # Examples:
-
     # Uncomment the admin/doc line below to enable admin documentation:
     # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
 
     # Uncomment the next line to enable the admin:
+    url(r'^admin/', include(admin.site.urls)),
+    #url(r'^grappelli/', include('grappelli.urls')),
+
+    url(r'^labrack/chassis[/]?$', CViews.chassis_list),
+    url(r'^labrack/chassis/(?P<id>[0-9A-Za-z]+)', CViews.ChassisDetail.as_view()),
+    url(r'^labrack/dna/(?P<id>[0-9A-Za-z]+)', CViews.DnaComponentDetail.as_view()),
+
     #url(r'^labrack/', include('labrack.urls')),
     #url(r'^admin/labrack/dnacomponent/(?P<Id>\d+)/$', index, name='index'), 
-    #url(r'^grappelli/', include('grappelli.urls')),
     #url(r'^', include('labrack.urls')),
     url( r'ajax_upload/$', ajax_upload, name="ajax_upload" ),
     url( r'/project/$', upload_page, name="upload_page" ),     
@@ -38,17 +44,10 @@ urlpatterns = patterns('',
     url(r'^plasmidlist/$', plasmidlist, name='plasmidlist'),
     url(r'^dnalist/$', dnalist, name='dnalist'),
     url(r'^celllist/$', celllist, name='celllist'),
-    url(r'^admin/', include(admin.site.urls)),
     url(r'^media/(?P<path>.*)$', 'django.views.static.serve',{'document_root': settings.MEDIA_ROOT})
     #url(r'^sampleFiles/(?P<path>.*)$', 'django.views.static.serve',{'document_root': settings.FOLDER_FILES_PATH + '/sampleFiles'}),
     #url(r'sequenceannotation/add/$', SequenceAnnotationCreate.as_view(), name='sequenceannotation_add'),
     #url(r'sequenceannotation/(?P<pk>\d+)/$', SequenceAnnotationUpdate.as_view(), name='sequenceannotation_update'),
     #url(r'sequenceannotation/(?P<pk>\d+)/delete/$', SequenceAnnotationDelete.as_view(), name='sequenceannotation_delete'),
     #url(r'^documents/(?P<path>.*)$', 'django.views.static.serve',{'document_root': settings.MEDIA_URL+ '/documents'}),
-    
 )
-"""
-urlpatterns = patterns('',
-    url(r'^$', views.index, name='index')
-)
-"""
