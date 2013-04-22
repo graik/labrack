@@ -54,6 +54,9 @@ def chassis_list( request, *args, **kwargs):
     """
     View capturing labrack/chassis and returning a ChangeList View from
     a customized adminSite instance (labracksite).
+    
+    Kind of works, but all links still point to /admin/labrack/chassis rather
+    than /labrack/chassis.
     """
     a = A.ChassisAdmin( M.Chassis, labracksite )
     return a.changelist_view( request, extra_context=None )

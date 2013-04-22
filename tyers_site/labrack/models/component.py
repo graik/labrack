@@ -5,6 +5,7 @@ from django.db import models
 from django.utils.safestring import mark_safe
 from django.utils.safestring import SafeUnicode 
 from django.core.exceptions import ValidationError
+from django.core.urlresolvers import reverse
 
 from Bio import SeqIO
 from Bio.Seq import Seq
@@ -12,7 +13,6 @@ from Bio.Seq import Seq
 from generalmodels import DnaSequenceAnnotation
 from entityModel import EntityModel
 from tyers_site import settings   
-
 
 class ComponentType( models.Model ):
     """
@@ -176,7 +176,7 @@ class Component(EntityModel,models.Model):
         """
         Define standard relative URL for object access in templates
         """
-        return 'dnacomponent/%i/' % self.id
+        return 'component/%i/' % self.id
     
     
     def related_seq( self ):
@@ -318,6 +318,10 @@ class Chassis(Component):
         Define standard relative URL for object access in templates
         """
         return 'chassis/%i/' % self.id
+    
+    def get_absolute_url(self):
+        """requires site URL to be set in admin/sites web interface"""
+        return '/chassis/%s/' % self.displayId
 
     def relatedChassisSamples( self ):
         """
