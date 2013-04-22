@@ -1,18 +1,18 @@
 ## Copyright 2012 Raik Gruenberg / Mathieu Courcelles
 
-## This file is part of the labhamster project (http://labhamster.sf.net)
-## Labhamster is free software: you can redistribute it and/or modify
+## This file is part of the labrack project (http://labrack.sf.net)
+## labrack is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Affero General Public License as
 ## published by the Free Software Foundation, either version 3 of the
 ## License, or (at your option) any later version.
 
-## Labhamster is distributed in the hope that it will be useful,
+## labrack is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU Affero General Public License for more details.
 
 ## You should have received a copy of the GNU Affero General Public
-## License along with labhamster. If not, see <http://www.gnu.org/licenses/>.
+## License along with labrack. If not, see <http://www.gnu.org/licenses/>.
 
 
 from genericcollection import GenericCollectionTabularInline
@@ -22,7 +22,7 @@ from django.core.exceptions import ValidationError
 #from django.core.urlresolvers import reverse
 from django.contrib import admin
 from django.contrib import messages
-from django.contrib.admin.sites import site 
+from django.contrib.admin.sites import AdminSite, site 
 from django.db.models import Q
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
@@ -692,7 +692,7 @@ class SampleAdmin(PermissionAdmin, admin.ModelAdmin):
         locat = rac.current_location
         url = locat.get_relative_url()
         return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.container.rack.current_location.__unicode__()))
-        return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.container.rack))
+
     location_url.allow_tags = True
     location_url.short_description = 'Location'    
 
@@ -1352,8 +1352,7 @@ class ProteinSequenceAnnotationAdmin(admin.ModelAdmin):
 
 
 
-
-## Register admin panels
+## Register regular admin panels
 admin.site.register(Container, ContainerAdmin)
 admin.site.register(Location, LocationAdmin)
 admin.site.register(Rack, RackAdmin)
@@ -1375,3 +1374,5 @@ admin.site.register(ChassisComponentType, ComponentTypeAdmin)
 admin.site.register(Collection)
 admin.site.register(ChassisSample,ChassisSampleAdmin)
 admin.site.register(DnaSample,DnaSampleAdmin)
+
+

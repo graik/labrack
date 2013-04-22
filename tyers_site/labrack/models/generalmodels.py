@@ -1,18 +1,18 @@
 ## Copyright 2012 Raik Gruenberg / Mathieu Courcelles
 
-## This file is part of the labhamster project (http://labhamster.sf.net)
-## Labhamster is free software: you can redistribute it and/or modify
+## This file is part of the labrack project (http://labrack.sf.net)
+## labrack is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU Affero General Public License as
 ## published by the Free Software Foundation, either version 3 of the
 ## License, or (at your option) any later version.
 
-## Labhamster is distributed in the hope that it will be useful,
+## labrack is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU Affero General Public License for more details.
 
 ## You should have received a copy of the GNU Affero General Public
-## License along with labhamster. If not, see <http://www.gnu.org/licenses/>.
+## License along with labrack. If not, see <http://www.gnu.org/licenses/>.
 
 
 from django.contrib.contenttypes.models import ContentType
