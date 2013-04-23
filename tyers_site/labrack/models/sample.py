@@ -7,7 +7,7 @@ from csvImporter import fields
 from datetime import datetime
 
 ## importing custom models
-from entityModel import EntityModel
+from entityModel import UserMixinModel
 from labrack.models.generalmodels import Container
 from labrack.models.component import DnaComponent, Chassis
 from labrack.models.unit import Unit
@@ -16,7 +16,7 @@ import tyers_site.settings as S
 
 
 
-class SampleCollection(EntityModel):
+class SampleCollection(UserMixinModel):
     """
     SampleCollection to group sample together
     """
@@ -36,7 +36,7 @@ class SampleCollection(EntityModel):
         app_label = 'labrack'   
 
 
-class Sample( EntityModel ):
+class Sample( UserMixinModel ):
     """
     Sample describes a single tube or well holding DNA, cells or protein.
 

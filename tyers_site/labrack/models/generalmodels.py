@@ -28,7 +28,7 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from tyers_site import settings   
 
-from entityModel import EntityModel
+from entityModel import UserMixinModel
 
 
 
@@ -43,7 +43,7 @@ import urllib
 import tyers_site.settings as S
 
 
-class Location(EntityModel):
+class Location(UserMixinModel):
     """
     A location (fridge, freezer, shelf) where containers are stored
     """
@@ -95,7 +95,7 @@ class Location(EntityModel):
 
 
 
-class Rack(EntityModel):
+class Rack(UserMixinModel):
     """
     A Rack (box) where containers are stored
     """
@@ -132,7 +132,7 @@ class Rack(EntityModel):
         app_label = 'labrack'   
 
 
-class Container( EntityModel ):
+class Container( UserMixinModel ):
     """
     A container holding several physical samples of nucleic acids, proteins 
     or other stuff.

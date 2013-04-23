@@ -1,6 +1,6 @@
 from datetime import datetime
 import os
- 
+
 from django.db import models
 from django.utils.safestring import mark_safe
 from django.utils.safestring import SafeUnicode 
@@ -11,7 +11,7 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 
 from generalmodels import DnaSequenceAnnotation
-from entityModel import EntityModel
+from entityModel import UserMixinModel
 from tyers_site import settings   
 
 class ComponentType( models.Model ):
@@ -84,7 +84,7 @@ class PeptideComponentType( ComponentType ):
 
 
         
-class Component(EntityModel,models.Model):
+class Component(UserMixinModel,models.Model):
     """
     Base class for cells, nucleic acids, proteins, and chemicals.
     Not shown to the user (currently) but the table exists and collects
@@ -168,8 +168,6 @@ class Component(EntityModel,models.Model):
         """
         r = DnaSequenceAnnotation.objects.filter( subComponent=self.id).order_by('bioStart')
 
-        #s = [content.sequenceannotation for content in r]
-
         return r    
 
     def get_dna_relative_url(self):
@@ -182,14 +180,10 @@ class Component(EntityModel,models.Model):
     def related_seq( self ):
         """
         """
-
-
         gb_features = ''
         try: 
             gb_file = settings.MEDIA_ROOT+"/"+os.path.normpath(self.GenBankfile.name)
             for gb_record in SeqIO.parse(open(gb_file,"r"), "genbank") :
-                # now do something with the record
-                #gb_features += "Name %s, %i features" % (gb_record.name, len(gb_record.features))
                 gb_features += gb_record.seq.tostring()
             return gb_features
         except Exception:
@@ -228,16 +222,14 @@ class Component(EntityModel,models.Model):
         return s     
 
     def number_related_ParentChildAnnotations( self ):
-            """
-            """
-            
-            r = DnaSequenceAnnotation.objects.filter( subComponent=self.id)
-            s = r.count()
-            
-            g = DnaSequenceAnnotation.objects.filter( componentAnnotated=self.id)
-            total = s+g.count()
+        """
+        """            
+        r = DnaSequenceAnnotation.objects.filter( subComponent=self.id)
+        s = r.count()
+        g = DnaSequenceAnnotation.objects.filter( componentAnnotated=self.id)
+        total = s+g.count()
     
-            return total  
+        return total  
 
     def showComment( self ):
         """
@@ -249,20 +241,6 @@ class Component(EntityModel,models.Model):
             return unicode(self.description)
         return unicode(self.description[:38] + '..')
     showComment.short_description = 'comment'
-
-#    def isavailable(self):
-#        return self.samples.count() > 0
-#    isavailable.short_description = 'available'
-#    isavailable.boolean = True
-#    
-#    def related_samples( self ):
-#        """
-#        """
-#        from django.db.models import Q
-#        q = Q(dna=self) | Q(cell=self) | Q(vector=self) | Q(protein=self)
-#        
-#        r = Sample.objects.filter( q )
-#        return r
 
     class Meta:
         app_label = 'labrack'   
@@ -283,7 +261,6 @@ class ChemicalComponent(Component):
                                             verbose_name='Variant of', 
                                             help_text='Specify part(s) this part is derived from, if any.' )
         
-
     def get_relative_url(self):
         """
         Define standard relative URL for object access in templates
@@ -293,8 +270,6 @@ class ChemicalComponent(Component):
     class Meta:
         app_label = 'labrack'        
         verbose_name = 'Chemical'
-
-
 
 
 class Chassis(Component):
@@ -312,7 +287,6 @@ class Chassis(Component):
                                             help_text='Specify part(s) this part is derived from, if any.' )
         
     
-
     def get_relative_url(self):
         """
         Define standard relative URL for object access in templates
@@ -333,14 +307,10 @@ class Chassis(Component):
         """
         """       
         import labrack.models as M
-
         r = M.DnaSample.objects.filter(inChassis=self.id)
-
-        #r = labrack.models.sample.DnaSample.objects.filter(dnaConstruct=1)
 
         return r       
     
-
     class Meta:
         app_label = 'labrack'           
         verbose_name = 'Cell'
@@ -381,13 +351,9 @@ class Collection(models.Model):
         name = self.name if self.name else ''
         return u'%s %s' % (self.displayId, name)
 
-
-
     class Meta:
         app_label = 'labrack'    
 
-
-        
         
 class PeptideComponent(Component):
     """
@@ -404,7 +370,6 @@ class PeptideComponent(Component):
                                             blank=True, null=True, 
                                             verbose_name='Variant of', 
                                             help_text='Specify part(s) this part is derived from, if any.' )
-        
 
     def get_relative_url(self):
         """
@@ -423,12 +388,6 @@ class PeptideComponent(Component):
         verbose_name = 'Peptide'
 
 
-    #    def related_samples( self ):
-    #        """
-    #        """
-    #        return self.protein_samples.all()
-
-
 class ProteinComponent(Component):
     """
     Description of a protein 'part'.
@@ -436,7 +395,6 @@ class ProteinComponent(Component):
     #: optional sequence
     sequence = models.TextField( help_text='amino acid sequence', 
                                 blank=True, null=True )
-    
     
     componentType = models.ManyToManyField(ProteinComponentType, 
                                             blank=True, null=True, 
@@ -449,8 +407,7 @@ class ProteinComponent(Component):
                                             blank=True, null=True, 
                                             verbose_name='Variant of', 
                                             help_text='Specify part(s) this part is derived from, if any.' )
-    
-    
+  
     def get_relative_url(self):
         """
         Define standard relative URL for object access in templates
@@ -471,23 +428,17 @@ class ProteinComponent(Component):
             self.save_annotation()
     
     def saveWithoutAnnotations(self, *args, **kwargs):
-        #Saving the sequence
-        #self.sequence = self.related_seq()
         super(ProteinComponent, self).save(*args, **kwargs) # Call the "real" save() method.    
     
     class Meta :
         app_label = 'labrack'                   
         verbose_name = 'Protein part'
         
-        
-
 class DnaComponent(Component):
     """
     Description of a stretch of DNA or RNA.
     """
-    #: optional sequence
-    
-    
+   
     sequence = models.TextField( help_text='nucleotide sequence', 
                                              blank=True, null=True )      
 
@@ -496,10 +447,6 @@ class DnaComponent(Component):
                                       help_text='Protein part this sequence translates to' )
 
     optimizedFor = models.ForeignKey( 'Chassis', blank=True, null=True )
-
-
-    #myfield=forms.CharField( widget=forms.TextInput(attrs={'class':'disabled', 'readonly':'readonly'}))
-
 
     componentType = models.ManyToManyField(DnaComponentType, 
                                            blank=True, null=True, 
@@ -530,8 +477,6 @@ class DnaComponent(Component):
             return len( self.sequence )
         return 0
 
-
-
     def show_translatesTo(self):
         """filter '(None)' display in admin table"""
         if self.translatesTo:
@@ -547,10 +492,8 @@ class DnaComponent(Component):
         return u''
 
     def show_resistance(self):
-        """z
+        """filter selection marker for this dnaComponent
         """
-        
-        
         ret = ""
         r = DnaSequenceAnnotation.objects.filter( subComponent=self.id).order_by('bioStart')
         try:                       
@@ -570,9 +513,8 @@ class DnaComponent(Component):
         return ret   
     show_resistance.short_description = 'Resistance'
     
-    
     def getVector(self):
-        """z
+        """
         """
         ret = ""
         r = DnaSequenceAnnotation.objects.filter( subComponent=self.id).order_by('bioStart')
@@ -590,9 +532,6 @@ class DnaComponent(Component):
         return ret   
     getVector.short_description = 'Vector'    
     
-     
-
-
     def related_dnaSamples(self):
         """
         """       
@@ -600,52 +539,25 @@ class DnaComponent(Component):
 
         r = M.DnaSample.objects.filter(dnaConstruct=self.id)
 
-        #r = labrack.models.sample.DnaSample.objects.filter(dnaConstruct=1)
-
         return r
-
-
-    def show_parentSample(self):
-        from django.db import connection, transaction
-        cursor = connection.cursor()
-
-
-        # Data retrieval operation - no commit required
-        #cursor.execute("SELECT foo FROM bar WHERE baz = %s", [self.baz])
-
-        cursor.execute("select count(*) as nbr from labrack_dnacomponent ")
-        row = cursor.fetchone()
-
-        return row
-
     show_optimizedFor.short_description = 'optimized for'
     show_optimizedFor.admin_order_field = 'optimizedFor'
 
-    def save(self, *args, **kwargs):
-        #Saving the sequence
-        #if self.GenBankfile:
-        #    self.sequence = self.related_seq()
-        super(DnaComponent, self).save(*args, **kwargs) # Call the "real" save() method.
-        #if self.GenBankfile:
-        #    self.save_annotation()
-
+        
     def related_seq( self ):
         """
         """
-        
         gb_features = ''
         try: 
             gb_file = settings.MEDIA_ROOT+"/"+os.path.normpath(self.GenBankfile.name)
             for gb_record in SeqIO.parse(open(gb_file,"r"), "genbank") :
-                # now do something with the record
-                #gb_features += "Name %s, %i features" % (gb_record.name, len(gb_record.features))
                 gb_features += gb_record.seq.tostring()
             return gb_features
         except Exception:
             return ''
 
     def saveSequenceWithoutAnnotations(self, *args, **kwargs):
-            #Saving the sequence 
+        #Saving the sequence 
         super(DnaComponent, self).save(*args, **kwargs) # Call the "real" save() method.
         if self.GenBankfile:
             self.sequence = self.related_seq()
@@ -653,8 +565,7 @@ class DnaComponent(Component):
 
 
     def saveWithoutAnnotations(self, *args, **kwargs):
-        #Saving the sequence
-        #self.sequence = self.related_seq()
+        
         super(DnaComponent, self).save(*args, **kwargs) # Call the "real" save() method.
 
     def save_annotation( self ):
@@ -668,7 +579,6 @@ class DnaComponent(Component):
                 if (not isParsingDone):
                     for ind in xrange(len(gb_record.features)) :
                         isParsingDone = True
-                        #gb_features += '\n'+ repr(gb_record.features[ind].type) + " Location start : "+ repr(gb_record.features[ind].location._start.position) + " Location end : "+ repr(gb_record.features[ind].location._end.position)
                         nameType = repr(gb_record.features[ind].type).replace("'", "")
                         strandValue = repr(gb_record.features[ind].strand)
                         startPos = repr(gb_record.features[ind].location._start.position+1)
@@ -679,7 +589,6 @@ class DnaComponent(Component):
 
                         ###check if the annotation refering to this dna already exists using start and end point and dnaID (this is to solve a bug but should be removed, the bug is that its saving the annotated dna twice))
                         if (not DnaSequenceAnnotation.objects.filter(bioStart = startPos, bioEnd = endPos, strand = strandValue, subComponent = self)):
-                            # save in the DNA/Protein if necessary
                             fullSequence = gb_record.seq.tostring()
                             if (startPos==endPos):
                                 partOfSequence = fullSequence[int(startPos):int(endPos)+1].replace(" ","").upper()
@@ -688,7 +597,6 @@ class DnaComponent(Component):
 
                             if (strandValue == '-1'):
                                 partOfSequence = Seq(partOfSequence).reverse_complement().tostring()
-
 
                             # the reason to save it twice is to get a unique ID to be able to put it in DisplayId
                             # retrieve the part type, if not existing create it
@@ -701,8 +609,7 @@ class DnaComponent(Component):
                                 ct.save()
                             ct = DnaComponentType.objects.filter(name=nameType)
                             ct.subTypeOf = subCtGenebankType
-                            # save the dna
-                            #if (not DnaComponent.objects.filter(sequence=partOfSequence)):
+
                             if (not self.__class__.objects.filter(sequence=partOfSequence)):
                                 dna2db = self.__class__(displayId='########', sequence = partOfSequence, name = label, GenBankfile = None)
                                 dna2db.saveWithoutAnnotations()
@@ -711,7 +618,6 @@ class DnaComponent(Component):
                                 dna2db.saveWithoutAnnotations()
                             dna2db = self.__class__.objects.get(sequence=partOfSequence)
                             # save the annotation in the database
-                            #an2db = SequenceAnnotation(uri ='', bioStart = startPos, bioEnd = endPos, strand = strandValue, subComponent = self, componentAnnotated = dna2db)
                             an2db = DnaSequenceAnnotation(uri ='', bioStart = startPos, bioEnd = endPos, strand = strandValue, subComponent = self, componentAnnotated = dna2db)
                             an2db.save()             
     class Meta:
