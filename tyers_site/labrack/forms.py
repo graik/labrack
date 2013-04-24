@@ -29,10 +29,6 @@ import utilLabrack
 from django.forms.forms import NON_FIELD_ERRORS
 
 
-class DocumentForm(forms.Form):
-    docfile = forms.FileField(
-        label='Select a CSV File'
-    )
 
 class DnaSampleForm(forms.ModelForm):
 
@@ -84,13 +80,15 @@ class DnaSampleForm(forms.ModelForm):
         model = DnaSample
 
 
-
+class DocumentForm(forms.Form):
+    docfile = forms.FileField(
+        label='Select a CSV File'
+    )
 
 class ChassisSampleForm(forms.ModelForm):
 
     ChassisDisplayID = forms.CharField(required=False,label="Display ID")
     ChassisName = forms.CharField(required=False,label="Name")  
-    #Chassis_Description = forms.CharField(widget=forms.Textarea,required=False,label="Description")
     ChassisDescription = forms.CharField(widget=forms.TextInput(attrs={'size':'40'}),required=False,label="Description")
 
     historyDescription = forms.CharField(widget=forms.TextInput(attrs={'size':'80'}),required=False,label="Description")
@@ -111,9 +109,6 @@ class DnaComponentForm(forms.ModelForm):
     htmlAttribute3 = forms.CharField(widget=forms.TextInput(attrs={'size':'1800','hidden':'true'}),required=False,label="")
     
     errorMessageForm = ''
-    
-    
-    
     
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request', None)
@@ -281,7 +276,7 @@ class DnaComponentForm(forms.ModelForm):
         fullSequence = self.cleaned_data['sequence']
         try:
             created_by = self.cleaned_data['created_by']
-        except Exception, err:
+        except NameError:
             created_by = instance.created_by
        
         try:        
