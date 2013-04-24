@@ -28,7 +28,7 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from tyers_site import settings   
 
-from entityModel import UserMixinModel
+from usermixin import UserMixinModel
 
 
 
@@ -360,7 +360,7 @@ class DnaSequenceAnnotation(SequenceAnnotation):
         
             if (r1>0 or r2>0):
                 return True
-        except error:
+        except DnaComponent.DoesNotExist:
             return False
         return False
     

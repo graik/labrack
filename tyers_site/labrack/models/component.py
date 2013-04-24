@@ -11,7 +11,7 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 
 from generalmodels import DnaSequenceAnnotation
-from entityModel import UserMixinModel
+from usermixin import UserMixinModel
 from tyers_site import settings   
 
 class ComponentType( models.Model ):
@@ -181,13 +181,12 @@ class Component(UserMixinModel,models.Model):
         """
         """
         gb_features = ''
-        try: 
-            gb_file = settings.MEDIA_ROOT+"/"+os.path.normpath(self.GenBankfile.name)
-            for gb_record in SeqIO.parse(open(gb_file,"r"), "genbank") :
-                gb_features += gb_record.seq.tostring()
-            return gb_features
-        except Exception:
-            return ''
+
+        gb_file = settings.MEDIA_ROOT+"/"+os.path.normpath(self.GenBankfile.name)
+        for gb_record in SeqIO.parse(open(gb_file,"r"), "genbank") :
+            gb_features += gb_record.seq.tostring()
+        return gb_features
+
 
 
     def related_file_annotation( self ):
@@ -496,19 +495,17 @@ class DnaComponent(Component):
         """
         ret = ""
         r = DnaSequenceAnnotation.objects.filter( subComponent=self.id).order_by('bioStart')
-        try:                       
-            for s in r:
-                com = s.componentAnnotated
-                comDna= DnaComponent.objects.get(id = com.id)
-                for t in comDna.componentType.all():
-                    if t.name == 'SelectionMarker':
-                        if ret=="":
-                            ret += s.componentAnnotated.name
-                        else:
-                            ret += ","+s.componentAnnotated.name
-        except Exception, err:
-            print err        
-        #s = [content.sequenceannotation for content in r]
+                      
+        for s in r:
+            com = s.componentAnnotated
+            comDna= DnaComponent.objects.get(id = com.id)
+            for t in comDna.componentType.all():
+                if t.name == 'SelectionMarker':
+                    if ret=="":
+                        ret += s.componentAnnotated.name
+                    else:
+                        ret += ","+s.componentAnnotated.name
+     
 
         return ret   
     show_resistance.short_description = 'Resistance'
@@ -518,16 +515,13 @@ class DnaComponent(Component):
         """
         ret = ""
         r = DnaSequenceAnnotation.objects.filter( subComponent=self.id).order_by('bioStart')
-        try:                       
-            for s in r:
-                com = s.componentAnnotated
-                comDna= DnaComponent.objects.get(id = com.id)
-                for t in comDna.componentType.all():
-                    if t.name == 'Vector':
-                        return s.componentAnnotated
-        except Exception, err:
-            print err        
-        #s = [content.sequenceannotation for content in r]
+        for s in r:
+            com = s.componentAnnotated
+            comDna= DnaComponent.objects.get(id = com.id)
+            for t in comDna.componentType.all():
+                if t.name == 'Vector':
+                    return s.componentAnnotated
+ 
 
         return ret   
     getVector.short_description = 'Vector'    
@@ -548,13 +542,12 @@ class DnaComponent(Component):
         """
         """
         gb_features = ''
-        try: 
-            gb_file = settings.MEDIA_ROOT+"/"+os.path.normpath(self.GenBankfile.name)
-            for gb_record in SeqIO.parse(open(gb_file,"r"), "genbank") :
-                gb_features += gb_record.seq.tostring()
-            return gb_features
-        except Exception:
-            return ''
+
+        gb_file = settings.MEDIA_ROOT+"/"+os.path.normpath(self.GenBankfile.name)
+        for gb_record in SeqIO.parse(open(gb_file,"r"), "genbank") :
+            gb_features += gb_record.seq.tostring()
+        return gb_features
+ 
 
     def saveSequenceWithoutAnnotations(self, *args, **kwargs):
         #Saving the sequence 
