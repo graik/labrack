@@ -6,12 +6,13 @@
 {% block after_field_sets %}
 
 
-
-<link rel="stylesheet" type="text/css" href="/media/js/fileuploader/fileuploader.css">
-<script type="text/javascript" src="/media/js/fileuploader/fileuploader.js"></script>
+{% load staticfiles %}
+<script type="text/javascript" src="/static/scribl/Scribl.1.1.3.min.js" ></script>
+<link rel="stylesheet" type="text/css" href="/static/js/fileuploader/fileuploader.css">
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
-<script src="/media/scribl/Scribl.1.1.3.min.js" ></script>
-<script type="text/javascript" src="/media/scribl/examples/js/dragscrollable.js"></script>
+<script type="text/javascript" src="/static/scribl/Scribl.1.1.3.min.js" ></script>
+<script type="text/javascript" src="/static/js/fileuploader/fileuploader.js"></script>
+<script type="text/javascript" src="/static/scribl/examples/js/dragscrollable.js"></script>
 
 
 <script language=javascript type='text/javascript'>
@@ -124,13 +125,7 @@ function log(msg) {
 
 function updateTextBoxElementsAndCheckDeletionAnnotationMsg(){
     try{
-        /*savebutton = document.getElementsByName("_save");
-        savebutton[0].onclick = retrieveAndFeedDataHandler;
-        savebutton1 = document.getElementsByName("_addanother");
-        savebutton1[0].onclick = retrieveAndFeedDataHandler;
-        savebutton2 = document.getElementsByName("_continue");
-        savebutton2[0].onclick = retrieveAndFeedDataHandler;*/
-        
+
         $('[name="_save"]').click( function() {
             retrieveAndFeedDataHandler();
         });
@@ -140,9 +135,6 @@ function updateTextBoxElementsAndCheckDeletionAnnotationMsg(){
         $('[name="_continue"]').click( function() {
             retrieveAndFeedDataHandler();
         });
-     
-        
-        
         
     } catch (e) {
             log(e.message);
@@ -224,7 +216,6 @@ function repopulateVectorChoice(){
 function repopulateCheckBox(){
     try{
         test = '('+document.getElementById("id_htmlAttribute2").value+')';
-    
         if (test!='()') {
             var myObject = eval(test);
             test_db_checked = myObject.selected_annot[0].db_checked;
@@ -942,7 +933,7 @@ function buildChartGeneBank(){
     var canvas = document.getElementById('canvas');
     canvas.width = canvas.width;
     chart1 = new Scribl(canvas, 400);
-    return chart1
+    return chart1;
 }
 
 
@@ -1140,7 +1131,7 @@ document.getElementById(divId).style.display = state;
 function uploadTheFile(){
     try{
             var uploader = new qq.FileUploader({
-                action: "{% url "ajax_upload" %}",
+                action: "{% url "file_upload" %}",
                 element: $('#id_GenBankfile')[0],
                 //element: document.getElementById('id_GenBankfile'), 
                 multiple: false,

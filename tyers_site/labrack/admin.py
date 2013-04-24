@@ -75,6 +75,9 @@ from tyers_site.labrack.forms import DnaComponentForm
 from tyers_site.labrack.forms import DnaSampleForm
 
 from django.contrib.auth.models import User
+from django.contrib.auth.models import Group
+from django.contrib.sites.models import Site
+
 
 
 
@@ -903,9 +906,6 @@ class DnaSampleAdmin(PermissionAdmin, admin.ModelAdmin):
         
         request.GET = data
         return super(DnaSampleAdmin, self).add_view(request, form_url="", extra_context=extra_context)
-   
-     
-
 
     def make_csv(self, request, queryset):
         return importexport.generate_csv(self, request, queryset, 
@@ -913,18 +913,15 @@ class DnaSampleAdmin(PermissionAdmin, admin.ModelAdmin):
 
     make_csv.short_description = 'Export as CSV'
 
-
     def make_bad(self, request, queryset):
         self.update_status(request, queryset, 'bad')
 
     make_bad.short_description = 'Mark selected entries as bad'
 
-
     def make_empty(self, request, queryset):
         self.update_status(request, queryset, 'empty')
 
     make_empty.short_description = 'Mark selected entries as empty'
-
 
     def make_ok(self, request, queryset):
         self.update_status(request, queryset, 'ok')
@@ -1359,20 +1356,20 @@ admin.site.register(Rack, RackAdmin)
 admin.site.register(SampleCollection, SampleCollectionAdmin)
 admin.site.register(Sample, SampleAdmin)
 admin.site.register(Unit, UnitAdmin) 
-#admin.site.register(CSVComponentType, ComponentTypeAdmin) 
 admin.site.register(ProteinComponentType, ComponentTypeAdmin)
 admin.site.register(PeptideComponent, PeptideComponentAdmin)
 admin.site.register(ProteinComponent, ProteinComponentAdmin)
 admin.site.register(DnaComponent, DnaComponentAdmin)
 admin.site.register(DnaComponentType, ComponentTypeAdmin) 
 admin.site.register(Component, ComponentAdmin)
-admin.site.register(ChemicalComponent, ComponentAdmin)
 admin.site.register(DnaSequenceAnnotation, DnaSequenceAnnotationAdmin)
-admin.site.register(ProteinSequenceAnnotation, ProteinSequenceAnnotationAdmin)
 admin.site.register(Chassis,ChassisAdmin) 
 admin.site.register(ChassisComponentType, ComponentTypeAdmin) 
 admin.site.register(Collection)
 admin.site.register(ChassisSample,ChassisSampleAdmin)
 admin.site.register(DnaSample,DnaSampleAdmin)
+admin.site.register(User)
+admin.site.register(Group)
+admin.site.register(Site)
 
 

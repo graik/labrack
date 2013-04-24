@@ -7,7 +7,7 @@ from csvImporter import fields
 from datetime import datetime
 
 ## importing custom models
-from entityModel import UserMixinModel
+from usermixin import UserMixinModel
 from labrack.models.generalmodels import Container
 from labrack.models.component import DnaComponent, Chassis
 from labrack.models.unit import Unit

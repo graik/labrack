@@ -46,137 +46,10 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 
-## R: This is code bloat. Instead:
 import labrack.models as M
-## and then use M.Sample, M.DnaSample, etc. -- remove the following 17 statements
-
-from labrack.models import CSVSample
-from labrack.models import CSVChassisSample
-from labrack.models import CSVCell
-from labrack.models import Sample
-from labrack.models import Chassis
-from labrack.models import DnaSample
-from labrack.models import ChassisSample
-
-## R: Direct import from sub-modules should not be needed. All those models
-## are supposed to be in the models/__init__ name space
-from labrack.models.generalmodels import Container
-from labrack.models.generalmodels import DnaSequenceAnnotation
-from labrack.models.component import DnaComponent
-from labrack.models.component import Component
-from labrack.models.component import ChemicalComponent
-from labrack.models.component import PeptideComponent
-from labrack.models.component import ProteinComponent
-from labrack.models.component import DnaComponentType
-from labrack.models.unit import Unit
-from labrack.models.generalmodels import Document
-
 from tyers_site import settings
 from labrack.forms import DocumentForm
 import utilLabrack
-
-
-## R: please rename to something more descriptive. BTW, these repetitions
-## surely can be simplified and put into a helper method.
-def list(request):
-    # Handle file upload
-    if request.method == 'POST':
-        form = DocumentForm(request.POST, request.FILES)
-        if form.is_valid():
-            newdoc = Document(docfile = request.FILES['docfile'])
-            newdoc.save()
-            s = request.FILES['docfile']
-            p = newdoc.docfile.url
-            gb_file = settings.MEDIA_ROOT+os.path.normpath(newdoc.docfile.url)
-            gb_file2 = settings.TEMPLATE_DIRS+os.path.normpath(newdoc.docfile.url)
-            try:
-                myCSVSsample = CSVSample.import_data(data = open(gb_file2))
-            except Exception:
-                print "Oops!  That was no valid number.  Try again..." 
-            #break                
-            #create a new sample for each line
-            for each_line in myCSVSsample:
-                containerFromDB = Container.objects.get(displayId=each_line.container)
-                sample2db = Sample(displayId=each_line.DisplayId, name = each_line.name, container = containerFromDB, status = each_line.status)
-                # aliquots number
-                if (each_line.NumberOfAliquots.strip() == ''):
-                    t = int(each_line.NumberOfAliquots.strip())
-                    sample2db.aliquotNr = int(each_line.NumberOfAliquots.strip())
-                # is the sample a reference or not
-                if ((each_line.isReference.strip() == '') or (each_line.isReference.strip() == '0')):
-                    sample2db.reference_status = False
-                else:
-                    sample2db.reference_status = True
-                # end of is the sample a reference or not
-                sample2db.save()
-                #DNA Content
-                emLine = each_line.DNA_DisplayID.strip()
-                if (emLine != ''):
-                    dnaFromDB = DnaComponent.objects.get(displayId=emLine)
-                    content_type = ContentType.objects.get(model='dnacomponent')
-                    object_id = dnaFromDB.id
-                    solvent = each_line.DNA_SolventBuffer
-                    concentration = each_line.DNA_Concentration
-                    concentrationUnit = Unit.objects.get(name=each_line.DNA_Concentration_Unit)
-                    amount = each_line.DNA_Amount
-                    amountUnit = Unit.objects.get(name=each_line.DNA_Amount_Unit)
-                    sampleContentToDB = SampleContent(sample = sample2db,content_type = content_type,object_id = object_id, solvent=solvent,concentration = concentration,concentrationUnit = concentrationUnit, amount=amount, amountUnit=amountUnit)
-                    sampleContentToDB.save()
-                #Chemical Content
-                chemLine = each_line.Chemical_DisplayID.strip()
-                if (chemLine != ''):
-                    chemicalFromDB = ChemicalComponent.objects.get(displayId=chemLine)
-                    content_type = ContentType.objects.get(model='chemicalcomponent')
-                    object_id = chemicalFromDB.id
-                    solvent = each_line.Chemical_SolventBuffer
-                    concentration = each_line.Chemical_Concentration
-                    concentrationUnit = Unit.objects.get(name=each_line.Chemical_Concentration_Unit)
-                    amount = each_line.Chemical_Amount
-                    amountUnit = Unit.objects.get(name=each_line.Chemical_Amount_Unit)
-                    sampleContentToDB = SampleContent(sample = sample2db,content_type = content_type,object_id = object_id, solvent=solvent,concentration = concentration,concentrationUnit = concentrationUnit, amount=amount, amountUnit=amountUnit)
-                    sampleContentToDB.save()
-                #Peptide Content
-                peptideLine = each_line.Peptide_DisplayID.strip()
-                if (peptideLine != ''):
-                    peptideFromDB = PeptideComponent.objects.get(displayId=peptideLine)
-                    content_type = ContentType.objects.get(model='peptidecomponent')
-                    object_id = peptideFromDB.id
-                    solvent = each_line.Peptide_SolventBuffer
-                    concentration = each_line.Peptide_Concentration
-                    concentrationUnit = Unit.objects.get(name=each_line.Peptide_Concentration_Unit)
-                    amount = each_line.Peptide_Amount
-                    amountUnit = Unit.objects.get(name=each_line.Peptide_Amount_Unit)
-                    sampleContentToDB = SampleContent(sample = sample2db,content_type = content_type,object_id = object_id, solvent=solvent,concentration = concentration,concentrationUnit = concentrationUnit, amount=amount, amountUnit=amountUnit)
-                    sampleContentToDB.save() 
-                #Protein Content
-                proteinLine = each_line.Protein_DisplayID.strip()
-                if (proteinLine != ''):
-                    proteinFromDB = ProteinComponent.objects.get(displayId=proteinLine)
-                    content_type = ContentType.objects.get(model='proteincomponent')
-                    object_id = proteinFromDB.id
-                    solvent = each_line.Protein_SolventBuffer
-                    concentration = each_line.Protein_Concentration
-                    concentrationUnit = Unit.objects.get(name=each_line.Protein_Concentration_Unit)
-                    amount = each_line.Protein_Amount
-                    amountUnit = Unit.objects.get(name=each_line.Protein_Amount_Unit)
-                    sampleContentToDB = SampleContent(sample = sample2db,content_type = content_type,object_id = object_id, solvent=solvent,concentration = concentration,concentrationUnit = concentrationUnit, amount=amount, amountUnit=amountUnit)
-                    sampleContentToDB.save()                                        
-
-                    # Redirect to the document list after POST
-            #return HttpResponseRedirect(reverse('labrack.views.list'))
-            return HttpResponseRedirect('/admin/labrack/sample/')
-    else:
-        form = DocumentForm() # A empty, unbound form
-
-    # Load documents for the list page
-    documents = Document.objects.all()
-
-    # Render list page with the documents and the form
-    return render_to_response(
-        'admin/labrack/sample/list.html',
-        {'documents': documents, 'form': form},
-        context_instance=RequestContext(request)
-    )
 
 
 def dnalist(request):
@@ -190,11 +63,9 @@ def dnalist(request):
             p = newdoc.docfile.url
             gbFile = settings.MEDIA_ROOT+os.path.normpath(newdoc.docfile.url)
             gbFile2 = settings.TEMPLATE_DIRS+os.path.normpath(newdoc.docfile.url)
-            try:
-                myCSVSsample = CSVSample.import_data(data = open(gbFile2))
-            except Exception:
-                print "Oops!  That was no valid number.  Try again..."
-            #break                
+            
+            myCSVSsample = CSVSample.import_data(data = open(gbFile2))
+                           
             #create a new sample for each line
             for each_line in myCSVSsample:
                 containerFromDB = Container.objects.get(displayId=each_line.container)
@@ -205,7 +76,9 @@ def dnalist(request):
                 amount = each_line.Amount
                 amountUnit = Unit.objects.get(name=each_line.Amount_Unit)                                
 
-                sample2db = DnaSample(amount=amount,amountUnit=amountUnit,solvent=solvent,concentration=concentration,concentrationUnit=concentrationUnit,displayId=each_line.DisplayId, container = containerFromDB, status = each_line.status)
+                sample2db = DnaSample(amount=amount,amountUnit=amountUnit,solvent=solvent, \
+                        concentration=concentration,concentrationUnit=concentrationUnit, \
+                        displayId=each_line.DisplayId, container = containerFromDB, status = each_line.status)
                 # aliquots number
                 if (each_line.NumberOfAliquots.strip() == ''):
                     t = int(each_line.NumberOfAliquots.strip())
@@ -216,7 +89,6 @@ def dnalist(request):
                 else:
                     sample2db.reference_status = True
                 # end of is the sample a reference or not
-                ###########################################sample2db.save()
                 #DNA Content
                 emLine = each_line.DNA_Construct.strip()
                 if (emLine != ''):
@@ -231,13 +103,6 @@ def dnalist(request):
                     messages.add_message(request, messages.INFO, each_line.DisplayId + ' was added.')
                 except Exception,err:
                     messages.add_message(request, messages.ERROR, each_line.DisplayId + ' was not added!!!.    ' + repr(err) )                                         
-
-
-
-                    # Redirect to the document list after POST
-            #return HttpResponseRedirect(reverse('labrack.views.list'))
-
-
             return HttpResponseRedirect('/admin/labrack/dnasample/')
     else:
         form = DocumentForm() # A empty, unbound form
@@ -266,10 +131,8 @@ def celllist(request):
             p = newdoc.docfile.url
             gb_file = settings.MEDIA_ROOT+os.path.normpath(newdoc.docfile.url)
             gb_file2 = settings.TEMPLATE_DIRS+os.path.normpath(newdoc.docfile.url)
-            try:
-                myCSVSsample = CSVChassisSample.import_data(data = open(gb_file2))
-            except Exception:
-                print "Oops!  That was no valid number.  Try again..." 
+
+            myCSVSsample = CSVChassisSample.import_data(data = open(gb_file2))
             #break                
             #create a new sample for each line
             for each_line in myCSVSsample:
@@ -281,7 +144,9 @@ def celllist(request):
                 amount = each_line.Amount
                 amountUnit = Unit.objects.get(name=each_line.Amount_Unit)                                
 
-                sample2db = ChassisSample(amount=amount,amountUnit=amountUnit,solvent=solvent,concentration=concentration,concentrationUnit=concentrationUnit,displayId=each_line.DisplayId, container = containerFromDB, status = each_line.status)
+                sample2db = ChassisSample(amount=amount,amountUnit=amountUnit,solvent=solvent, \
+                        concentration=concentration,concentrationUnit=concentrationUnit, \
+                        displayId=each_line.DisplayId, container = containerFromDB, status = each_line.status)
                 # aliquots number
                 if (each_line.NumberOfAliquots.strip() == ''):
                     t = int(each_line.NumberOfAliquots.strip())
@@ -303,9 +168,6 @@ def celllist(request):
                     messages.add_message(request, messages.INFO, each_line.DisplayId + ' was added.')
                 except Exception,err:
                     messages.add_message(request, messages.ERROR, each_line.DisplayId + ' was not added!!!.    ' + repr(err) )                                         
-
-
-
 
                     # Redirect to the document list after POST
             #return HttpResponseRedirect(reverse('labrack.views.list'))
@@ -337,29 +199,20 @@ def cellonlylist(request):
             p = newdoc.docfile.url
             gb_file = settings.MEDIA_ROOT+os.path.normpath(newdoc.docfile.url)
             gb_file2 = settings.TEMPLATE_DIRS+os.path.normpath(newdoc.docfile.url)
-            try:
-                myCSVSsample = CSVCell.import_data(data = open(gb_file2))                                
-            except Exception:
-                print "Oops!  That was no valid number.  Try again..." 
+            myCSVSsample = CSVCell.import_data(data = open(gb_file2))                                
             #break                
             #create a new sample for each line
             for each_line in myCSVSsample:
                 if (each_line.DisplayId != 'DisplayId'):
                     displayId = each_line.DisplayId
                     name = each_line.Name
-                    description	= each_line.Description                                                            
-
-
+                    description	= each_line.Description 
                     sample2db = Chassis(displayId=displayId,name=name,description=description)
                     try:
                         sample2db.save()
                         messages.add_message(request, messages.INFO, displayId + ' was added.')
                     except Exception,err:
-                        messages.add_message(request, messages.ERROR, displayId + ' was not added!!!.    ' + repr(err) )                                         
-
-
-                    # Redirect to the document list after POST
-            #return HttpResponseRedirect(reverse('labrack.views.list'))
+                        messages.add_message(request, messages.ERROR, displayId + ' was not added!!!.    ' + repr(err) ) 
 
             return HttpResponseRedirect('/admin/labrack/chassis/')
     else:
@@ -377,109 +230,27 @@ def cellonlylist(request):
     )
 
 
-## R: Please don't check in test code from fantasy forms. This is not the place
-## for it. Have your test django project somewhere else.
-
-#### new test
-class Html5EmailInput(Input):
-    input_type = 'email'
-
-class ContactForm(forms.Form):
-    name = forms.CharField(max_length=30)
-    firstname = forms.CharField(max_length=30)
-    email = forms.EmailField(max_length=50, widget=Html5EmailInput())
-    message = forms.CharField(max_length=1000)
-    password = forms.CharField(max_length=50, widget=forms.PasswordInput())
-
-    def clean_password(self):
-        password = self.cleaned_data['password']
-        length = len(password)
-        if length < 8:
-            raise forms.ValidationError("Password has to be at least 8 characters long.")
-        return password
-
-def contact(request):
-    if request.method == 'POST': # If the form has been submitted...
-        form = ContactForm(request.POST) # A form bound to the POST data
-        if form.is_valid(): # All validation rules pass
-            name = form.cleaned_data['name']
-            firstname = form.cleaned_data['firstname']
-            email = form.cleaned_data['email']
-            message = form.cleaned_data['message']
-            password = form.cleaned_data['password']
-            # do_something
-
-            # then return
-            if request.is_ajax():
-                return HttpResponse(content=json.dumps({'success' : '/success'}), mimetype='application/json')
-
-            return redirect('success') # Redirect after POST
-        elif request.is_ajax():
-            errors = json.dumps(form.errors)
-            return HttpResponse(errors, mimetype='application/json')
-    else:
-        form = ContactForm() # An unbound form
-    return render_to_response('form.html', {'form' : form}, context_instance=RequestContext(request))
-
 def success(request):
     return HttpResponse('success')        
 
 
-
-
-def plasmidlist(request):
-    form = ContactForm() # An unbound form
-    return render_to_response('form.html', {'form' : form}, context_instance=RequestContext(request))
-
-def plasmidlistw(request):
-    if request.is_ajax():
-        if format == 'xml':
-            mimetype = 'application/xml'
-        if format == 'json':
-            mimetype = 'application/javascript'
-        data = serializers.serialize(format, ExampleModel.objects.all())
-        #return HttpResponse(data,mimetype) 
-    # If you want to prevent non XHR calls
-    else:
-        return HttpResponse(status=404) 
-    return render_to_response(
-        'admin/labrack/chassissample/celllist.html',
-        {'documents': documents, 'form': form},
-        context_instance=RequestContext(request)
-    )    
-
-
-class JSONResponseMixin(object):
-    def render_to_response(self, context):
-        return self.get_json_response(self.convert_context_to_json(context))
-    def get_json_response(self, content, **httpresponse_kwargs):
-        return HttpResponse(content, content_type='application/json', **httpresponse_kwargs)
-    def convert_context_to_json(self, context):
-        return simplejson.dumps(context)
-
-class HybridDetailView(JSONResponseMixin, SingleObjectTemplateResponseMixin, BaseDetailView):
-    def render_to_response(self, context):
-        if self.request.is_ajax():
-            obj = context['object'].as_dict()
-            return JSONResponseMixin.render_to_response(self, obj)
-        else:
-            return SingleObjectTemplateResponseMixin.render_to_response(self, context)
-
 def getVectorBySequence(sequence_text,strand,displayIdDnaComponent):#local function
 
-    dnapartsVectorAll = DnaComponent.objects.filter(componentType__name='Vector Backbone')
+    dnapartsVectorAll = M.DnaComponent.objects.filter(componentType__name='Vector Backbone')
     dnVectorId = -999 
     try:
-        dnaComp = DnaComponent.objects.get(displayId =displayIdDnaComponent)
+        dnaComp = M.DnaComponent.objects.get(displayId =displayIdDnaComponent)
         qSet = dnaComp.related_annotations()
         for dn in qSet:
             if dn.componentAnnotated in dnapartsVectorAll:
                 dnVectorId = dn.componentAnnotated.id                
-    except:
+    except M.DnaComponent.DoesNotExist:
         dnVectorId = -999       
 
 
-    dnaparts = [dnapart for dnapart in DnaComponent.objects.all() if (dnapart in dnapartsVectorAll and dnapart.sequence is not None and dnapart.sequence != "" and dnapart.sequence in sequence_text)]
+    dnaparts = [dnapart for dnapart in M.DnaComponent.objects.all() \
+                if (dnapart in dnapartsVectorAll and dnapart.sequence is not None \
+                    and dnapart.sequence != "" and dnapart.sequence in sequence_text)]
 
     name = ''
     data = serializers.serialize('json', dnaparts)
@@ -496,9 +267,13 @@ def getVectorBySequence(sequence_text,strand,displayIdDnaComponent):#local funct
         sequence = dnapart.sequence
         description = dnapart.description
         if json_object == '':
-            json_object = '{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'","strand":"'+strand+'","isRelated":"'+isRelated+'"}'
+            json_object = '{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+ \
+                '","displayid":"'+displayid+'","description":"'+description+'","strand":"'+strand+ \
+                '","isRelated":"'+isRelated+'"}'
         else:
-            json_object = json_object+',{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'","strand":"'+strand+'","isRelated":"'+isRelated+'"}'
+            json_object = json_object+',{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+ \
+                '","displayid":"'+displayid+'","description":"'+description+'","strand":"'+strand+ \
+                '","isRelated":"'+isRelated+'"}'
     json_object = '['+json_object+']'
     return json_object
 
@@ -506,11 +281,13 @@ def getInsertDBAnnotationBySequence(sequence_text,strand,displayIdDnaComponent):
     lenSimple = len(sequence_text)        
     sequence_text = sequence_text + sequence_text
 
-    dnapartsVectorAll  = DnaComponent.objects.filter(componentType__name='Vector Backbone')
-    dnapartsInsertsAll = DnaComponent.objects.filter(componentType__name='Vector Backbone')
+    dnapartsVectorAll  = M.DnaComponent.objects.filter(componentType__name='Vector Backbone')
+    dnapartsInsertsAll = M.DnaComponent.objects.filter(componentType__name='Vector Backbone')
     # removed because Vector selection was removed for now, therefore add Vector selection within the annotations
     #dnaparts = [dnapart for dnapart in DnaComponent.objects.all() if (dnapart not in dnapartsVectorAll and dnapart.sequence is not None and dnapart.sequence != "" and dnapart.sequence in sequence_text)]
-    dnaparts = [dnapart for dnapart in DnaComponent.objects.all()  if (dnapart.sequence is not None and dnapart.sequence != "" and dnapart.sequence in sequence_text and dnapart.displayId!=displayIdDnaComponent)]
+    dnaparts = [dnapart for dnapart in M.DnaComponent.objects.all()  \
+                if (dnapart.sequence is not None and dnapart.sequence != "" and \
+                    dnapart.sequence in sequence_text and dnapart.displayId!=displayIdDnaComponent)]
     name = ''
     data = serializers.serialize('json', dnaparts)
     json_Insertobject = ''
@@ -532,11 +309,8 @@ def getInsertDBAnnotationBySequence(sequence_text,strand,displayIdDnaComponent):
 
         # check if the annotation are already related
         isRelated = False
-        try:
-            isRelated = DnaSequenceAnnotation.isRelated(displayid,displayIdDnaComponent)
-        except:
-            print ''
-
+        isRelated = M.DnaSequenceAnnotation.isRelated(displayid,displayIdDnaComponent)
+        
         if (strand=='-'):
             firstPos = firstposition
             firstposition = secondpeace - lastposition
@@ -559,17 +333,23 @@ def getInsertDBAnnotationBySequence(sequence_text,strand,displayIdDnaComponent):
             else:
                 componentType_name = ''                        
             if json_Insertobject == '':
-                json_Insertobject = '{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'","coverage":"'+coverage+'","optimizedFor_name":"'+optimizedFor_name+'","componentType_name":"'+componentType_name+'","strand":"'+strand+'","isRelated":"'+str(isRelated)+'"}' 
+                json_Insertobject = '{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+ \
+                    '","displayid":"'+displayid+'","description":"'+description+'","coverage":"'+coverage+ \
+                    '","optimizedFor_name":"'+optimizedFor_name+'","componentType_name":"'+componentType_name+ \
+                    '","strand":"'+strand+'","isRelated":"'+str(isRelated)+'"}' 
             else:
-                json_Insertobject = json_Insertobject+',{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'","coverage":"'+coverage+'","optimizedFor_name":"'+optimizedFor_name+'","componentType_name":"'+componentType_name+'","strand":"'+strand+'","isRelated":"'+str(isRelated)+'"}' 
+                json_Insertobject = json_Insertobject+',{ "id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+\
+                    '","displayid":"'+displayid+'","description":"'+description+'","coverage":"'+coverage+\
+                    '","optimizedFor_name":"'+optimizedFor_name+'","componentType_name":"'+componentType_name+ \
+                    '","strand":"'+strand+'","isRelated":"'+str(isRelated)+'"}' 
     json_Insertobject = '['+json_Insertobject+']'
     return json_Insertobject
 
 def getAnnotToBeDeleted(request, jsonAmmpt,displayIdDnaComponent):
     #import django.utils.simplejson as json
     try:
-        dnacomp = DnaComponent.objects.get(displayId = displayIdDnaComponent)
-    except DnaComponent.DoesNotExist:
+        dnacomp = M.DnaComponent.objects.get(displayId = displayIdDnaComponent)
+    except M.DnaComponent.DoesNotExist:
         dnacomp = None
         message = "None"
         json = simplejson.dumps(message)
@@ -580,16 +360,12 @@ def getAnnotToBeDeleted(request, jsonAmmpt,displayIdDnaComponent):
         sumDna = ""
         missingAnnot = ''
         selectedAnnotFromDB = json.loads(data2[0]["selected_annot"][0]["db_checked"])
-        if (selectedAnnotFromDB):
-            try:                       
-                for id in selectedAnnotFromDB:
-                    sumDna = sumDna+','+id["id"]
-            except:
-                print 'error'        
-
+        if (selectedAnnotFromDB):                     
+            for id in selectedAnnotFromDB:
+                sumDna = sumDna+','+id["id"]       
         try:
-            dnacomp = DnaComponent.objects.get(displayId = displayIdDnaComponent)
-            for qannot in DnaSequenceAnnotation.objects.filter( subComponent=dnacomp.id):
+            dnacomp = M.DnaComponent.objects.get(displayId = displayIdDnaComponent)
+            for qannot in M.DnaSequenceAnnotation.objects.filter( subComponent=dnacomp.id):
                 test = qannot.componentAnnotated.displayId
                 if( not utilLabrack.isDnaTypeVector(qannot.componentAnnotated)):
                     if (sumDna.find(test)==-1):
@@ -597,11 +373,11 @@ def getAnnotToBeDeleted(request, jsonAmmpt,displayIdDnaComponent):
                             missingAnnot = test
                         else:
                             missingAnnot = missingAnnot + "," + test
-        except:
-            print ''
+        except M.DnaComponent.DoesNotExist:
+            pass
         json = simplejson.dumps(missingAnnot)
         return HttpResponse(json, mimetype='application/json') 
-    except:
+    except ValueError: ## includes simplejson.decoder.JSONDecodeError
         dnacomp = None
         message = "None"
         json = simplejson.dumps(message)
@@ -617,7 +393,8 @@ def search_dna_parts(request, sequence_text,displayIdDnaComponent):
     seq_exceptVector = sequence_text.replace(sequence_vector, '')
     s = len(seq_exceptVector)
 
-    message = {"list_dnas": "", "extra_values": "","parttypes_values": "","optimizedfor_values": "","reverse_list_dnas": "","reverse_extra_values": ""}
+    message = {"list_dnas": "", "extra_values": "","parttypes_values": "","optimizedfor_values": "", \
+               "reverse_list_dnas": "","reverse_extra_values": ""}
     if request.is_ajax():
         # calculate the reverse complement sequence and duplicate sequence for better Vector matching
         sequence_textDuplicate = sequence_text + sequence_text
@@ -638,7 +415,7 @@ def search_dna_parts(request, sequence_text,displayIdDnaComponent):
         message['reverse_extra_values'] = getInsertDBAnnotationBySequence(str(revseq_exceptVect),'-',displayIdDnaComponent)
 
         #paret retrieving all partTypes
-        dnapartstypesAll = DnaComponentType.objects.all()
+        dnapartstypesAll = M.DnaComponentType.objects.all()
         json_dnaparttype = ''
         for dnaparttype in dnapartstypesAll :
             id = dnaparttype.id
@@ -651,7 +428,7 @@ def search_dna_parts(request, sequence_text,displayIdDnaComponent):
         message['parttypes_values'] = json_dnaparttype
 
         #paret retrieving all optimized for
-        chassisOptimizedAll = Chassis.objects.all()
+        chassisOptimizedAll = M.Chassis.objects.all()
         json_chassisOptimizedAll = ''
         json_chassisOptimizedAll = '{ "id":"","name":""}'
         for chas in chassisOptimizedAll :
@@ -661,15 +438,14 @@ def search_dna_parts(request, sequence_text,displayIdDnaComponent):
             if json_chassisOptimizedAll == '':
                 json_chassisOptimizedAll = '{ "id":"'+str(id)+'","name":"'+name+'","displayId":"'+displayId+'"}'
             else:
-                json_chassisOptimizedAll = json_chassisOptimizedAll+',{ "id":"'+str(id)+'","name":"'+name+'","displayId":"'+displayId+'"}'
+                json_chassisOptimizedAll = json_chassisOptimizedAll+',{ "id":"'+str(id)+'","name":"'+name+ \
+                    '","displayId":"'+displayId+'"}'
         json_chassisOptimizedAll = '['+json_chassisOptimizedAll+']'
         message['optimizedfor_values'] = json_chassisOptimizedAll                
     else:
         message = "None"
     json = simplejson.dumps(message)
     return HttpResponse(json, mimetype='application/json')
-
-
 
 def get_dna_info(request, text_value):
     message = {"list_dnas": "", "extra_values": ""}
@@ -686,7 +462,8 @@ def get_dna_info(request, text_value):
             displayid = dnapart.displayId
             sequence = dnapart.sequence
             description = dnapart.description
-            json_object = '[{"id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+'","description":"'+description+'"}]'
+            json_object = '[{"id":"'+str(id)+'","name":"'+name+'","sequence":"'+sequence+'","displayid":"'+displayid+ \
+                '","description":"'+description+'"}]'
             message['list_dnas'] = json_object
             message['extra_values'] = request.method
         else:
@@ -698,12 +475,6 @@ def get_dna_info(request, text_value):
         json = simplejson.dumps(message)
         return HttpResponse(json, mimetype='application/json')                
 
-
-def upload_page( request ):
-    ctx = RequestContext( request, {
-        'csrf_token': get_token( request ),
-    } )
-    return render_to_response( 'upload_page.html', ctx )
 
 
 def save_upload( uploaded, filename, raw_data ):
@@ -732,10 +503,10 @@ def save_upload( uploaded, filename, raw_data ):
             return True
     except IOError:
         # could not open the file most likely
-        pass
+        return HttpResponseBadRequest( "Could not open the file" )
     return False
 
-def ajax_upload( request ):
+def file_upload( request ):
     if request.method == "POST":   
         if request.is_ajax( ):
             # the file is stored raw in the request
@@ -770,14 +541,6 @@ def ajax_upload( request ):
         return HttpResponse(json.dumps(ret_json))
 
 def getGBDataFromFile(request, filePath):
-    #filename = filePath;
-
-    #genbankjson = retrieveGenBankInfo(filename)
-    #import json
-    #print genbankjson
-    #ret_json = {'test':genbankjson,}
-    #print len(genbankjson)
-    #return HttpResponse(json.dumps(ret_json))
     success = ''
     genbankjson = retrieveGenBankInfo(filePath)
         # let Ajax Upload know whether we saved it or not
@@ -787,7 +550,7 @@ def getGBDataFromFile(request, filePath):
 
 
 def retrieveGenBankInfo(filename):
-    gb_file = settings.MEDIA_ROOT+"/documents/GenBank/"+os.path.normpath(filename)
+    gb_file = settings.MEDIA_ROOT+"documents/GenBank/"+os.path.normpath(filename)
     gb_features = ""
     dispId = 1
     isParsingDone = False
@@ -812,8 +575,14 @@ def retrieveGenBankInfo(filename):
                     label = repr(gb_record.features[ind].qualifiers.get('gene')).replace("['","").replace("']","").replace("\\"," ")
 
                 if json_Insertobject == '':
-                    json_Insertobject = '{ "id":"'+str(label)+'","name":"'+nameType+'","sequence":"'+origFullSequence+'","displayid":"'+label+'","description":"'+description+'","coverage":"'+coverage+'","startPos":"'+startPos+'","endPos":"'+endPos+'","strandValue":"'+strandValue+'","featureSeq":"'+featureSeq+'"}' 
+                    json_Insertobject = '{ "id":"'+str(label)+'","name":"'+nameType+'","sequence":"'+origFullSequence+ \
+                        '","displayid":"'+label+'","description":"'+description+'","coverage":"'+coverage+ \
+                        '","startPos":"'+startPos+'","endPos":"'+endPos+'","strandValue":"'+strandValue+'","featureSeq":"'+ \
+                        featureSeq+'"}' 
                 else:
-                    json_Insertobject = json_Insertobject+',{ "id":"'+str(label)+'","name":"'+nameType+'","sequence":"'+origFullSequence+'","displayid":"'+label+'","description":"'+description+'","coverage":"'+coverage+'","startPos":"'+startPos+'","endPos":"'+endPos+'","strandValue":"'+strandValue+'","featureSeq":"'+featureSeq+'"}' 
+                    json_Insertobject = json_Insertobject+',{ "id":"'+str(label)+'","name":"'+nameType+'","sequence":"'+ \
+                        origFullSequence+'","displayid":"'+label+'","description":"'+description+'","coverage":"'+coverage+ \
+                        '","startPos":"'+startPos+'","endPos":"'+endPos+'","strandValue":"'+strandValue+ \
+                        '","featureSeq":"'+featureSeq+'"}' 
     json_Insertobject = '['+json_Insertobject+']' 
     return json_Insertobject

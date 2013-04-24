@@ -29,6 +29,8 @@ import labrack.models as M
 import labrack.admin as A
 from labrack.displayAdmin import labracksite
 
+
+
 class ComponentDetailView( DetailView ):
     """
     Class-based view for Component pages.
