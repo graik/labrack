@@ -14,7 +14,14 @@
 ## You should have received a copy of the GNU Affero General Public
 ## License along with labrack. If not, see <http://www.gnu.org/licenses/>.
 
-"""Views for display (rather than editing) of Components"""
+"""Views for display (rather than editing) of Components
+
+A perhaps better short term solution is this:
+http://stackoverflow.com/questions/6680631/django-admin-separate-read-only-view-and-change-view
+This would retain everything within Admin and create a view form separate
+from the change/edit form.
+"""
+
 
 from django.views.generic import ListView, DetailView
 
