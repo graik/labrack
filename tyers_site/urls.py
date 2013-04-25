@@ -2,16 +2,16 @@ from django.conf.urls.defaults import patterns, include, url
 
 from django.contrib import admin
 
-from labrack.views import getAnnotToBeDeleted,getGBDataFromFile,file_upload,\
-     get_dna_info,search_dna_parts
+from labrack.views import getAnnotToBeDeleted,getGBDataFromFile,fileUpload,\
+     getDnaInfo,searchDnaParts
 
-import labrack.componentViews as CViews
+#import labrack.componentViews as CViews
 import settings
 
 # deprecated in django 1.5: Use class-based views instead
 # http://stackoverflow.com/questions/11428427/no-module-named-simple-error-in-django
 # from django.views.generic.simple import redirect_to
-
+admin.autodiscover()
 
 urlpatterns = patterns('',
     # Uncomment the admin/doc line below to enable admin documentation:
@@ -19,13 +19,13 @@ urlpatterns = patterns('',
     
     # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^labrack/chassis[/]?$', CViews.chassis_list),
-    url(r'^labrack/chassis/(?P<id>[0-9A-Za-z]+)', CViews.ChassisDetail.as_view()),
-    url(r'^labrack/dna/(?P<id>[0-9A-Za-z]+)', CViews.DnaComponentDetail.as_view()),
-    url( r'file_upload/$', file_upload, name="file_upload" ),
-    url(r'^get_dna_info/(?P<text_value>.*)/$',get_dna_info,name='get_dna_info'),
+    #url(r'^labrack/chassis[/]?$', CViews.chassis_list),
+    #url(r'^labrack/chassis/(?P<id>[0-9A-Za-z]+)', CViews.ChassisDetail.as_view()),
+    #url(r'^labrack/dna/(?P<id>[0-9A-Za-z]+)', CViews.DnaComponentDetail.as_view()),
+    url( r'fileUpload/$', fileUpload, name="fileUpload" ),
+    url(r'^getDnaInfo/(?P<text_value>.*)/$',getDnaInfo,name='getDnaInfo'),
     url(r'^getGBDataFromFile/(?P<filePath>.*)/$', getGBDataFromFile,name='getGBDataFromFile'),  
-    url(r'^search_dna_parts/(?P<sequence_text>.*)/(?P<displayIdDnaComponent>.*)/$', search_dna_parts,name='search_dna_parts'),  
+    url(r'^searchDnaParts/(?P<sequence_text>.*)/(?P<displayIdDnaComponent>.*)/$', searchDnaParts,name='searchDnaParts'),  
     url(r'^checkAnnotToDelete/(?P<jsonAmmpt>.*)/(?P<displayIdDnaComponent>.*)/$', getAnnotToBeDeleted,name='getAnnotToBeDeleted'),      
     url(r'^media/(?P<path>.*)$', 'django.views.static.serve',{'document_root': settings.MEDIA_ROOT})
 )

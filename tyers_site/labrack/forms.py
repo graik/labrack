@@ -66,7 +66,7 @@ class DnaSampleForm(forms.ModelForm):
         #instance.historyDescription = self.cleaned_data['genebank'] # etc
         
         if self.cleaned_data['dnaConstruct']==None:
-            dna2db = DnaComponent(displayId=self.cleaned_data['DNA_Display_ID'],description=self.cleaned_data['DNA_Description'], name =self.cleaned_data['DNA_Name'], sequence = self.cleaned_data['sequence'],status = self.cleaned_data['DNA_Status'], GenBankfile = self.cleaned_data['genebank'])
+            dna2db = DnaComponent(displayId=self.cleaned_data['DNA_Display_ID'],description=self.cleaned_data['DNA_Description'], name =self.cleaned_data['DNA_Name'], sequence = self.cleaned_data['sequence'],status = self.cleaned_data['DNA_Status'], genBankfile = self.cleaned_data['genebank'])
             dna2db.saveSequenceWithoutAnnotations()
             #dna2db.save()
             instance.dnaConstruct = dna2db
@@ -264,11 +264,10 @@ class DnaComponentForm(forms.ModelForm):
         instance = super(DnaComponentForm, self).save(commit=False)
         fileName = self.cleaned_data['htmlAttribute3']
         
-        #settings.MEDIA_ROOT+"/"+os.path.normpath(self.GenBankfile.name)
         if (fileName!=""):
             #file = open(settings.MEDIA_ROOT+"/documents/GenBank/"+fileName)
             file = open(settings.MEDIA_ROOT+"/"+fileName)
-            instance.GenBankfile = File(file)
+            instance.genBankfile = File(file)
         #instance.historyDescription = self.cleaned_data['genebank'] # etc
 
 

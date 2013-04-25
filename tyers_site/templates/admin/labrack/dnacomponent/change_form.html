@@ -31,9 +31,9 @@
             var divs = document.getElementsByTagName("div");
                 for(var i = 0; i < divs.length; i++){
                     //do something to each div like
-                    if (divs[i].className=='form-row field-GenBankfile') {
+                    if (divs[i].className=='form-row field-genBankfile') {
                         //alert(divs[i].className);
-                        divs[i].id = 'id_GenBankfile';
+                        divs[i].id = 'id_genBankfile';
                         var elem = divs[i].children;
                             for(var j = 0; j < elem.length; j++){
                                 var td = elem[j];
@@ -44,7 +44,7 @@
                 <!--for(var i = 0; i < divs.length; i++){-->
                     if (divs[i].className=='form-row field-sequence') {
                         txt=document.createTextNode('');
-                        divs[i].id = 'id_GenBankfile_loaded';
+                        divs[i].id = 'id_genBankfile_loaded';
                          divs[i].innerHTML += "<ul class='object-tools'><input type='button' align='center' onclick='send_request(true);' value='Update Annotations'/></ul>";
                     }
                     if (divs[i].className=='field-box field-displayId') {
@@ -56,10 +56,7 @@
         }
 
     uploadTheFile();
-    // reload charts if file has been selected already
-    ////////////////////////////////////////////uploadGBDataFileIfExist();
-    //checkContent = document.getElementById("id_is_vector_backbone");
-    //checkContent.onchange = checkHandler;
+
 
     try{
         textContent = document.getElementById("id_sequence");
@@ -78,11 +75,7 @@
         document.getElementById("id_componentType").selectedIndex = PlasmidIndexType();
     }
     listContent.onchange = listTypeOnChange;
-
-
-    //$('#id_GenBankfile').live('change', function(){ uploadFile(); });
-
-    fileContent = document.getElementById("id_GenBankfile");
+    fileContent = document.getElementById("id_genBankfile");
     fileContent.onchange=sequenceHandlerFile;
 
 
@@ -486,7 +479,7 @@ function update_dnaBackbone(selectedItem,fullsequence){
     $.ajax({
         async: false,
         type: 'GET',
-        url: "/get_dna_info/"+selectedItem+"/",
+        url: "/getDnaInfo/"+selectedItem+"/",
         success: function(data){
             var values = data.list_dnas;
                 var jsonObject = eval(values);
@@ -504,16 +497,6 @@ function update_dnaBackbone(selectedItem,fullsequence){
 
 
 
-    <!--$.get("/get_dna_info/"+selectedItem+"/", function(data){-->
-        <!--var values = data.list_dnas;-->
-            <!--var jsonObject = eval(values);-->
-            <!--$("#vectorName").html(jsonObject[0].name);-->
-            <!--$("#vectorDescription").html(jsonObject[0].description);-->
-            <!--//$("#idExtra").html(data.extra_values);-->
-
-    <!--//update annot base on the vector sequence-->
-    <!--currSelectedVectorSeq = jsonObject[0].sequence;-->
-<!--});-->
 send_request(false);
 
 }
@@ -644,7 +627,7 @@ function send_request(isUpdateVector){
         $.ajax({
             async: false,
             type: 'GET',
-            url: "/search_dna_parts/"+ta+"/"+idComp+"/",
+            url: "/searchDnaParts/"+ta+"/"+idComp+"/",
             success: function(data) {
                 if (isUpdateVector) {populateVectorBackbone(data);}
                 currSelectedAnnot = data;
@@ -1104,7 +1087,7 @@ function uploadGBDataFileIfExist(){
 
     buildGenBankTable(json.test);
     drawGenBank(json.test,buildChartGeneBank());
-    document.getElementById("id_GenBankfile_loaded").innerHTML += "<br>Last File :"+pathFile;
+    document.getElementById("id_genBankfile_loaded").innerHTML += "<br>Last File :"+pathFile;
 
 
     }
@@ -1131,14 +1114,13 @@ document.getElementById(divId).style.display = state;
 function uploadTheFile(){
     try{
             var uploader = new qq.FileUploader({
-                action: "{% url "file_upload" %}",
-                element: $('#id_GenBankfile')[0],
-                //element: document.getElementById('id_GenBankfile'), 
+                action: "{% url "fileUpload" %}",
+                element: $('#id_genBankfile')[0],
                 multiple: false,
                 
                 onComplete: function( id, fileName, responseJSON ) {
                 document.getElementById("id_htmlAttribute3").value = fileName;
-                document.getElementById("id_GenBankfile_loaded").innerHTML += "<br>Last File :"+fileName;
+                document.getElementById("id_genBankfile_loaded").innerHTML += "<br>Last File :"+fileName;
                 buildGenBankTable(responseJSON.test);
         
                 drawGenBank(responseJSON.test,buildChartGeneBank());

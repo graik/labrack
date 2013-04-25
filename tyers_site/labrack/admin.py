@@ -167,7 +167,7 @@ class ProteinComponentAdmin(ComponentAdmin):
 
     fieldsets = ComponentAdmin.fieldsets.__add__(\
         ((None, {
-            'fields': ('GenBankfile',),
+            'fields': ('genBankfile',),
         }
           ),
          ('Protein Details', {
@@ -248,7 +248,7 @@ class DnaComponentAdmin(ComponentAdmin):
                             ('description',),
                             ('optimizedFor', 'translatesTo',),
                             ('sequence',),
-                            ('GenBankfile',)
+                            ('genBankfile',)
                             )
                           }
              ),            
@@ -1368,8 +1368,8 @@ admin.site.register(ChassisComponentType, ComponentTypeAdmin)
 admin.site.register(Collection)
 admin.site.register(ChassisSample,ChassisSampleAdmin)
 admin.site.register(DnaSample,DnaSampleAdmin)
-admin.site.register(User)
-admin.site.register(Group)
-admin.site.register(Site)
+#admin.site.register(User)
+#admin.site.register(Group)
+#admin.site.register(Site)
 
 

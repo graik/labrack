@@ -182,7 +182,7 @@ class Component(UserMixinModel,models.Model):
         """
         gb_features = ''
 
-        gb_file = settings.MEDIA_ROOT+"/"+os.path.normpath(self.GenBankfile.name)
+        gb_file = settings.MEDIA_ROOT+"/"+os.path.normpath(self.genBankfile.name)
         for gb_record in SeqIO.parse(open(gb_file,"r"), "genbank") :
             gb_features += gb_record.seq.tostring()
         return gb_features
@@ -191,7 +191,7 @@ class Component(UserMixinModel,models.Model):
 
     def related_file_annotation( self ):
 
-        gb_file = settings.MEDIA_ROOT+"/"+os.path.normpath(self.GenBankfile.name)
+        gb_file = settings.MEDIA_ROOT+"/"+os.path.normpath(self.genBankfile.name)
         gb_features = ""
         for gb_record in SeqIO.parse(open(gb_file,"r"), "genbank") :
             # now do something with the record
@@ -400,7 +400,7 @@ class ProteinComponent(Component):
                                             verbose_name='Part type', 
                                             help_text='Classification of this part.')   
     
-    GenBankfile = models.FileField(upload_to='documents/GenBank/%Y/%m/%d',blank=True,null=True)
+    genBankfile = models.FileField(upload_to='documents/GenBank/%Y/%m/%d',blank=True,null=True)
     
     variantOf = models.ManyToManyField( 'self', symmetrical=False, 
                                             blank=True, null=True, 
@@ -423,7 +423,7 @@ class ProteinComponent(Component):
         #Saving the sequence
         self.sequence = self.related_seq()
         super(ProteinComponent, self).save(*args, **kwargs) # Call the "real" save() method.
-        if self.GenBankfile:
+        if self.genBankfile:
             self.save_annotation()
     
     def saveWithoutAnnotations(self, *args, **kwargs):
@@ -456,7 +456,7 @@ class DnaComponent(Component):
                                     help_text='is the DNA Circular or not.')
 
 
-    GenBankfile = models.FileField(upload_to='documents/GenBank/%Y/%m/%d',blank=True,null=True)
+    genBankfile = models.FileField(upload_to='documents/GenBank/%Y/%m/%d',blank=True,null=True)
     
     
     variantOf = models.ManyToManyField( 'self', symmetrical=False, 
@@ -543,7 +543,7 @@ class DnaComponent(Component):
         """
         gb_features = ''
 
-        gb_file = settings.MEDIA_ROOT+"/"+os.path.normpath(self.GenBankfile.name)
+        gb_file = settings.MEDIA_ROOT+"/"+os.path.normpath(self.genBankfile.name)
         for gb_record in SeqIO.parse(open(gb_file,"r"), "genbank") :
             gb_features += gb_record.seq.tostring()
         return gb_features
@@ -552,7 +552,7 @@ class DnaComponent(Component):
     def saveSequenceWithoutAnnotations(self, *args, **kwargs):
         #Saving the sequence 
         super(DnaComponent, self).save(*args, **kwargs) # Call the "real" save() method.
-        if self.GenBankfile:
+        if self.genBankfile:
             self.sequence = self.related_seq()
         super(DnaComponent, self).save(*args, **kwargs) # Call the "real" save() method.
 
@@ -562,8 +562,8 @@ class DnaComponent(Component):
         super(DnaComponent, self).save(*args, **kwargs) # Call the "real" save() method.
 
     def save_annotation( self ):
-        if (self.GenBankfile):
-            gb_file = settings.MEDIA_ROOT+"/"+os.path.normpath(self.GenBankfile.name)
+        if (self.genBankfile):
+            gb_file = settings.MEDIA_ROOT+"/"+os.path.normpath(self.genBankfile.name)
             gb_features = ""
             dispId = 1
             isParsingDone = False
@@ -604,7 +604,7 @@ class DnaComponent(Component):
                             ct.subTypeOf = subCtGenebankType
 
                             if (not self.__class__.objects.filter(sequence=partOfSequence)):
-                                dna2db = self.__class__(displayId='########', sequence = partOfSequence, name = label, GenBankfile = None)
+                                dna2db = self.__class__(displayId='########', sequence = partOfSequence, name = label, genBankfile = None)
                                 dna2db.saveWithoutAnnotations()
                                 dna2db.componentType = ct
                                 dna2db.displayId="gb%06i"%dna2db.id

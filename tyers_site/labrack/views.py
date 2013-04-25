@@ -54,9 +54,6 @@ import utilLabrack
 
 
 
-    
-
-
 def getVectorBySequence(sequence_text,strand,displayIdDnaComponent):#local function
 
     dnapartsVectorAll = M.DnaComponent.objects.filter(componentType__name='Vector Backbone')
@@ -211,7 +208,7 @@ def getAnnotToBeDeleted(request, jsonAmmpt,displayIdDnaComponent):
         json = simplejson.dumps(message)
         return HttpResponse(json, mimetype='application/json')                 
 
-def search_dna_parts(request, sequence_text,displayIdDnaComponent):
+def searchDnaParts(request, sequence_text,displayIdDnaComponent):
     coo = sequence_text
     rs = sequence_text.split('__')
     sequence_text = rs[0]
@@ -275,15 +272,11 @@ def search_dna_parts(request, sequence_text,displayIdDnaComponent):
     json = simplejson.dumps(message)
     return HttpResponse(json, mimetype='application/json')
 
-def get_dna_info(request, text_value):
+def getDnaInfo(request, text_value):
     message = {"list_dnas": "", "extra_values": ""}
     try:
         if request.is_ajax():
-            #cell = get_object_or_404(DnaComponent, sequence='MVSKGEELFTGVVPILVELDGDVN')
-            #cell = get_object_or_404(DnaComponent, sequence=cell_id)
-            #dnaparts = DnaComponent.objects.filter(sequence=sequence_text)
-            #dnapart = get_object_or_404(DnaComponent, displayid=text_value)
-            dnapart = DnaComponent.objects.get(displayId=text_value)
+            dnapart = M.DnaComponent.objects.get(displayId=text_value)
             json_object = ''
             id = dnapart.id
             name = dnapart.name
@@ -305,7 +298,7 @@ def get_dna_info(request, text_value):
 
 
 
-def save_upload( uploaded, filename, raw_data ):
+def saveUpload( uploaded, filename, raw_data ):
     '''
     raw_data: if True, uploaded is an HttpRequest object with the file being
               the raw post data
@@ -335,7 +328,7 @@ def save_upload( uploaded, filename, raw_data ):
         return HttpResponseBadRequest( "Could not open the file" )
     return False
 
-def file_upload( request ):
+def fileUpload( request ):
     if request.method == "POST":   
         if request.is_ajax( ):
             # the file is stored raw in the request
@@ -362,7 +355,7 @@ def file_upload( request ):
             filename = upload.name
 
         # save the file
-        success = save_upload( upload, filename, is_raw )
+        success = saveUpload( upload, filename, is_raw )
         genbankjson = retrieveGenBankInfo(filename)
         # let Ajax Upload know whether we saved it or not
         import json
