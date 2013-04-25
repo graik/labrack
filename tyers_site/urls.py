@@ -3,8 +3,7 @@ from django.conf.urls.defaults import patterns, include, url
 from django.contrib import admin
 
 from labrack.views import getAnnotToBeDeleted,getGBDataFromFile,file_upload,\
-     get_dna_info,dnalist,celllist,cellonlylist,success,\
-     search_dna_parts
+     get_dna_info,search_dna_parts
 
 import labrack.componentViews as CViews
 import settings
@@ -28,10 +27,6 @@ urlpatterns = patterns('',
     url(r'^getGBDataFromFile/(?P<filePath>.*)/$', getGBDataFromFile,name='getGBDataFromFile'),  
     url(r'^search_dna_parts/(?P<sequence_text>.*)/(?P<displayIdDnaComponent>.*)/$', search_dna_parts,name='search_dna_parts'),  
     url(r'^checkAnnotToDelete/(?P<jsonAmmpt>.*)/(?P<displayIdDnaComponent>.*)/$', getAnnotToBeDeleted,name='getAnnotToBeDeleted'),      
-    url(r'^success/$', success, name='success'),    
-    url(r'^cellonlylist/$', cellonlylist, name='cellonlylist'),
-    url(r'^dnalist/$', dnalist, name='dnalist'),
-    url(r'^celllist/$', celllist, name='celllist'),
     url(r'^media/(?P<path>.*)$', 'django.views.static.serve',{'document_root': settings.MEDIA_ROOT})
 )
 

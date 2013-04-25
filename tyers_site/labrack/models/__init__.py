@@ -12,5 +12,4 @@ from labrack.models.component import \
      Chassis, PeptideComponent, Collection
 
 from labrack.models.sample import \
-     CSVSample, CSVChassisSample, CSVCell, \
      DnaSample, ChassisSample, Sample, SampleCollection, SampleProvenance

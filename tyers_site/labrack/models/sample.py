@@ -2,8 +2,6 @@ import os
 import urllib
 from django.db import models
 from django.db.models import Q
-from csvImporter.model import CsvModel
-from csvImporter import fields
 from datetime import datetime
 
 ## importing custom models
@@ -16,7 +14,7 @@ import tyers_site.settings as S
 
 
 
-class SampleCollection(UserMixinModel):
+class SampleCollection(UserMixinModel,models.Model):
     """
     SampleCollection to group sample together
     """
@@ -36,7 +34,7 @@ class SampleCollection(UserMixinModel):
         app_label = 'labrack'   
 
 
-class Sample( UserMixinModel ):
+class Sample( UserMixinModel ,models.Model):
     """
     Sample describes a single tube or well holding DNA, cells or protein.
 
@@ -496,62 +494,7 @@ class Sample( UserMixinModel ):
 ##    def get_pretty_sequence( self, recenter=0 ):
 ##        return self.dna.get_pretty_sequence( recenter=recenter )
 
-class CSVSample(CsvModel):
-    container = fields.CharField()
-    DisplayId = fields.CharField()
-    #name = fields.CharField()
-    isReference = fields.CharField()
-    SampleCollection = fields.CharField()
-    PreparationDate = fields.CharField()
-    status = fields.IntegerField()
-    
-    SolventBuffer = fields.CharField()
-    Concentration = fields.CharField()
-    Concentration_Unit = fields.CharField()
-    Amount = fields.CharField()
-    Amount_Unit = fields.CharField()
-    NumberOfAliquots = fields.CharField()
-    Description	= fields.CharField()
-
-    DNA_Construct = fields.CharField()
-    inCell = fields.CharField()
-
-    class Meta: 
-        delimiter = ";"
-        has_header = True
-        
-class CSVCell(CsvModel):
-    DisplayId = fields.CharField()
-    Name = fields.CharField()
-    Description	= fields.CharField()
-    
-    class Meta:
-        has_header = True
-        delimiter = ";"
-    
-class CSVChassisSample(CsvModel):
-    container = fields.CharField()
-    DisplayId = fields.CharField()
-    #name = fields.CharField()
-    isReference = fields.CharField()
-    SampleCollection = fields.CharField()
-    PreparationDate = fields.CharField()
-    status = fields.IntegerField()
-    
-    SolventBuffer = fields.CharField()
-    Concentration = fields.CharField()
-    Concentration_Unit = fields.CharField()
-    Amount = fields.CharField()
-    Amount_Unit = fields.CharField()
-    NumberOfAliquots = fields.CharField()
-    Description	= fields.CharField()
-
-    #DNA_Construct = fields.CharField()
-    inCell = fields.CharField()
-
-    class Meta: 
-        delimiter = ";"
-        has_header = True        
+     
 
 
 class SampleProvenance(models.Model):

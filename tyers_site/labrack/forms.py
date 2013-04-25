@@ -266,7 +266,8 @@ class DnaComponentForm(forms.ModelForm):
         
         #settings.MEDIA_ROOT+"/"+os.path.normpath(self.GenBankfile.name)
         if (fileName!=""):
-            file = open(settings.MEDIA_ROOT+"/documents/GenBank/"+fileName)
+            #file = open(settings.MEDIA_ROOT+"/documents/GenBank/"+fileName)
+            file = open(settings.MEDIA_ROOT+"/"+fileName)
             instance.GenBankfile = File(file)
         #instance.historyDescription = self.cleaned_data['genebank'] # etc
 
@@ -276,7 +277,7 @@ class DnaComponentForm(forms.ModelForm):
         fullSequence = self.cleaned_data['sequence']
         try:
             created_by = self.cleaned_data['created_by']
-        except NameError:
+        except KeyError,NameError:
             created_by = instance.created_by
        
         try:        

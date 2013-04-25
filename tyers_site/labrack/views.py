@@ -52,186 +52,9 @@ from labrack.forms import DocumentForm
 import utilLabrack
 
 
-def dnalist(request):
-    # Handle file upload
-    if request.method == 'POST':
-        form = DocumentForm(request.POST, request.FILES)
-        if form.is_valid():
-            newdoc = Document(docfile = request.FILES['docfile'])
-            newdoc.save()
-            s = request.FILES['docfile']
-            p = newdoc.docfile.url
-            gbFile = settings.MEDIA_ROOT+os.path.normpath(newdoc.docfile.url)
-            gbFile2 = settings.TEMPLATE_DIRS+os.path.normpath(newdoc.docfile.url)
-            
-            myCSVSsample = CSVSample.import_data(data = open(gbFile2))
-                           
-            #create a new sample for each line
-            for each_line in myCSVSsample:
-                containerFromDB = Container.objects.get(displayId=each_line.container)
-
-                solvent = each_line.SolventBuffer  
-                concentration = each_line.Concentration
-                concentrationUnit = Unit.objects.get(name=each_line.Concentration_Unit)
-                amount = each_line.Amount
-                amountUnit = Unit.objects.get(name=each_line.Amount_Unit)                                
-
-                sample2db = DnaSample(amount=amount,amountUnit=amountUnit,solvent=solvent, \
-                        concentration=concentration,concentrationUnit=concentrationUnit, \
-                        displayId=each_line.DisplayId, container = containerFromDB, status = each_line.status)
-                # aliquots number
-                if (each_line.NumberOfAliquots.strip() == ''):
-                    t = int(each_line.NumberOfAliquots.strip())
-                    sample2db.aliquotNr = int(each_line.NumberOfAliquots.strip())
-                # is the sample a reference or not
-                if ((each_line.isReference.strip() == '') or (each_line.isReference.strip() == '0')):
-                    sample2db.reference_status = False
-                else:
-                    sample2db.reference_status = True
-                # end of is the sample a reference or not
-                #DNA Content
-                emLine = each_line.DNA_Construct.strip()
-                if (emLine != ''):
-                    sample2db.dnaConstruct = DnaComponent.objects.get(displayId=emLine)
-                #Cell Content
-                emLine = each_line.inCell.strip()
-                if (emLine != ''):
-                    sample2db.inChassis = Chassis.objects.get(displayId=emLine)
-
-                try:
-                    sample2db.save()
-                    messages.add_message(request, messages.INFO, each_line.DisplayId + ' was added.')
-                except Exception,err:
-                    messages.add_message(request, messages.ERROR, each_line.DisplayId + ' was not added!!!.    ' + repr(err) )                                         
-            return HttpResponseRedirect('/admin/labrack/dnasample/')
-    else:
-        form = DocumentForm() # A empty, unbound form
-
-    # Load documents for the list page
-    documents = Document.objects.all()
-
-    # Render list page with the documents and the form
-
-    return render_to_response(
-        'admin/labrack/dnasample/dnalist.html',
-        {'documents': documents, 'form': form},
-        context_instance=RequestContext(request)
-    )
 
 
-
-def celllist(request):
-    # Handle file upload
-    if request.method == 'POST':
-        form = DocumentForm(request.POST, request.FILES)
-        if form.is_valid():
-            newdoc = Document(docfile = request.FILES['docfile'])
-            newdoc.save()
-            s = request.FILES['docfile']
-            p = newdoc.docfile.url
-            gb_file = settings.MEDIA_ROOT+os.path.normpath(newdoc.docfile.url)
-            gb_file2 = settings.TEMPLATE_DIRS+os.path.normpath(newdoc.docfile.url)
-
-            myCSVSsample = CSVChassisSample.import_data(data = open(gb_file2))
-            #break                
-            #create a new sample for each line
-            for each_line in myCSVSsample:
-                containerFromDB = Container.objects.get(displayId=each_line.container)
-
-                solvent = each_line.SolventBuffer  
-                concentration = each_line.Concentration
-                concentrationUnit = Unit.objects.get(name=each_line.Concentration_Unit)
-                amount = each_line.Amount
-                amountUnit = Unit.objects.get(name=each_line.Amount_Unit)                                
-
-                sample2db = ChassisSample(amount=amount,amountUnit=amountUnit,solvent=solvent, \
-                        concentration=concentration,concentrationUnit=concentrationUnit, \
-                        displayId=each_line.DisplayId, container = containerFromDB, status = each_line.status)
-                # aliquots number
-                if (each_line.NumberOfAliquots.strip() == ''):
-                    t = int(each_line.NumberOfAliquots.strip())
-                    sample2db.aliquotNr = int(each_line.NumberOfAliquots.strip())
-                # is the sample a reference or not
-                if ((each_line.isReference.strip() == '') or (each_line.isReference.strip() == '0')):
-                    sample2db.reference_status = False
-                else:
-                    sample2db.reference_status = True
-                # end of is the sample a reference or not
-                ###########################################sample2db.save()
-                #Cell Content
-                emLine = each_line.inCell.strip()
-                if (emLine != ''):
-                    sample2db.chassis = Chassis.objects.get(displayId=emLine)
-
-                try:
-                    sample2db.save()
-                    messages.add_message(request, messages.INFO, each_line.DisplayId + ' was added.')
-                except Exception,err:
-                    messages.add_message(request, messages.ERROR, each_line.DisplayId + ' was not added!!!.    ' + repr(err) )                                         
-
-                    # Redirect to the document list after POST
-            #return HttpResponseRedirect(reverse('labrack.views.list'))
-            return HttpResponseRedirect('/admin/labrack/chassissample/')
-    else:
-        form = DocumentForm() # A empty, unbound form
-
-    # Load documents for the list page
-    documents = Document.objects.all()
-
-    # Render list page with the documents and the form
-
-    return render_to_response(
-        'admin/labrack/chassissample/celllist.html',
-        {'documents': documents, 'form': form},
-        context_instance=RequestContext(request)
-    )
-
-
-
-def cellonlylist(request):
-    # Handle file upload
-    if request.method == 'POST':
-        form = DocumentForm(request.POST, request.FILES)
-        if form.is_valid():
-            newdoc = Document(docfile = request.FILES['docfile'])
-            newdoc.save()
-            s = request.FILES['docfile']
-            p = newdoc.docfile.url
-            gb_file = settings.MEDIA_ROOT+os.path.normpath(newdoc.docfile.url)
-            gb_file2 = settings.TEMPLATE_DIRS+os.path.normpath(newdoc.docfile.url)
-            myCSVSsample = CSVCell.import_data(data = open(gb_file2))                                
-            #break                
-            #create a new sample for each line
-            for each_line in myCSVSsample:
-                if (each_line.DisplayId != 'DisplayId'):
-                    displayId = each_line.DisplayId
-                    name = each_line.Name
-                    description	= each_line.Description 
-                    sample2db = Chassis(displayId=displayId,name=name,description=description)
-                    try:
-                        sample2db.save()
-                        messages.add_message(request, messages.INFO, displayId + ' was added.')
-                    except Exception,err:
-                        messages.add_message(request, messages.ERROR, displayId + ' was not added!!!.    ' + repr(err) ) 
-
-            return HttpResponseRedirect('/admin/labrack/chassis/')
-    else:
-        form = DocumentForm() # A empty, unbound form
-
-    # Load documents for the list page
-    documents = Document.objects.all()
-
-    # Render list page with the documents and the form
-
-    return render_to_response(
-        'admin/labrack/chassis/cellonlylist.html',
-        {'documents': documents, 'form': form},
-        context_instance=RequestContext(request)
-    )
-
-
-def success(request):
-    return HttpResponse('success')        
+    
 
 
 def getVectorBySequence(sequence_text,strand,displayIdDnaComponent):#local function
@@ -277,6 +100,11 @@ def getVectorBySequence(sequence_text,strand,displayIdDnaComponent):#local funct
     json_object = '['+json_object+']'
     return json_object
 
+
+def success(request):
+    return HttpResponse('success')    
+
+
 def getInsertDBAnnotationBySequence(sequence_text,strand,displayIdDnaComponent):#local function
     lenSimple = len(sequence_text)        
     sequence_text = sequence_text + sequence_text
@@ -302,9 +130,9 @@ def getInsertDBAnnotationBySequence(sequence_text,strand,displayIdDnaComponent):
         rslt = fisrtPeace/float(secondpeace)
         firstposition = sequence_text.find(sequence)
         # check if the sequence was found over circular dna sequence by cmopare the lentgh of simpleSequence and not duplicate
-        lastposition = firstposition+len(sequence)                
+        lastposition = firstposition+len(sequence)
         if (firstposition+len(sequence)>lenSimple):
-            lastposition = fisrtPeace - (lenSimple - firstposition)                       
+            lastposition = fisrtPeace - (lenSimple - firstposition)
 
 
         # check if the annotation are already related
@@ -346,7 +174,7 @@ def getInsertDBAnnotationBySequence(sequence_text,strand,displayIdDnaComponent):
     return json_Insertobject
 
 def getAnnotToBeDeleted(request, jsonAmmpt,displayIdDnaComponent):
-    #import django.utils.simplejson as json
+    import django.utils.simplejson as json
     try:
         dnacomp = M.DnaComponent.objects.get(displayId = displayIdDnaComponent)
     except M.DnaComponent.DoesNotExist:
@@ -484,7 +312,8 @@ def save_upload( uploaded, filename, raw_data ):
               if False, uploaded has been submitted via the basic form
               submission and is a regular Django UploadedFile in request.FILES
     '''
-    filename = settings.MEDIA_ROOT + '/documents/GenBank/'+ filename
+    #filename = settings.MEDIA_ROOT + '/documents/GenBank/'+ filename
+    filename = settings.MEDIA_ROOT + '/'+ filename
     try:
         from io import FileIO, BufferedWriter
         with BufferedWriter( FileIO( filename, "wb" ) ) as dest:
@@ -550,7 +379,8 @@ def getGBDataFromFile(request, filePath):
 
 
 def retrieveGenBankInfo(filename):
-    gb_file = settings.MEDIA_ROOT+"documents/GenBank/"+os.path.normpath(filename)
+    #gb_file = settings.MEDIA_ROOT+"documents/GenBank/"+os.path.normpath(filename)
+    gb_file = settings.MEDIA_ROOT+"/"+os.path.normpath(filename)
     gb_features = ""
     dispId = 1
     isParsingDone = False
