@@ -520,7 +520,7 @@ class SampleProvenance(models.Model):
 
 class DnaSample(Sample):
     #, help ='Select a DNA Construct'
-    dnaConstruct = models.ForeignKey(DnaComponent,verbose_name='DNA Construct', blank=True, null=True, related_name='dnaSample',help_text='Select a DNA Construct')
+    dnaConstruct = models.ForeignKey(DnaComponent,verbose_name='DNA Construct', related_name='dnaSample',help_text='Select a DNA Construct')
     
     
     inChassis = models.ForeignKey(Chassis, verbose_name='in Cell', blank=True, null=True, related_name='chassisSample')
