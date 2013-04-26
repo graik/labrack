@@ -2,8 +2,8 @@ from django.conf.urls.defaults import patterns, include, url
 
 from django.contrib import admin
 
-from labrack.views import getAnnotToBeDeleted,getGBDataFromFile,fileUpload,\
-     getDnaInfo,searchDnaParts
+from labrack.jsViews import getGBDataFromFile,fileUpload,\
+     getDnaInfo,searchDnaParts,getAnnotToBeDeleted
 
 #import labrack.componentViews as CViews
 import settings
