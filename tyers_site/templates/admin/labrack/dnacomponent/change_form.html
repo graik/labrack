@@ -1121,6 +1121,10 @@ function uploadTheFile(){
                 onComplete: function( id, fileName, responseJSON ) {
                 document.getElementById("id_htmlAttribute3").value = fileName;
                 document.getElementById("id_genBankfile_loaded").innerHTML += "<br>Last File :"+fileName;
+                if(typeof(responseJSON.test)=='undefined'){
+                        alert('Unable to parse the GenBank file!');
+                }                 
+                 
                 buildGenBankTable(responseJSON.test);
         
                 drawGenBank(responseJSON.test,buildChartGeneBank());

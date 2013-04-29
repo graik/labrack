@@ -268,8 +268,6 @@ class DnaComponentForm(forms.ModelForm):
             #file = open(settings.MEDIA_ROOT+"/documents/GenBank/"+fileName)
             file = open(settings.MEDIA_ROOT+"/"+fileName)
             instance.genBankfile = File(file)
-        #instance.historyDescription = self.cleaned_data['genebank'] # etc
-
 
         jsonFromWeb = self.cleaned_data['htmlAttribute1']
         

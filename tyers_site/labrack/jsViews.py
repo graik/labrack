@@ -166,6 +166,7 @@ def fileUpload( request ):
         # save the file
         success = saveUpload( upload, filename, is_raw )
         genbankjson = retrieveGenBankInfo(filename)
+
         # let Ajax Upload know whether we saved it or not
         import json
         ret_json = { 'success': success, 'test':genbankjson,}
@@ -177,6 +178,7 @@ def fileUpload( request ):
 def getGBDataFromFile(request, filePath):
     success = ''
     genbankjson = retrieveGenBankInfo(filePath)
+     
         # let Ajax Upload know whether we saved it or not
     import json
     ret_json = { 'success': success, 'test':genbankjson,}
@@ -291,7 +293,6 @@ def getInsertDBAnnotationBySequence(sequence_text,strand,displayIdDnaComponent):
         sequence = dnapart.sequence
         fisrtPeace = len(sequence)
         secondpeace = len(sequence_text)
-        rslt = fisrtPeace/float(secondpeace)
         firstposition = sequence_text.find(sequence)
         # check if the sequence was found over circular dna sequence by cmopare the lentgh of simpleSequence and not duplicate
         lastposition = firstposition+len(sequence)
@@ -303,10 +304,10 @@ def getInsertDBAnnotationBySequence(sequence_text,strand,displayIdDnaComponent):
         isRelated = False
         isRelated = M.DnaSequenceAnnotation.isRelated(displayid,displayIdDnaComponent)
         
-        if (strand=='-'):
-            firstPos = firstposition
-            firstposition = secondpeace - lastposition
-            lastposition = secondpeace - firstPos
+        ##if (strand=='-'):
+            ##firstPos = firstposition
+            ##firstposition = secondpeace - lastposition
+            ##lastposition = secondpeace - firstPos
         # remove case where sequence from DB is the same as the requested annotation to avoid annotating fragment by it self
         if (sequence!=sequence_text):
             coverage = str(firstposition)+'-'+str(lastposition)
