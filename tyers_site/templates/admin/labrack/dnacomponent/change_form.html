@@ -94,19 +94,8 @@
 
 
     // reason for calling is to populate parttype and optimized for
-    //send_request(true);
     send_request(true);
-
-    // hide Vector part to be removed in the future
-    ShowHide('HiddenDivVector','none');
-
-    HideShowElement('backbone_db','visible');
-    HideShowElement('backbone_genbank','hidden');
-
-    repopulateVectorChoice();
     repopulateCheckBox();
-
-
     };
 
 function log(msg) {
@@ -171,41 +160,6 @@ return JSON.stringify(jsonObj);
 
 
 
-function repopulateVectorChoice(){
-    try{    
-        test = '('+document.getElementById("id_htmlAttribute1").value+')';
-        if (test!='()') {
-            var myObject = eval(test);
-            test_db_checked = myObject.data[0].db_data;
-            test_gb_checked = myObject.data[1].gb_data;
-            // populate radio button
-            document.getElementById("radiodb").checked = test_db_checked
-            document.getElementById("radiogb").checked = test_gb_checked
-            if (test_db_checked=='true') {
-            HideShowElement('backbone_db','visible');
-            HideShowElement('backbone_genbank','hidden');
-            }
-            if (test_gb_checked=='true') {
-            HideShowElement('backbone_db','hidden');
-            HideShowElement('backbone_genbank','visible');
-            }
-            // populate Vectors fields
-            // db part
-            document.getElementById("inputDataList").selectedIndex = myObject.data[0].db_listSelectedIndex;
-    
-        // gb part		
-        document.getElementById("datalist_gen").selectedIndex = myObject.data[1].gb_listSelectedIndex;
-        document.getElementById("id_backbone_gen_displayid").value = myObject.data[1].displayid;
-        document.getElementById("id_backbone_gen_name").value = myObject.data[1].name;
-        document.getElementById("id_backbone_gen_description").value = myObject.data[1].description;
-        document.getElementById("id_backbone_gen_coverage").value = myObject.data[1].coverage;
-    
-    
-        }
-    } catch (e) {
-            log(e.message);
-    }
-}
 function repopulateCheckBox(){
     try{
         test = '('+document.getElementById("id_htmlAttribute2").value+')';
@@ -247,7 +201,6 @@ function repopulateCheckBox(){
 
 
 function checkDeletionAnnotBeforeAfter(json){
-    log('checking deletion of annotation');    
     try {
             displayId = document.getElementById("id_displayId").value;
             answer = "";
@@ -275,23 +228,23 @@ function retrieveAndFeedDataHandler()
     textContent2 = document.getElementById("id_htmlAttribute2");
     textContent2Before = textContent2.value;
 
-    is_db_data = document.getElementById("radiodb").checked;
-    db_data_displayid = document.getElementById("inputDataList").value;
-    db_data_listIdSelectedIndex = document.getElementById("inputDataList").selectedIndex;		
+    <!--is_db_data = document.getElementById("radiodb").checked;-->
+    <!--db_data_displayid = document.getElementById("inputDataList").value;-->
+    <!--db_data_listIdSelectedIndex = document.getElementById("inputDataList").selectedIndex;		-->
 
-    is_gb_data = document.getElementById("radiogb").checked;
-    gb_data_displayid = document.getElementById("id_backbone_gen_displayid").value;
-    gb_data_listIdSelectedIndex = document.getElementById("datalist_gen").selectedIndex;
-    gb_data_name = document.getElementById("id_backbone_gen_name").value;
-    gb_data_description = document.getElementById("id_backbone_gen_description").value;
-    gb_data_coverage = document.getElementById("id_backbone_gen_coverage").value;
+    <!--is_gb_data = document.getElementById("radiogb").checked;-->
+    <!--gb_data_displayid = document.getElementById("id_backbone_gen_displayid").value;-->
+    <!--gb_data_listIdSelectedIndex = document.getElementById("datalist_gen").selectedIndex;-->
+    <!--gb_data_name = document.getElementById("id_backbone_gen_name").value;-->
+    <!--gb_data_description = document.getElementById("id_backbone_gen_description").value;-->
+    <!--gb_data_coverage = document.getElementById("id_backbone_gen_coverage").value;-->
 
 
-    var json_ele = {"data": [
-        {"db_data": ""+is_db_data+"", "db_listSelectedIndex": ""+db_data_listIdSelectedIndex+"", "name": ""+db_data_displayid+"", "description": ""},
-        {"gb_data": ""+is_gb_data+"", "gb_listSelectedIndex": ""+gb_data_listIdSelectedIndex+"", "displayid": ""+gb_data_displayid+"", "name": ""+gb_data_name+"", "description": ""+gb_data_description+"", "coverage": ""+gb_data_coverage+""}
-        ]
-    };
+    <!--var json_ele = {"data": [-->
+        <!--{"db_data": ""+is_db_data+"", "db_listSelectedIndex": ""+db_data_listIdSelectedIndex+"", "name": ""+db_data_displayid+"", "description": ""},-->
+        <!--{"gb_data": ""+is_gb_data+"", "gb_listSelectedIndex": ""+gb_data_listIdSelectedIndex+"", "displayid": ""+gb_data_displayid+"", "name": ""+gb_data_name+"", "description": ""+gb_data_description+"", "coverage": ""+gb_data_coverage+""}-->
+        <!--]-->
+    <!--};-->
 
     gb_checked_cancel = false;
     var json_ele2 = {"selected_annot": [
@@ -300,7 +253,7 @@ function retrieveAndFeedDataHandler()
         {"gb_checked_cancel":""+gb_checked_cancel+""}
     ]
     };
-    textContent.value = JSON.stringify(json_ele);
+    //textContent.value = JSON.stringify(json_ele);
     textContent2.value = JSON.stringify(json_ele2);
     textToShow = "None"
     textToShow = checkDeletionAnnotBeforeAfter(textContent2.value);
@@ -365,21 +318,18 @@ function retrieveAndFeedDataHandler()
     {
     case 'Vector Backbone':
         document.getElementById("id_circular").checked = false;
-        ShowHide('HiddenDivVector','none');
         document.getElementById("id_optimizedFor").disabled=false; 
         document.getElementById("id_translatesTo").disabled=false; 
         break;
 
     case 'Primer':
         document.getElementById("id_circular").checked = false;
-        ShowHide('HiddenDivVector','none');
         document.getElementById("id_optimizedFor").disabled=true; 
         document.getElementById("id_translatesTo").disabled=true; 
 
     break;
 case 'dsDNA Fragment':
     document.getElementById("id_circular").checked = false;
-    ShowHide('HiddenDivVector','none');
     document.getElementById("id_optimizedFor").disabled=false; 
     document.getElementById("id_translatesTo").disabled=false; 
 
@@ -387,7 +337,6 @@ case 'dsDNA Fragment':
 
     case 'SelectionMarker':
         document.getElementById("id_circular").checked = false;
-        ShowHide('HiddenDivVector','none');
         document.getElementById("id_optimizedFor").disabled=false; 
         document.getElementById("id_translatesTo").disabled=false; 
 
@@ -395,21 +344,18 @@ case 'dsDNA Fragment':
 
     case 'Plasmid':
         document.getElementById("id_circular").checked = true;
-        ShowHide('HiddenDivVector','none');
         document.getElementById("id_optimizedFor").disabled=false; 
         document.getElementById("id_translatesTo").disabled=false; 
         break;
 
     case 'Region':
         document.getElementById("id_circular").checked = false;
-        ShowHide('HiddenDivVector','none');
         document.getElementById("id_optimizedFor").disabled=false; 
         document.getElementById("id_translatesTo").disabled=false; 
         break;
 
     default:
         document.getElementById("id_circular").checked = false;
-        ShowHide('HiddenDivVector','none');
         document.getElementById("id_optimizedFor").disabled=false;
         document.getElementById("id_translatesTo").disabled=false; 
 
@@ -531,57 +477,57 @@ var jsonObject = jsonStruct;
 }
 
 // Vector backbone section populating the list of vector that sequence are part of the main sequence
-function populateVectorBackbone(data){
-reverse_jsonObject = eval(data.reverse_list_dnas);
+<!--function populateVectorBackbone(data){-->
+<!--reverse_jsonObject = eval(data.reverse_list_dnas);-->
 
 
-var jsonObject = eval(data.list_dnas);
-    var arrayOfObjects = jsonObject;
-    //alert(data.list_dnas);
-    $("#input").html("");
-    //dataList.empty();
+<!--var jsonObject = eval(data.list_dnas);-->
+    <!--var arrayOfObjects = jsonObject;-->
+    <!--//alert(data.list_dnas);-->
+    <!--$("#input").html("");-->
+    <!--//dataList.empty();-->
 
-    var dataList_gen = document.getElementById("datalist_gen");
-    //dataList_gen.options.length = 0;
-    /*var optn = document.createElement("OPTION");
-        optn.text = "";
-        optn.value = "";
-        optn.id = -999;
-        dataList_gen.options.add(optn);
-    */
-    var dataList = document.getElementById("inputDataList");
-    dataList.options.length = 0;
-    var optn = document.createElement("OPTION");
-        optn.text = "";
-        optn.value = "";
-        optn.id = -999;
-        dataList.options.add(optn);
-    if(arrayOfObjects) {
-        for(var i=0, len=arrayOfObjects.length; i<len; i++) {
-            var optn = document.createElement("OPTION");
-                optn.text = arrayOfObjects[i].displayid;
-                optn.value = arrayOfObjects[i].displayid;
-                optn.id = arrayOfObjects[i].id;
-                if (arrayOfObjects[i].isRelated=='True') {optn.selected = true;}
-                dataList.options.add(optn);
+    <!--var dataList_gen = document.getElementById("datalist_gen");-->
+    <!--//dataList_gen.options.length = 0;-->
+    <!--/*var optn = document.createElement("OPTION");-->
+        <!--optn.text = "";-->
+        <!--optn.value = "";-->
+        <!--optn.id = -999;-->
+        <!--dataList_gen.options.add(optn);-->
+    <!--*/-->
+    <!--var dataList = document.getElementById("inputDataList");-->
+    <!--dataList.options.length = 0;-->
+    <!--var optn = document.createElement("OPTION");-->
+        <!--optn.text = "";-->
+        <!--optn.value = "";-->
+        <!--optn.id = -999;-->
+        <!--dataList.options.add(optn);-->
+    <!--if(arrayOfObjects) {-->
+        <!--for(var i=0, len=arrayOfObjects.length; i<len; i++) {-->
+            <!--var optn = document.createElement("OPTION");-->
+                <!--optn.text = arrayOfObjects[i].displayid;-->
+                <!--optn.value = arrayOfObjects[i].displayid;-->
+                <!--optn.id = arrayOfObjects[i].id;-->
+                <!--if (arrayOfObjects[i].isRelated=='True') {optn.selected = true;}-->
+                <!--dataList.options.add(optn);-->
 
-    }
-}
+    <!--}-->
+<!--}-->
 
-    //add the reverse if existing
+    <!--//add the reverse if existing-->
 
-    if(reverse_jsonObject) {
-        for(var i=0, len=reverse_jsonObject.length; i<len; i++) {
-            if (!checkIfElementExistInJson(reverse_jsonObject[i].displayid,arrayOfObjects)) {
-                var optn = document.createElement("OPTION");
-                    optn.text = reverse_jsonObject[i].displayid;
-                    optn.value = reverse_jsonObject[i].displayid;
-                    optn.id = reverse_jsonObject[i].id;
-                    dataList.options.add(optn);
-                }
-            }
-        }
-}
+    <!--if(reverse_jsonObject) {-->
+        <!--for(var i=0, len=reverse_jsonObject.length; i<len; i++) {-->
+            <!--if (!checkIfElementExistInJson(reverse_jsonObject[i].displayid,arrayOfObjects)) {-->
+                <!--var optn = document.createElement("OPTION");-->
+                    <!--optn.text = reverse_jsonObject[i].displayid;-->
+                    <!--optn.value = reverse_jsonObject[i].displayid;-->
+                    <!--optn.id = reverse_jsonObject[i].id;-->
+                    <!--dataList.options.add(optn);-->
+                <!--}-->
+            <!--}-->
+        <!--}-->
+<!--}-->
 
 // populate inserts part base on the main sequence and the vector selections
 function populateInserts(data){
@@ -629,7 +575,7 @@ function send_request(isUpdateVector){
             type: 'GET',
             url: "/searchDnaParts/"+ta+"/"+idComp+"/",
             success: function(data) {
-                if (isUpdateVector) {populateVectorBackbone(data);}
+                //if (isUpdateVector) {populateVectorBackbone(data);}
                 currSelectedAnnot = data;
                 populateInserts(data);
                 drawGenBankCurrentData(data,buildChartGeneBank());
@@ -1029,13 +975,13 @@ function buildGenBankTable(jsontext){
     emptyRowsTable(1);
 // reset and add empty row to Genbank vector list
     // datalist_gen.options.length = 0;
-var optn = document.createElement("OPTION");
-    optn.text = "";
-    optn.value = "";
-    optn.id = -999;
-    datalist_gen.options.add(optn);
+<!--var optn = document.createElement("OPTION");-->
+    <!--optn.text = "";-->
+    <!--optn.value = "";-->
+    <!--optn.id = -999;-->
+    <!--datalist_gen.options.add(optn);-->
 
-    var dataList_gen = document.getElementById("datalist_gen");
+    //var dataList_gen = document.getElementById("datalist_gen");
     //alert = function() {};
 
     if(arrayOfInsertObjects.length) {
@@ -1061,9 +1007,9 @@ optn.text = arrayOfInsertObjects[i].displayid;
 optn.value = arrayOfInsertObjects[i].id+'<>'+arrayOfInsertObjects[i].displayid+'<>'+arrayOfInsertObjects[i].description+'<>'+arrayOfInsertObjects[i].componentType_name+'<>'+arrayOfInsertObjects[i].coverage;
 optn.id = arrayOfInsertObjects[i].id;
 //alert(optn.text+optn.value+optn.id);
-if (arrayOfInsertObjects[i].name.toUpperCase()=='VECTOR' || arrayOfInsertObjects[i].name.toUpperCase()=='VECTOR BACKBONE') {
-    dataList_gen.options.add(optn);
-            }
+<!--if (arrayOfInsertObjects[i].name.toUpperCase()=='VECTOR' || arrayOfInsertObjects[i].name.toUpperCase()=='VECTOR BACKBONE') {-->
+    <!--dataList_gen.options.add(optn);-->
+            <!--}-->
         }
     }
 }
@@ -1177,78 +1123,10 @@ function uploadTheFile(){
 <div style="background-color:rgb(100,149,237);border:0px solid black;padding:10px;width:100px; height:5px;">
 <p>Unregistered</p>
 </div>
+</div>
 							
 </fieldset>
-<div class="mid" id="HiddenDivVector" style="DISPLAY: block" >
-    <h2>Specify vector backbone</h2>
 
-
-    <div class="form-row">
-
-    <div class="myradio">
-        <label><input id="radiodb" type="radio" name="group1" value="database" onchange="HideShowElement('backbone_db','visible');HideShowElement('backbone_genbank','hidden');" checked> Vector from Database</label>
-        <label><input id="radiogb" type="radio" name="group1" value="file" onchange="HideShowElement('backbone_db','hidden');HideShowElement('backbone_genbank','visible');"> Vector from Genbank file</label><BR><BR><BR>
-        <p class="help">choose the vector from the database or from the genbank file.</p><BR>
-    </div>
-<div class="form-row">
-    <div id="backbone_db"> 
-        <div class="field-box">
-            <label for="id_backbone_id">ID:</label>
-            <SELECT id = "inputDataList" NAME="datalist" onChange="selected_dnaBackbone();">
-            </SELECT>
-        </div>
-
-    <div class="field-box">
-        <label for="id_backbone_name" class="inline">Name:</label>
-            <input type="text" name="id_backbone_name" readonly id="id_backbone_name" />
-    </div>
-
-
-    <div class="field-box">
-        <label for="id_backbone_description" class="inline">Description:</label>
-            <input type="text" name="id_backbone_description" readonly id="id_backbone_description" />
-    </div>
-
-    <div class="field-box" style="visibility: hidden">
-        <label for="id_backbone_selectionmarkers" class="inline">Selection markers(s):</label>
-            <input type="text" name="id_backbone_selectionmarkers" readonly id="id_backbone_selectionmarkers"/>
-
-    </div>
-
-    </div> 
-</div>				
-<div class="form-row">
-    <div id="backbone_genbank"> 
-        <div class="field-box">
-            <label for="id_backbone_gen_id">List:</label>
-            <SELECT id = "datalist_gen" NAME="datalist_gen" onChange="updateJSON_accordingto_genbankFileSelection();">
-            </SELECT>
-        </div>
-
-    <div class="field-box">
-        <label for="id_backbone_gen_displayid" class="inline">ID:</label>
-            <input type="text" name="id_backbone_gen_displayid" id="id_backbone_gen_displayid" />
-    </div>
-
-    <div class="field-box">
-        <label for="id_backbone_gen_name" class="inline">Name:</label>
-            <input type="text" name="id_backbone_gen_name" id="id_backbone_gen_name" />
-    </div>
-
-    <div class="field-box" style="visibility: hidden">
-        <label for="id_backbone_gen_selectionmarkers" class="inline">Selection markers(s):</label>
-            <input type="text" name="id_backbone_gen_selectionmarkers" id="id_backbone_gen_selectionmarkers" HIDDEN=TRUE />
-    </div>
-
-    <div class="field-box">
-        <label for="id_backbone_gen_description" class="inline">Description:</label>
-            <input type="text" name="id_backbone_gen_description" id="id_backbone_gen_description"/>
-    </div>
-    <div class="field-box">
-        <label for="id_backbone_gen_coverage" class="inline">Position:</label>
-            <input type="text" name="id_backbone_gen_coverage" id="id_backbone_gen_coverage"/>
-    </div>
-</div>
 </div>
 
 

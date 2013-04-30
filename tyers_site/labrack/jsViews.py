@@ -39,9 +39,6 @@ def searchDnaParts(request, sequence_text,displayIdDnaComponent):
         my_seq_exceptVect = Seq(seq_exceptVector, IUPAC.unambiguous_dna)
         revseq_exceptVect = my_seq_exceptVect.reverse_complement()
 
-        message['list_dnas'] = getVectorBySequence(sequence_textDuplicate,'+',displayIdDnaComponent)
-        message['reverse_list_dnas'] = getVectorBySequence(revseqDuplicate,'-',displayIdDnaComponent)
-
         #part for retriving potential Inserts
         message['extra_values'] = getInsertDBAnnotationBySequence(seq_exceptVector,'+',displayIdDnaComponent)
         message['reverse_extra_values'] = getInsertDBAnnotationBySequence(str(revseq_exceptVect),'-',displayIdDnaComponent)
@@ -275,10 +272,6 @@ def getInsertDBAnnotationBySequence(sequence_text,strand,displayIdDnaComponent):
     lenSimple = len(sequence_text)        
     sequence_text = sequence_text + sequence_text
 
-    dnapartsVectorAll  = M.DnaComponent.objects.filter(componentType__name='Vector Backbone')
-    dnapartsInsertsAll = M.DnaComponent.objects.filter(componentType__name='Vector Backbone')
-    # removed because Vector selection was removed for now, therefore add Vector selection within the annotations
-    #dnaparts = [dnapart for dnapart in DnaComponent.objects.all() if (dnapart not in dnapartsVectorAll and dnapart.sequence is not None and dnapart.sequence != "" and dnapart.sequence in sequence_text)]
     dnaparts = [dnapart for dnapart in M.DnaComponent.objects.all()  \
                 if (dnapart.sequence is not None and dnapart.sequence != "" and \
                     dnapart.sequence in sequence_text and dnapart.displayId!=displayIdDnaComponent)]
@@ -341,7 +334,6 @@ def getInsertDBAnnotationBySequence(sequence_text,strand,displayIdDnaComponent):
 
 
 def retrieveGenBankInfo(filename):
-    #gb_file = settings.MEDIA_ROOT+"documents/GenBank/"+os.path.normpath(filename)
     gb_file = settings.MEDIA_ROOT+"/"+os.path.normpath(filename)
     gb_features = ""
     dispId = 1
@@ -350,31 +342,31 @@ def retrieveGenBankInfo(filename):
     for gb_record in SeqIO.parse(open(gb_file,"r"), "genbank") :
         if (not isParsingDone):
             for ind in xrange(len(gb_record.features)) :
-                nameType = repr(gb_record.features[ind].type).replace("'", "")
-                isParsingDone = True
-                #gb_features += '\n'+ repr(gb_record.features[ind].type) + " Location start : "+ repr(gb_record.features[ind].location._start.position) + " Location end : "+ repr(gb_record.features[ind].location._end.position)
-                strandValue = repr(gb_record.features[ind].strand)
-                startPos = repr(gb_record.features[ind].location._start.position)
-                endPos = repr(gb_record.features[ind].location._end.position)
-                pos = str(startPos)+'-'+str(endPos)
-                strandValue = repr(gb_record.features[ind].strand)
-                origFullSequence = gb_record.seq.tostring()
-                featureSeq = gb_record.features[ind].extract(gb_record).seq.tostring()
-                coverage = pos
-                description = ''
-                label = repr(gb_record.features[ind].qualifiers.get('label')).replace("['","").replace("']","").replace("\\"," ")
-                if (label == 'None'):
-                    label = repr(gb_record.features[ind].qualifiers.get('gene')).replace("['","").replace("']","").replace("\\"," ")
-
-                if json_Insertobject == '':
-                    json_Insertobject = '{ "id":"'+str(label)+'","name":"'+nameType+'","sequence":"'+origFullSequence+ \
-                        '","displayid":"'+label+'","description":"'+description+'","coverage":"'+coverage+ \
-                        '","startPos":"'+startPos+'","endPos":"'+endPos+'","strandValue":"'+strandValue+'","featureSeq":"'+ \
-                        featureSeq+'"}' 
-                else:
-                    json_Insertobject = json_Insertobject+',{ "id":"'+str(label)+'","name":"'+nameType+'","sequence":"'+ \
-                        origFullSequence+'","displayid":"'+label+'","description":"'+description+'","coverage":"'+coverage+ \
-                        '","startPos":"'+startPos+'","endPos":"'+endPos+'","strandValue":"'+strandValue+ \
-                        '","featureSeq":"'+featureSeq+'"}' 
+                featureSeq = gb_record.features[ind].extract(gb_record).seq.tostring()                
+                if (len(featureSeq)>5):
+                    nameType = repr(gb_record.features[ind].type).replace("'", "")
+                    isParsingDone = True
+                    strandValue = repr(gb_record.features[ind].strand)
+                    startPos = repr(gb_record.features[ind].location._start.position)
+                    endPos = repr(gb_record.features[ind].location._end.position)
+                    pos = str(startPos)+'-'+str(endPos)
+                    strandValue = repr(gb_record.features[ind].strand)
+                    origFullSequence = gb_record.seq.tostring()
+                    coverage = pos
+                    description = ''
+                    label = repr(gb_record.features[ind].qualifiers.get('label')).replace("['","").replace("']","").replace("\\"," ")
+                    if (label == 'None'):
+                        label = repr(gb_record.features[ind].qualifiers.get('gene')).replace("['","").replace("']","").replace("\\"," ")
+    
+                    if json_Insertobject == '':
+                        json_Insertobject = '{ "id":"'+str(label)+'","name":"'+nameType+'","sequence":"'+origFullSequence+ \
+                            '","displayid":"'+label+'","description":"'+description+'","coverage":"'+coverage+ \
+                            '","startPos":"'+startPos+'","endPos":"'+endPos+'","strandValue":"'+strandValue+'","featureSeq":"'+ \
+                            featureSeq+'"}' 
+                    else:
+                        json_Insertobject = json_Insertobject+',{ "id":"'+str(label)+'","name":"'+nameType+'","sequence":"'+ \
+                            origFullSequence+'","displayid":"'+label+'","description":"'+description+'","coverage":"'+coverage+ \
+                            '","startPos":"'+startPos+'","endPos":"'+endPos+'","strandValue":"'+strandValue+ \
+                            '","featureSeq":"'+featureSeq+'"}' 
     json_Insertobject = '['+json_Insertobject+']' 
     return json_Insertobject

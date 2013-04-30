@@ -181,19 +181,7 @@ class DnaComponentForm(forms.ModelForm):
         ## retrieve vector GB information
         jsonFromWeb = self.cleaned_data['htmlAttribute1']
         fullSequence = self.cleaned_data['sequence']
-        try:
-            data = json.loads(jsonFromWeb)
-            isGbData = data["data"][1]["gb_data"]
-            vectorIdFromGB_displayid = data["data"][1]["displayid"]
-            vectorIdFromGB_name = data["data"][1]["name"]
-            vectorIdFromGB_description = data["data"][1]["description"]
-        except ValueError:
-            isGbData=False
-            data=[]
-            self.errorMessageForm = 'no json data was submited and no annotation data was saved due to errors, \
-            contact administrator!' 
-            print 'no json data was submited and no annotation data was saved due to errors, contact administrator!'          
-        
+     
         try:            
             ## retrieve annot GB information
             jsonFromWeb2 = self.cleaned_data['htmlAttribute2']
@@ -210,20 +198,7 @@ class DnaComponentForm(forms.ModelForm):
             self.errorMessageForm = 'no json data was submited and no annotation data was saved due to errors, contact administrator!' 
             print 'no GB json data was submited!'          
                
-        
-        
-        # check if the name vector exist already in the DB
-        if (isGbData=='true' and  data["data"][1]["name"]!=''):
-            displayid_gb=data["data"][1]["displayid"]
-            regExp = r'^[vV][a-zA-Z]\d\d\d?$'
-            if not(re.match(regExp, displayid_gb)):
-                errorMessage = "ID :"+displayid_gb+" doesn't respect the vector naming convention"
-                errors.setdefault('',[]).append(errorMessage)
-            
-            if (DnaComponent.objects.filter(displayId=displayid_gb)):
-                errorMessage = "Please choose another name for the Vector "+displayid_gb+" since it already exist in the DB!"
-                errors.setdefault('',[]).append(errorMessage)
-        
+           
         # check if the named annotation exist already in the DB
         if (selectedAnnotFromGB):                
                 
@@ -277,16 +252,6 @@ class DnaComponentForm(forms.ModelForm):
         except KeyError,NameError:
             created_by = instance.created_by
        
-        try:        
-            data = json.loads(jsonFromWeb)
-            isGbData = data["data"][0]["db_data"]
-            isGbData = data["data"][1]["gb_data"]
-        except ValueError:
-            isDbData=[]
-            isDbData=[]
-            self.errorMessageForm = 'no json data was submited and no annotation data was saved due to errors, contact administrator!' 
-            print 'no  json data was submited!'  
-
         jsonFromWeb2 = self.cleaned_data['htmlAttribute2']
         try:
             data2 = json.loads(jsonFromWeb2)
@@ -308,18 +273,7 @@ class DnaComponentForm(forms.ModelForm):
             subCtType.save()
         subCtVectorType = DnaComponentType.objects.filter(name='Vector Backbone')
 
-        try:
-            isGbData = data["data"][1]["gb_data"]
-            vectorIdFromGB_displayid = data["data"][1]["displayid"]
-            vectorIdFromGB_name = data["data"][1]["name"]
-            vectorIdFromGB_description = data["data"][1]["description"]
-        except ValueError:
-            isGbData=[]
-            vectorIdFromGB_displayid=[]
-            vectorIdFromGB_name=[]
-            vectorIdFromGB_description=[]
-            message = 'no json data was submited and no annotation data was saved due to errors, contact administrator'
-
+        
         instance.save()
         #delete all the entry for annotation for this component ID and recreate if needed
         DnaSequenceAnnotation.deleteRelated(instance.displayId)        
