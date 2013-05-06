@@ -2,7 +2,7 @@ import os
 import sys
 import django.core.handlers.wsgi
 
-sys.path.append('/home/django/py')
+sys.path.append('/home/django/py/labrack')
 os.environ['DJANGO_SETTINGS_MODULE'] = 'tyers_site.settings'
 
 _application = django.core.handlers.wsgi.WSGIHandler()
