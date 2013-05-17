@@ -158,8 +158,8 @@ class DnaComponentForm(forms.ModelForm):
             regExp = r'^[vV][a-zA-Z]\d\d\d?$'
             regExp2 = r'^[vV][a-zA-Z]\d\d\d?$'
         if (compTypeName=='Primer'):
-            regExp = r'^Pri\d\d\d\d[a-zA-Z]?$'
-            regExp2 = r'^Pri\d\d\d\d?$'            
+            regExp = r'^O[a-zA-Z][a-zA-Z]\d\d\d\d[a-zA-Z]?$'
+            regExp2 = r'^O[a-zA-Z][a-zA-Z]\d\d\d\d?$'            
             
         if not(re.match(regExp, dispId)):
             if (compTypeName=='Vector Backbone'):
@@ -210,8 +210,8 @@ class DnaComponentForm(forms.ModelForm):
                     regExp2 = r'^[a-zA-Z][a-zA-Z]\d\d\d\d?$'
                     
                     if (annotType=='Primer'):
-                        regExp = r'^Pri\d\d\d\d[a-zA-Z]?$'
-                        regExp2 = r'^Pri\d\d\d\d?$'                            
+                        regExp = r'^O[a-zA-Z][a-zA-Z]\d\d\d\d[a-zA-Z]?$'
+                        regExp2 = r'^O[a-zA-Z][a-zA-Z]\d\d\d\d?$'                            
                     
                     if (idAnnot.upper()<>'(AUTO)'):
                         if (not(re.match(regExp, idAnnot)) and not(re.match(regExp2, idAnnot))):

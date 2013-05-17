@@ -85,7 +85,13 @@
                 
   
   <br />
-  
+ 
+            
+            
+            
+            {% if request.user.is_superuser %}
+            
+ 
   <div class="module">
             <table summary="Models available in the Labrack application.">
             <caption><a href="" class="section">Categories</a></caption>
@@ -178,11 +184,9 @@
                 
                 </tr>
             </table>
-            </div>
+            </div>            
             
             
-            
-            {% if request.user.is_superuser %}
                       <div class="module">
             <table summary="Models available in the Labrack application.">
             <caption><a href="" class="section">Auth</a></caption>
