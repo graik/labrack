@@ -28,7 +28,7 @@
         document.getElementById("add_id_marker").href = "/admin/labrack/dnacomponent/add/?componentType="+MarkerIndexType();
         
         
-                
+        initIdDiv();
         listContent = document.getElementById("id_componentType");
 
         listContentChild = document.getElementById("id_componentSubType");
@@ -60,16 +60,6 @@
                             selectobject.options[i].selected = true;                            
                         }
                 }
-            //childValue = listContentChild[selectedSubType].value;
-            //clearListBox('id_componentSubType');       
-
-            //setParentType(childValue,'id_componentType');
-            //i = listContentChild.selectedIndex;
-            //alert(i);
-            //selectedValue = listContent.options[i].text;
-            //updateList(selectedValue,'id_componentSubType');
-            //listContentChild[i].selected = true;
-        
         }
         listContent.onchange = listTypeOnChange;
         clearNoneSelected('id_attachements');
@@ -132,7 +122,63 @@
     i = listContent.selectedIndex;
     selectedValue = listContent.options[i].text;
     updateList(selectedValue,'id_componentSubType');
-
+    hideShowElementMain(selectedValue);
+    }
+    function initIdDiv()
+    {
+    //blockAllTextFieldFromEditing();
+        try{
+            var scr = "";
+            var divs = document.getElementsByTagName("div");
+                for(var i = 0; i < divs.length; i++){
+                    //do something to each div like
+                    if (divs[i].className=='field-box field-insert') {
+                        divs[i].id = 'id_field_insert';
+                        } else {
+                        if (divs[i].className=='field-box field-marker') {
+                        divs[i].id = 'id_field_marker';
+                        } else {
+                            if (divs[i].className=='field-box field-baseVector') {
+                                divs[i].id = 'id_field_baseVector';
+                            }
+                        }   
+                    }
+                    }
+                
+        } catch (e) {
+            log(e.message);
+        }
+    
+    
+    }
+    function hideShowElementMain(selectedValue)
+    {
+        switch (selectedValue)
+        {
+        case 'Plasmid':
+            HideShowElement('id_field_baseVector','visible');
+            HideShowElement('id_field_marker','hidden');
+            HideShowElement('id_field_insert','visible');
+            break;       
+        case 'Base Vector':
+            HideShowElement('id_field_baseVector','hidden');
+            HideShowElement('id_field_marker','visible');
+            HideShowElement('id_field_insert','hidden');
+            break;
+        case 'Insert':
+            HideShowElement('id_field_baseVector','hidden');
+            HideShowElement('id_field_marker','visible');
+            HideShowElement('id_field_insert','hidden');
+            break;
+        case 'Marker':
+            HideShowElement('id_field_baseVector','hidden');
+            HideShowElement('id_field_marker','hidden');
+            HideShowElement('id_field_insert','hidden');
+            break;
+        default:
+            break;
+        
+        }        
     }
 
     function setParentType(selectedSubTypeID,elementID){
@@ -192,6 +238,13 @@
         var mylistbox = document.getElementById(elementID);
         mylistbox.options[0].selected = true;
         };
+    
+    
+    function HideShowElement(elementName,status) {
+        if (document.getElementById) { // DOM3 = IE5, NS6
+        document.getElementById(elementName).style.visibility = status;
+        }
+    }    
     
     function clearListBox(listboxID)
     {

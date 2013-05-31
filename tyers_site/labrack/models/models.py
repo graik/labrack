@@ -155,16 +155,13 @@ class DnaComponent(Component):
     source = models.ForeignKey( Source, blank=True, null=True, 
                                       help_text='external source' )
     
-    baseVector = models.ForeignKey( 'self', blank=True, null=True, 
-                                      help_text='base Vector' )
+    baseVector = models.ForeignKey( 'self', blank=True, null=True )
     
     marker = models.ForeignKey( 'self', blank=True, null=True, 
-                                      related_name='Marker', 
-                                      help_text='Marker')
+                                      related_name='Marker')
     
     insert = models.ForeignKey( 'self', blank=True, null=True, 
-                                      related_name='Insert', 
-                                      help_text='Insert')
+                                      related_name='Insert')
     
 
     def get_relative_url(self):
