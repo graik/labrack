@@ -317,13 +317,13 @@ class ComponentAdmin(admin.ModelAdmin):
     make_csv.short_description = 'Export as CSV'
 
 
-class baseVectorFilter(SimpleListFilter):
-    title = 'base Vector'
-    parameter_name = 'baseVector'
+class vectorBackboneFilter(SimpleListFilter):
+    title = 'vector Backbone'
+    parameter_name = 'vectorBackbone'
 
     def lookups(self, request, model_admin):
         #dnaOfBaseVector = DnaComponent.objects.filter(componentType__name='Base Vector')        
-        dnaOfBaseVector = DnaComponent.objects.filter(componentSubType__subTypeOf=DnaComponentType.objects.get(name='Base Vector'))        
+        dnaOfBaseVector = DnaComponent.objects.filter(componentSubType__subTypeOf=DnaComponentType.objects.get(name='Vector Backbone'))        
         r = [(c.id, c.displayId) for c in dnaOfBaseVector]
         return r
 
@@ -332,7 +332,7 @@ class baseVectorFilter(SimpleListFilter):
         if (val == None):
             return queryset
         else:
-            return queryset.filter(baseVector__id__exact=self.value())
+            return queryset.filter(vectorBackbone__id__exact=self.value())
         
         
 class markerFilter(SimpleListFilter):
@@ -379,10 +379,10 @@ class PlasmidSampleAdmin(ComponentAdmin):
     #DiplayId +Name +Insert (clickable) + Vector  (clickable) + Marker  (clickable) + User +Shorten Description + Status + Edit 
     
     # Fiktler by : status + vector(?) + marker
-    list_display = ('diplayId_readOnly', 'name', 'insert_url','baseVector_url', 'marker_url', 'created_by_user','shorten_description','status','dnaComponent_editOnly')
+    list_display = ('diplayId_readOnly', 'name', 'insert_url','vectorBackbone_url', 'marker_url', 'created_by_user','shorten_description','status','dnaComponent_editOnly')
 
     search_fields = ComponentAdmin.search_fields.__add__(('sequence',))
-    list_filter = ComponentAdmin.list_filter.__add__(( baseVectorFilter, markerFilter))
+    list_filter = ComponentAdmin.list_filter.__add__(( vectorBackboneFilter, markerFilter))
     
 
 class DnaComponentAdmin(ComponentAdmin):
@@ -397,7 +397,7 @@ class DnaComponentAdmin(ComponentAdmin):
                 'fields': (('displayId', 'name','status'),
                            ('componentType','componentSubType'),
                            ('circular',),
-                           ('baseVector','marker','insert' ),
+                           ('vectorBackbone','marker','insert' ),
                            ('created_by','owners'),
                            ('registration_date','source')
                             )
@@ -415,10 +415,10 @@ class DnaComponentAdmin(ComponentAdmin):
     #DiplayId +Name +Insert (clickable) + Vector  (clickable) + Marker  (clickable) + User +Shorten Description + Status + Edit 
     
     # Fiktler by : status + vector(?) + marker
-    list_display = ('diplayId_readOnly', 'name', 'insert_url','baseVector_url', 'marker_url', 'created_by_user','shorten_description','status','dnaComponent_editOnly')
+    list_display = ('diplayId_readOnly', 'name', 'insert_url','vectorBackbone_url', 'marker_url', 'created_by_user','shorten_description','status','dnaComponent_editOnly')
 
     search_fields = ComponentAdmin.search_fields.__add__(('sequence',))
-    list_filter = ComponentAdmin.list_filter.__add__(( baseVectorFilter, markerFilter))
+    list_filter = ComponentAdmin.list_filter.__add__(( vectorBackboneFilter, markerFilter))
     
       
         
@@ -442,20 +442,20 @@ class DnaComponentAdmin(ComponentAdmin):
     created_by_user.allow_tags = True
     created_by_user.short_description = 'User'
 
-    def baseVector_readOnly(self, obj):
-        if (obj.baseVector==None):
+    def vectorBackbone_readOnly(self, obj):
+        if (obj.vectorBackbone==None):
             return mark_safe('')
-    baseVector_readOnly.allow_tags = True
-    baseVector_readOnly.short_description = 'Vector'
+    vectorBackbone_readOnly.allow_tags = True
+    vectorBackbone_readOnly.short_description = 'Vector'
     
-    def baseVector_url(self, obj):
-        if (obj.baseVector==None):
+    def vectorBackbone_url(self, obj):
+        if (obj.vectorBackbone==None):
             return mark_safe('')
         else:
-            url = obj.baseVector.get_absolute_url()
-            return mark_safe('<a href="../../%s">%s</a>' % (url, obj.baseVector.__unicode__()))            
-    baseVector_url.allow_tags = True
-    baseVector_url.short_description = 'Vector'    
+            url = obj.vectorBackbone.get_absolute_url()
+            return mark_safe('<a href="../../%s">%s</a>' % (url, obj.vectorBackbone.__unicode__()))            
+    vectorBackbone_url.allow_tags = True
+    vectorBackbone_url.short_description = 'Vector'    
     
     def marker_url(self, obj):
         if (obj.marker==None):
@@ -485,15 +485,12 @@ class DnaComponentAdmin(ComponentAdmin):
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'created_by':
             kwargs['queryset'] = User.objects.filter(username=request.user.username)
-        if db_field.name == 'baseVector':
-            #dnaOfBaseVector = DnaComponent.objects.filter(componentType__name='Base Vector')
-            #dnaOfBaseVector = DnaComponent.objects.filter(componentSubType__subTypeOf=DnaComponentType.objects.get(name='Base Vector'))        
-            dnaOfBaseVector = DnaComponent.objects.filter(componentSubType__subTypeOf__name='Base Vector')        
+        if db_field.name == 'vectorBackbone':
+            dnaOfBaseVector = DnaComponent.objects.filter(componentSubType__subTypeOf__name='Vector Backbone')        
            
             kwargs['queryset'] = dnaOfBaseVector
         
         if db_field.name == 'marker':
-            #dnaOfMarker = DnaComponent.objects.filter(componentType__name='Marker')
             dnaOfMarker = DnaComponent.objects.filter(componentSubType__subTypeOf__name='Marker')        
             kwargs['queryset'] = dnaOfMarker
             

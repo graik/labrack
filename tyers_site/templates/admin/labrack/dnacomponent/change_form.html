@@ -23,7 +23,7 @@
     window.onload = function()
     {
         //adding links automaticaly
-        document.getElementById("add_id_baseVector").href = "/admin/labrack/dnacomponent/add/?componentType="+VectorIndexType();
+        document.getElementById("add_id_vectorBackbone").href = "/admin/labrack/dnacomponent/add/?componentType="+VectorIndexType();
         document.getElementById("add_id_insert").href = "/admin/labrack/dnacomponent/add/?componentType="+InsertIndexType();
         document.getElementById("add_id_marker").href = "/admin/labrack/dnacomponent/add/?componentType="+MarkerIndexType();
         
@@ -108,7 +108,7 @@
     function VectorIndexType(){
         var selectobject=document.getElementById("id_componentType")
             for (var i=0; i<selectobject.length; i++){
-                if (selectobject.options[i].text=='Base Vector') {
+                if (selectobject.options[i].text=='Vector Backbone') {
                     return selectobject.options[i].value;
                 }
         }
@@ -138,8 +138,8 @@
                         if (divs[i].className=='field-box field-marker') {
                         divs[i].id = 'id_field_marker';
                         } else {
-                            if (divs[i].className=='field-box field-baseVector') {
-                                divs[i].id = 'id_field_baseVector';
+                            if (divs[i].className=='field-box field-vectorBackbone') {
+                                divs[i].id = 'id_field_vectorBackbone';
                             }
                         }   
                     }
@@ -156,22 +156,22 @@
         switch (selectedValue)
         {
         case 'Plasmid':
-            HideShowElement('id_field_baseVector','visible');
+            HideShowElement('id_field_vectorBackbone','visible');
             HideShowElement('id_field_marker','hidden');
             HideShowElement('id_field_insert','visible');
             break;       
-        case 'Base Vector':
-            HideShowElement('id_field_baseVector','hidden');
+        case 'Vector Backbone':
+            HideShowElement('id_field_vectorBackbone','hidden');
             HideShowElement('id_field_marker','visible');
             HideShowElement('id_field_insert','hidden');
             break;
         case 'Insert':
-            HideShowElement('id_field_baseVector','hidden');
+            HideShowElement('id_field_vectorBackbone','hidden');
             HideShowElement('id_field_marker','visible');
             HideShowElement('id_field_insert','hidden');
             break;
         case 'Marker':
-            HideShowElement('id_field_baseVector','hidden');
+            HideShowElement('id_field_vectorBackbone','hidden');
             HideShowElement('id_field_marker','hidden');
             HideShowElement('id_field_insert','hidden');
             break;

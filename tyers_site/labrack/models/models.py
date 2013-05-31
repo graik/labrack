@@ -155,7 +155,7 @@ class DnaComponent(Component):
     source = models.ForeignKey( Source, blank=True, null=True, 
                                       help_text='external source' )
     
-    baseVector = models.ForeignKey( 'self', blank=True, null=True )
+    vectorBackbone = models.ForeignKey( 'self', blank=True, null=True ,verbose_name='Vector Backbone')
     
     marker = models.ForeignKey( 'self', blank=True, null=True, 
                                       related_name='Marker')
