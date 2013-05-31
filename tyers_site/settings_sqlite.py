@@ -7,7 +7,7 @@ sys.path = [T.approot()] + sys.path
 
 ## system-wide definition of admin base URL
 admin_root = "/admin/labrack"
-
+search_root = "/databrowse/labrack"
 
 DEBUG = True
 #TEMPLATE_DEBUG = DEBUG
@@ -29,6 +29,15 @@ DATABASES = {
         'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
     }
 }
+
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        'ENGINE': 'haystack.backends.elasticsearch_backend.ElasticsearchSearchEngine',
+        'URL': 'http://127.0.0.1:9200/',
+        'INDEX_NAME': 'haystack',
+    },
+}
+
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -130,7 +139,6 @@ MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 
 FOLDER_FILES_PATH = T.approot() + '/labrack/uploadedFiles'
 
-GRAPPELLI_INDEX_DASHBOARD = 'labrack.dashboard.CustomIndexDashboard'
 
 #
 INSTALLED_APPS = (
@@ -140,16 +148,10 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # Uncomment the next line to enable the admin user interface change grappelli:            
-    # Uncomment the next line to enable the admin:
-    #'grappelli.dashboard',    
-    #'grappelli',    
     'django.contrib.admin',
-    # Uncomment the next line to enable admin documentation:
-    # 'django.contrib.admindocs',
-    
     ## Schema migration
     'south',
+    'haystack',
 
     ## Main application
     'tyers_site.labrack'

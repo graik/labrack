@@ -1,25 +1,33 @@
-## R: I tried to bring some order into the import statements
-## Todo -- Code cleanup:
-## ** put all javascript-related methods into a separate viewJavascript module
-## ** put all CVS export / import methods into a separate viewCVS module
-## ** the indentation was set to 8 -- normal coding style is 4.
-## ** remove example, unused and commented-out code (see comments below)
-## ** simplify, shorten import statements (see comments)
-## ** remove un-used imports
+# Create your views here.
+from labrack.models.models import DnaComponentType
+from django.core import serializers
+from django.http import HttpResponse
+from django.template import loader, Context
+from datetime import datetime
+from django.template import RequestContext, loader
+from labrack.models import DnaComponent 
+
+def getTypeDnaInfo(request, maintype):
+    #maintype = 'Plasmid'
+    currentMainType = DnaComponentType.objects.filter(subTypeOf__name=maintype)
+    
+    json_models = serializers.serialize("json", currentMainType)
+    return HttpResponse(json_models, mimetype="application/javascript")
+
+def getParentTypeDnaInfo(request, subtype):
+    #maintype = 'Plasmid'
+    currentSubType = DnaComponentType.objects.get(id=subtype)
+    currentMainType = DnaComponentType.objects.filter(id = currentSubType.subTypeOf.id)
+    
+    json_models = serializers.serialize("json", currentMainType)
+    return HttpResponse(json_models, mimetype="application/javascript")
 
 
-## Copyright 2012-2013 Raik Gruenberg / Mathieu Courcelles
 
-## This file is part of the labrack project (http://labrack.sf.net)
-## labrack is free software: you can redistribute it and/or modify
-## it under the terms of the GNU Affero General Public License as
-## published by the Free Software Foundation, either version 3 of the
-## License, or (at your option) any later version.
-
-## labrack is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU Affero General Public License for more details.
-
-## You should have received a copy of the GNU Affero General Public
-## License along with labrack. If not, see <http://www.gnu.org/licenses/>.
+def reviewdna(request, displayId):
+    now = datetime.now()
+    dnaComponent = DnaComponent.objects.get(displayId=displayId)
+    t = loader.get_template('review_form.html')
+    
+    html = t.render(Context({'dnaComponent': dnaComponent}))
+    return HttpResponse(html)

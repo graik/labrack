@@ -11,10 +11,6 @@ class UserMixinModel( models.Model ):
 
     owners = models.ManyToManyField(User, null=True, blank=True, 
                                     related_name='%(class)s_owners')
-    
-        
-    
-
     class Meta:
         app_label = 'labrack'        
         abstract = True

@@ -1,0 +1,41 @@
+{% extends "admin/change_form.html" %}
+
+{% load i18n admin_modify  %}
+
+
+{% block after_field_sets %}
+
+
+{% load staticfiles %}
+
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+
+
+
+<script language=javascript type='text/javascript'>
+
+    var txtContent;
+    var currSelectedVectorSeq = '';
+    var currSelectedAnnot = '';
+    var jsonObjectPartTypes;
+    var jsonObjectOptimizedFor;
+
+    window.onload = function()
+    {
+        alert('ehhh');
+        clearNoneSelected('id_attachements');
+    };
+    
+    function clearNoneSelected(listboxID){
+        var mylistbox = document.getElementById(listboxID);
+        if (mylistbox!=null){
+            for(var i=mylistbox.options.length-1;i>=0;i--){
+                if(!mylistbox.options[i].selected) {
+                    mylistbox.remove(i);
+                }
+            }
+        }
+    }
+    
+</script>
+{% endblock %}
