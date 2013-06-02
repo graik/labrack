@@ -295,20 +295,6 @@ class ComponentAdmin(admin.ModelAdmin):
 
     search_fields = ('displayId', 'name', 'description')
 
-
-    #def formfield_for_dbfield(self, db_field, **kwargs):
-
-        #if db_field.name in self.raw_id_fields:
-
-            #kwargs.pop("request", None)
-            #fType = db_field.rel.__class__.__name__
-            #if fType == "ManyToOneRel":
-                #kwargs['widget'] = VerboseForeignKeyRawIdWidget(db_field.rel, site)
-            #elif fType == "ManyToManyRel":
-                #kwargs['widget'] = VerboseManyToManyRawIdWidget(db_field.rel, site)
-            #return db_field.formfield(**kwargs)
-        #return super(ComponentAdmin, self).formfield_for_dbfield(db_field, **kwargs)
-
     def make_csv(self, request, queryset):
         return importexport.generate_csv(self, request, queryset, 
                                          self.exportFields, 'Component')
@@ -423,13 +409,13 @@ class DnaComponentAdmin(ComponentAdmin):
       
         
     def shorten_description(self,obj):
-        descrp = obj.description
-        if (len(descrp)>30):
-            descrp = descrp[0:30]+"..."
-        return descrp
-    shorten_description.short_description = 'description'
-    shorten_description.help_text="Please use the following format:."
-    
+        if not obj.comment:
+            return u''
+        if len(obj.comment) < 40:
+            return unicode(obj.comment)
+        return unicode(obj.comment[:38] + '..')
+    shorten_description.short_description = 'Comment'        
+
     def diplayId_readOnly(self, obj):
         return mark_safe('<a href="%s/%s/%s/">%s</a>' % (S.admin_root,'../../reviewdna', obj.displayId,obj.displayId))
         
@@ -461,8 +447,15 @@ class DnaComponentAdmin(ComponentAdmin):
         if (obj.marker==None):
             return mark_safe('')
         else:
-            url = obj.marker.get_absolute_url()
-            return mark_safe('<a href="../../%s">%s</a>' % (url, obj.marker.__unicode__()))
+            ln = ""
+            for m in obj.marker.all():
+                url = m.get_absolute_url()
+                if (ln==""):
+                    ln += mark_safe('<a href="../../%s">%s</a>' % (url, m.__unicode__()))
+                else:
+                    ln += " ,"+mark_safe('<a href="../../%s">%s</a>' % (url, m.__unicode__()))
+                    
+            return ln
     marker_url.allow_tags = True
     marker_url.short_description = 'Marker'   
     
@@ -489,11 +482,7 @@ class DnaComponentAdmin(ComponentAdmin):
             dnaOfBaseVector = DnaComponent.objects.filter(componentSubType__subTypeOf__name='Vector Backbone')        
            
             kwargs['queryset'] = dnaOfBaseVector
-        
-        if db_field.name == 'marker':
-            dnaOfMarker = DnaComponent.objects.filter(componentSubType__subTypeOf__name='Marker')        
-            kwargs['queryset'] = dnaOfMarker
-            
+                  
         if db_field.name == 'insert':
             #dnaOfInsert = DnaComponent.objects.filter(componentSubType__name='Insert')
             dnaOfInsert = DnaComponent.objects.filter(componentSubType__subTypeOf__name='Insert')
@@ -504,6 +493,11 @@ class DnaComponentAdmin(ComponentAdmin):
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == "componentType":
             kwargs['queryset'] = DnaComponentType.objects.filter(subTypeOf=None)
+
+        if db_field.name == 'marker':
+            kwargs['queryset'] = DnaComponent.objects.filter(componentSubType__subTypeOf__name='Marker')        
+
+         
         return super(DnaComponentAdmin, self).formfield_for_manytomany(
             db_field, request, **kwargs)    
     

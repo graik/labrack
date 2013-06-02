@@ -28,7 +28,7 @@ class Component(UserMixinModel,models.Model):
     name = models.CharField('Name', max_length=200, blank=True, 
                             help_text='Descriptive name (e.g. "TEV protease")')
 
-    description = models.TextField( 'Detailed description', blank=True)
+    comment = models.TextField( 'Detailed description', blank=True)
     
     registration_date = models.DateField(default=datetime.now(), verbose_name="registred")
    
@@ -56,12 +56,12 @@ class Component(UserMixinModel,models.Model):
         """
         @return: str; truncated comment
         """
-        if not self.description:
+        if not self.comment:
             return u''
-        if len(self.description) < 40:
-            return unicode(self.description)
-        return unicode(self.description[:38] + '..')
-    showComment.short_description = 'comment'
+        if len(self.comment) < 40:
+            return unicode(self.comment)
+        return unicode(self.comment[:38] + '..')
+    showComment.short_description = 'Comment'
 
     class Meta:
         app_label = 'labrack'
@@ -76,7 +76,7 @@ class ComponentType( models.Model ):
     uri = models.URLField( unique=False, blank=True, null=True,
                            help_text='Typically a sequence ontology URI, example: http://purl.obolibrary.org/obo/SO_0000167' )
 
-    name = models.CharField('Name', max_length=200, 
+    name = models.CharField('Name', unique=True, max_length=200, 
                             help_text='Informative name')
 
     def __unicode__( self ):
@@ -157,7 +157,7 @@ class DnaComponent(Component):
     
     vectorBackbone = models.ForeignKey( 'self', blank=True, null=True ,verbose_name='Vector Backbone')
     
-    marker = models.ForeignKey( 'self', blank=True, null=True, 
+    marker = models.ManyToManyField( 'self', blank=True, null=True, 
                                       related_name='Marker')
     
     insert = models.ForeignKey( 'self', blank=True, null=True, 
@@ -210,7 +210,7 @@ class Sample( UserMixinModel ,models.Model):
                                            help_text='mark sample as master or reference')
 
 
-    description = models.TextField('Description / Comments', blank=True)
+    description = models.TextField('Comments', blank=True)
 
 
 
