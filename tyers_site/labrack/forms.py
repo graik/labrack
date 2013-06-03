@@ -1,16 +1,13 @@
 from django import forms
-from labrack.models import DnaComponent, DnaComponentType
+from labrack.models import DnaComponent, DnaComponentType, ExtraFile
 
 
 
 class DnaComponentForm(forms.ModelForm):
-
     componentType = forms.ModelMultipleChoiceField(label='Categorie',queryset=DnaComponentType.objects.filter(subTypeOf=None),required=False)
     componentSubType = forms.ModelMultipleChoiceField(label='Type',queryset=DnaComponentType.objects.all(),required=False)
-    
-        
-    description = forms.CharField(widget=forms.Textarea(attrs={'cols': 30, 'rows': 4}),required=False)
-    sequence = forms.CharField(widget=forms.Textarea(attrs={'cols': 60, 'rows': 5}),required=False)
+    description = forms.CharField(widget=forms.Textarea(attrs={'cols': 60, 'rows': 4}),required=False)
+    sequence = forms.CharField(widget=forms.Textarea(attrs={'cols': 60, 'rows': 4}),required=False)
     
     
     
@@ -18,8 +15,6 @@ class DnaComponentForm(forms.ModelForm):
         self.request = kwargs.pop('request', None)
         # Voila, now you can access request anywhere in your form methods by using self.request!
         super(DnaComponentForm, self).__init__(*args, **kwargs)
-        #t = self.instance
-        
-        
+                
     class Meta:
         model = DnaComponent 

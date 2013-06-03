@@ -1,0 +1,176 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_static %}
+
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static "admin/css/dashboard.css" %}" />{% endblock %}
+
+{% block coltype %}colMS{% endblock %}
+
+{% block bodyclass %}dashboard{% endblock %}
+
+{% block breadcrumbs %}{% endblock %}
+
+{% block content %}
+
+    <!-- Content -->
+    <div id="content" class="colM">
+        
+        <h1>{{ dnaComponent }} <a href="/admin/labrack/dnacomponent/{{ dnaComponent.id }}/"><img src="http://icons.iconarchive.com/icons/custom-icon-design/office/16/edit-icon.png"/></a></h1>
+        <div id="content-main">
+
+
+
+<form enctype="multipart/form-data" action="" method="post" id="dnacomponent_form"><input type='hidden' name='csrfmiddlewaretoken' value='EknmgaCUBMqzsw9pwmQU3V4QhERiqKaO' />
+<div>
+  <fieldset class="module aligned ">
+        <div class="form-row field-displayId field-name field-status">
+        <TABLE BORDER="0"> 
+                <CAPTION> Voici le titre du tableau </CAPTION> 
+                <TR> 
+                        <TH> <div class="field-box field-displayId">
+                               <label>ID:</label>
+                                   <p>{{ dnaComponent.displayId }}</p>
+                             </div>
+                       </TH> 
+                        <TH> <div class="field-box field-name">
+                               <label class="inline">Name:</label>
+                                   <p>{{ dnaComponent.name }}</p>
+                             </div> 
+                       </TH> 
+                </TR> 
+                <TR> 
+                        <TH> <div class="field-box field-status">
+                        <label class="inline">Status:</label>
+                            <p>{{ dnaComponent.status }}</p>
+                            </div>
+                       </TH>
+                       <TH></TH>
+                        
+                </TR> 
+                <TR> 
+                        <TH> <div class="field-box field-componentType">
+                        <label>Categorie:</label>
+                            <p>{% for o in dnaComponent.componentType.all %}
+                                {{ o }}
+                               {% endfor %}</p><br>
+                              </div>
+                       </TH> 
+                       <TH><div class="field-box field-componentSubType">
+                        <label class="inline">Type:</label>
+                            <p>{% for o in dnaComponent.componentSubType.all %}
+                                {{ o }}
+                               {% endfor %}</p><br>
+                </div></TH>
+                         
+                </TR>
+                <TR> 
+                        <TH>
+                        <div class="form-row field-circular">
+                <div>
+                        <label>Circular:</label>
+                            <p>{% if dnaComponent.circular == True %} <img src="/static/admin/img/icon-yes.gif" alt="True" /> {% endif %}
+</p>
+                        <p class="help">is the DNA Circular or not.</p>
+                </div>
+        </div>
+                       </TH>
+                       <TH></TH>
+                        
+                </TR>
+                
+                <TR> 
+                        <TH> <div class="field-box field-baseVector">
+                        <label>BaseVector:</label>
+                            <p>{% if dnaComponent.baseVector != None %} {{ dnaComponent.baseVector }}  {% endif %}</p>
+                             </div>
+                       </TH>
+                       <TH><div class="field-box field-marker">
+                        <label class="inline">Marker:</label>
+                            <p>{% for o in dnaComponent.marker.all %}
+                                {{ o }}<br>
+                        {% endfor %}
+                        </div></TH>
+                        
+                </TR>
+                <TR>
+                <TH><div class="field-box field-insert">
+                        <label class="inline">Insert:</label>
+                            <p>{% if dnaComponent.insert != None %} {{ dnaComponent.insert }}  {% endif %}</p>
+                </div></TH>
+                </TR>
+                <TR>
+                <TH><div class="field-box field-created_by">
+                        <label>Created by:</label>
+                            <p>{{ dnaComponent.created_by }}</p>
+                </div></TH>
+                <TH> <div class="field-box field-owners">
+                        <label class="inline">Owners:</label>
+                            <p>{% for o in dnaComponent.owners.all %}
+                                {{ o }}
+                               {% endfor %}</p>
+                </div></TH>
+                </TR>
+                <TR>
+                <TH><div class="field-box field-registration_date">
+                        <label>Registred:</label>
+                            <p>{{ dnaComponent.registration_date }}</p>
+                </div></TH>
+                <TH><div class="field-box field-source">
+                        <label class="inline">Source:</label>
+                            <p>{% for o in dnaComponent.source.all %}
+                                {{ o }}
+                               {% endfor %}</p>
+                        <p class="help">external source</p>
+                    
+                </div></TH>
+                </TR>
+        </TABLE>
+                
+                
+        </div>
+            
+     
+        
+         
+    
+</fieldset>
+
+
+  <fieldset class="module aligned ">
+    <h2>Details</h2>
+    <TABLE BORDER="0"> 
+                <CAPTION>  </CAPTION> 
+                <TR> 
+                        <TH> <div>
+                        <label>Comment:</label>
+                            <p>{{ dnaComponent.description }}</p>
+                            </div>
+                        </TH> 
+                        <TH> <div class="field-box field-attachements">
+                        <label class="inline">Attachements:</label>
+                            <p>{% for o in dnaComponent.attachements.all %}
+                                {{ o.get_absolute_html_url|safe }}<br>
+                               {% endfor %}</p>
+                    
+                </div> 
+                       </TH> 
+                </TR> 
+        <TH>
+        <div class="form-row field-sequence field-attachements">
+                <div class="field-box field-sequence">
+                        <label>Sequence:</label>
+                            <p><p>{{ dnaComponent.sequence }}</p></p>
+                        <p class="help">nucleotide sequence</p>
+                    
+                </div> 
+            </TH> </TR> 
+        </div>        
+        </TABLE> 
+         
+    
+        
+    
+</fieldset>
+
+
+{% endblock %}
+

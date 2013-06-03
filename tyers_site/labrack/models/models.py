@@ -6,6 +6,9 @@ from django.utils.safestring import mark_safe
 from labrack.models.generalmodels import Rack
 from labrack.models.generalmodels import Container
 from labrack.models.generalmodels import Location
+from labrack.models.generalmodels import Unit
+
+from django.contrib.auth.models import User
 
 
 class Component(UserMixinModel,models.Model):
@@ -125,9 +128,22 @@ class ExtraFile(models.Model):
     description = models.TextField( 'Detailed description', blank=True)
     
     def __unicode__(self):
-        name = self.uploadedFile if self.uploadedFile else ''
-        return u'%s' % (self.uploadedFile)
-          
+        link = self.uploadedFile if self.uploadedFile else ''
+        name = link
+        if str(name)<>"":
+            names=str(name).split("/")
+            name = names[len(names)-1]
+        return u'%s' % (link)
+    
+    
+    
+    def get_absolute_html_url(self):
+        link = self.uploadedFile if self.uploadedFile else ''
+        name = link
+        if str(name)<>"":
+            names=str(name).split("/")
+            name = names[len(names)-1]
+        return u'<a href="../../media/%s">%s</a>' % (link,name)         
     
     class Meta:
         app_label = 'labrack' 
@@ -141,9 +157,6 @@ class DnaComponent(Component):
    
     sequence = models.TextField( help_text='nucleotide sequence', blank=True, null=True )      
     
-    
-    #componentType = models.ManyToManyField(DnaComponentType, verbose_name='Categorie')        
-
     componentSubType = models.ManyToManyField(DnaComponentType, 
                                            verbose_name='Type',
                                            related_name='Type',  blank=True, null=True)    
@@ -189,9 +202,7 @@ class Sample( UserMixinModel ,models.Model):
     displayId = models.CharField('ID', max_length=20,
                                  help_text='Label or well position. Must be unique within container.')
 
-    name = models.CharField('Name', max_length=200, blank=True, 
-                            help_text='Informative name for tables and listings')
-
+    
     #: link to a single container
     container = models.ForeignKey( Container, related_name='samples' 
                                    )
@@ -206,11 +217,8 @@ class Sample( UserMixinModel ,models.Model):
                       )
     status = models.CharField( max_length=30, choices=STATUS_CHOICES, 
                                default='ok')
-    reference_status = models.BooleanField('Reference sample',default=False,
-                                           help_text='mark sample as master or reference')
-
-
-    description = models.TextField('Comments', blank=True)
+    
+    comment = models.TextField('Comments', blank=True)
 
 
 
@@ -224,6 +232,26 @@ class Sample( UserMixinModel ,models.Model):
     
     source = models.ForeignKey( Source, blank=True, null=True, 
                                       help_text='external source' )
+    
+    solvent = models.CharField('Buffer/Medium', max_length=100, blank=True)
+
+    concentration = models.FloatField('Concentration', null=True, blank=True)
+
+    concentrationUnit = models.ForeignKey(Unit, 
+                                          verbose_name='Concentration Unit',
+                                          related_name='concUnit',
+                                          null=True, blank=True,
+                                          limit_choices_to = {'unitType': 'concentration'})    
+    
+    amount = models.FloatField('Amount', null=True, blank=True)
+    amountUnit = models.ForeignKey(Unit, 
+                                          verbose_name='Amount Unit',
+                                          related_name='amouUnit', 
+                                          null=True, blank=True, 
+                                          limit_choices_to = {'unitType': 'concentration'})
+    
+    
+    
     
 
 class PlasmidSample(Sample):
@@ -244,3 +272,62 @@ class PlasmidSample(Sample):
     class Meta:
         app_label = 'labrack'
         verbose_name = 'PlasmidSample'    
+        
+        
+### To be removed what under
+
+class Background(models.Model):
+    
+    displayId = models.CharField('displayId', max_length=100, unique=True, 
+        help_text='Unique identification')
+    description = models.TextField('Comments', blank=True)
+    class Meta:
+        app_label = 'labrack'
+        
+class Yeast(models.Model):
+    
+    
+    mtid = models.CharField('MTID', max_length=20, unique=True, 
+        help_text='Unique identification')
+    
+    
+    MATING_TYPE_CHOICES = (('a','a'),('alpha','alpha'),('a/alpha','a/alpha'))
+    matingType = models.CharField('matingType',max_length=200, null=True, blank=True, choices=MATING_TYPE_CHOICES)
+    
+    
+    background = models.ForeignKey(Background,
+                            verbose_name='Background',
+                            null=True, blank=True)
+    
+    GENO_CHOICES = (('ade2','ade2'),('his3','his3'),('leu2','leu2'),('lys2','lys2'),('trp1','trp1'),('ura3','ura3'),('gal','gal'),('kan','kan'),('nat','nat'))
+    genoList = models.CharField('genoList',max_length=200, null=True, blank=True, choices=GENO_CHOICES)
+    
+   
+    
+    relevantGeno = models.TextField('RelevantGeno', null=True,blank=True) 
+    fillingDate = models.DateField(default=datetime.now(), null=True,blank=True)
+    user = models.ForeignKey(User, null=True, blank=True, 
+                                   related_name='%(class)s_created_by')
+    
+    source_old_list = models.ForeignKey(Source,
+                            verbose_name='source',
+                            null=True, blank=True)
+    
+    sourceLabMember = models.ForeignKey(User, null=True, blank=True)
+    
+    attachedSheet = models.BooleanField('Attached sheet',default=False)
+    
+    otherMarkers = models.TextField('otherMarkers', null=True,blank=True)
+    
+    strainConstruction = models.TextField('strainConstruction', null=True,blank=True)
+    
+    comments = models.TextField('Comments', null=True,blank=True) 
+     
+    fileBrowse1 = models.FileField(upload_to='documents/%Y/%m/%d',blank=True,null=True)    
+    fileBrowse2 = models.FileField(upload_to='documents/%Y/%m/%d',blank=True,null=True)
+    
+    
+    def __unicode__(self):
+        return self.mtid
+    class Meta:
+        app_label = 'labrack'

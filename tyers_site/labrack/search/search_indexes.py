@@ -8,6 +8,8 @@ class DnaComponentIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True, use_template=True)
     displayId = indexes.CharField(model_attr='displayId')
     registration_date = indexes.DateTimeField(model_attr='registration_date')
+    circular = indexes.BooleanField(model_attr='circular')
+     
 
     def get_model(self):
         return DnaComponent

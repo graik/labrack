@@ -27,7 +27,7 @@ def getParentTypeDnaInfo(request, subtype):
 def reviewdna(request, displayId):
     now = datetime.now()
     dnaComponent = DnaComponent.objects.get(displayId=displayId)
-    t = loader.get_template('review_form.html')
+    t = loader.get_template('admin/labrack/dnacomponent/review_form.html')
     
     html = t.render(Context({'dnaComponent': dnaComponent}))
     return HttpResponse(html)

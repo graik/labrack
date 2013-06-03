@@ -39,23 +39,25 @@ from labrack.models.generalmodels import Container
 from labrack.models.generalmodels import Location
 from labrack.models.models import ExtraFile
 from labrack.models.models import DnaComponent
+
 from labrack.models.models import Source
 from labrack.models.models import DnaComponentType
 from labrack.models.models import PlasmidSample
 from labrack.forms import DnaComponentForm
 
 
+from labrack.models.models import Yeast
 
 
 from labrack.models import utilLabrack
 from django.contrib.auth.models import User
 from django.contrib.auth.models import Group
 from django.contrib.sites.models import Site
-
  
 
+
 class AutoAssignAdmin():
-    
+
     # Save the owner of the object
     def save_model(self, request, obj, form, change):
 
@@ -63,14 +65,14 @@ class AutoAssignAdmin():
         self.obj.created_by = request.user
         #self.obj.owners.add(request.user)
         self.obj.save()
-        
+
 
 class ContainerAdmin(AutoAssignAdmin, admin.ModelAdmin):
 
     actions = ['make_csv']
-    
+
     readonly_fields = ('registration_date',)
-    
+
 
     exportFields = OrderedDict( [('Container ID', 'displayId'),
                                  ('Name', 'name'),
@@ -88,7 +90,7 @@ class ContainerAdmin(AutoAssignAdmin, admin.ModelAdmin):
                         ('containerType', 'rack'),
                         'description',('created_by','owners','registration_date')                        
                         ),
-          }
+        }
          ),
     ]
 
@@ -122,13 +124,13 @@ class ContainerAdmin(AutoAssignAdmin, admin.ModelAdmin):
     rack_url.allow_tags = True
 
     rack_url.short_description = 'Rack'   
-    
+
     def location_url(self, obj):
         if obj.rack.current_location:
             url = obj.rack.current_location.get_relative_url()
         else:
             url = ''
-        
+
         return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.rack.current_location))
 
     location_url.allow_tags = True
@@ -145,7 +147,7 @@ class ContainerAdmin(AutoAssignAdmin, admin.ModelAdmin):
         if db_field.name == 'created_by':
             kwargs['queryset'] = User.objects.filter(username=request.user.username)
         return super(ContainerAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
-    
+
     #def get_readonly_fields(self, request, obj=None):
         #if obj is not None:
             #return self.readonly_fields + ('created_by',)
@@ -156,12 +158,12 @@ class ContainerAdmin(AutoAssignAdmin, admin.ModelAdmin):
         data['created_by'] = request.user
         request.GET = data
         return super(ContainerAdmin, self).add_view(request, form_url="", extra_context=extra_context)
-    
+
 
 class LocationAdmin(AutoAssignAdmin,admin.ModelAdmin):
 
     actions = ['make_csv']
-    
+
     readonly_fields = ('registration_date',)
 
     exportFields = OrderedDict( [('Location ID', 'displayId'),
@@ -192,8 +194,8 @@ class LocationAdmin(AutoAssignAdmin,admin.ModelAdmin):
         if db_field.name == 'created_by':
             kwargs['queryset'] = User.objects.filter(username=request.user.username)
         return super(LocationAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
-    
-    
+
+
     def get_readonly_fields(self, request, obj=None):
         if obj is not None:
             return self.readonly_fields + ('created_by',)
@@ -204,20 +206,20 @@ class LocationAdmin(AutoAssignAdmin,admin.ModelAdmin):
         data['created_by'] = request.user
         request.GET = data
         return super(LocationAdmin, self).add_view(request, form_url="", extra_context=extra_context)
-    
-    
+
+
 class RackAdmin(AutoAssignAdmin,admin.ModelAdmin):
 
     actions = ['make_csv']
-    
+
     readonly_fields = ('registration_date',)
-    
+
 
     exportFields = OrderedDict( [('Rack ID', 'displayId'),
                                  ('Name', 'name'),
                                  ('Current location','location_url'),
                                  ])
-    
+
     list_display = ('displayId', 'name', 'location_url', 
                     )    
     fields = (('displayId', 'name'),'current_location','description',('created_by','owners','registration_date'))
@@ -243,12 +245,12 @@ class RackAdmin(AutoAssignAdmin,admin.ModelAdmin):
                                          self.exportFields, 'Rack')
 
     make_csv.short_description = 'Export as CSV'
-    
+
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'created_by':
             kwargs['queryset'] = User.objects.filter(username=request.user.username)
         return super(RackAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
-    
+
     def get_readonly_fields(self, request, obj=None):
         if obj is not None:
             return self.readonly_fields + ('created_by',)
@@ -259,8 +261,8 @@ class RackAdmin(AutoAssignAdmin,admin.ModelAdmin):
         data['created_by'] = request.user
         request.GET = data
         return super(RackAdmin, self).add_view(request, form_url="", extra_context=extra_context)
-    
-    
+
+
 class ComponentAdmin(admin.ModelAdmin):
 
 
@@ -287,7 +289,7 @@ class ComponentAdmin(admin.ModelAdmin):
         }
          ),
     )
-    
+
     list_display = ('displayId', 'name', 'created_by', 'showComment','status')
     list_filter = ('status', 'created_by')
 
@@ -319,14 +321,13 @@ class vectorBackboneFilter(SimpleListFilter):
             return queryset
         else:
             return queryset.filter(vectorBackbone__id__exact=self.value())
-        
-        
+
+
 class markerFilter(SimpleListFilter):
     title = 'Marker'
     parameter_name = 'marker'
 
     def lookups(self, request, model_admin):
-        #dnaOfMarker = DnaComponent.objects.filter(componentType__name='Marker') 
         dnaOfMarker = DnaComponent.objects.filter(componentSubType__subTypeOf__name='Marker')        
         r = [(c.id, c.displayId) for c in dnaOfMarker]        
         return r
@@ -337,77 +338,153 @@ class markerFilter(SimpleListFilter):
             return queryset
         else:
             return queryset.filter(marker__id__exact=self.value())
-      
-       
-class PlasmidSampleAdmin(ComponentAdmin):
-    #form = DnaComponentForm
-    
+
+
+
+class PlasmidSampleAdmin(admin.ModelAdmin):
+    #form = DnaSampleForm     
 
     readonly_fields = ('registration_date',)
-    
 
-    fieldsets = (
+    actions = ['make_csv', 'make_ok', 'make_empty', 'make_bad']
+
+    date_hierarchy = 'preparation_date'
+
+    exportFields = OrderedDict([('Sample ID', 'displayId'),
+                                 ('Location', 'container.location'),
+                                 ('Container', 'container'),
+                                 ('Number of aliquots', 'aliquotNr'),
+                                 ('Status', 'status'),
+                                 ('Reference', 'reference_status'),
+                                 ('Comment', 'comment'),
+                                 ('History', 'strProvenance()'),
+                                 ('Sample link','sampleLinkStr()'),
+                                 ('Preparation date', 'preparation_date'),
+                                 ('Registered at','creation_date'),
+                                 ('Last modified','modification_date'),
+                                 ])
+    fieldsets = [
         (None, {
-            'fields' : ((('container', 'displayId', 
-                          'reference_status'),
-                         ('aliquotNr',),
-                         ('preparation_date','status'),
-                         ('description'),
+            'fields' : ((('container', 'displayId', 'status'),
+                         ('preparation_date','registration_date',),
+                         ('concentration','concentrationUnit'),
+                         ('amount','amountUnit'),
+                         ('solvent','aliquotNr',),
+                         ('created_by','owners'),
+                         ('comment'),
                          )
                         )
         }
-         ),
+         ), 
+        ('DNA Content',{'fields':[('dnaComponent')
+                                  ]
+                        }),
 
-      
-        )
+        ('Host ',{'fields':[('hostGenotype','parentalVector'),
+                            ('synonyms','attachedSheet')
+                            ]
+                  }),        
+        ('History',{'fields':[('historyDescription',)],
+                    'description': 'Indicate whether this sample was created from another sample.'
+                    }),        
+    ]
 
-    #add short_description + 
-    #DiplayId +Name +Insert (clickable) + Vector  (clickable) + Marker  (clickable) + User +Shorten Description + Status + Edit 
+    list_display   = ('displayId', 'location_url', 
+                      'created_by', 'preparation_date','content_url', 'concentraunit', 
+                      'status', 'shorten_description')
     
-    # Fiktler by : status + vector(?) + marker
-    list_display = ('diplayId_readOnly', 'name', 'insert_url','vectorBackbone_url', 'marker_url', 'created_by_user','shorten_description','status','dnaComponent_editOnly')
+    ordering       = ('container', 'displayId')
 
-    search_fields = ComponentAdmin.search_fields.__add__(('sequence',))
-    list_filter = ComponentAdmin.list_filter.__add__(( vectorBackboneFilter, markerFilter))
+    save_as        = True
+
+    save_on_top = True
+
+    search_fields  = ('displayId', 'name', 'description', 
+                      'container__displayId', 
+                      'container__rack__current_location__displayId', 
+                      'container__rack__current_location__location__temperature', 
+                      'container__rack__current_location__location__room')
+
+    list_filter = ComponentAdmin.list_filter.__add__(('dnaComponent',))
     
+
+    def concentraunit(self,obj):
+        if obj.concentration == None:
+            conc = ''
+        else:
+            conc = str(obj.concentration)
+            
+        if obj.concentrationUnit == None:
+            concUnit = ''
+        else:
+            concUnit = str(obj.concentrationUnit)        
+        
+        return conc + ' '+ concUnit
+    
+    def location_url(self, obj):
+            con = obj.container
+            rac = con.rack
+            locat = rac.current_location
+            if locat:
+                url = locat.get_relative_url()
+                locatAttr = obj.container.rack.current_location.__unicode__()
+            else:
+                url = ''
+                locatAttr = '' 
+            #return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.container.rack.current_location.__unicode__()))
+            return mark_safe('<a href="%s/%s">%s, %s</a>' % (S.admin_root, url, obj.container.rack.__unicode__(),locatAttr))
+    location_url.allow_tags = True
+    location_url.short_description = 'Location'  
+    
+    def shorten_description(self,obj):
+        if not obj.comment:
+            return u''
+        if len(obj.comment) < 40:
+            return unicode(obj.comment)
+        return unicode(obj.comment[:38] + '..')
+    shorten_description.short_description = 'Comment' 
+
+    def content_url(self, obj):
+        url = obj.dnaComponent.get_relative_url()
+        return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.dnaComponent.__unicode__()))
+    content_url.allow_tags = True
+    content_url.short_description = 'Content'    
+
 
 class DnaComponentAdmin(ComponentAdmin):
     form = DnaComponentForm
-    
+
 
     readonly_fields = ('registration_date',)
-    
+
 
     fieldsets = (
-            (None, {
-                'fields': (('displayId', 'name','status'),
-                           ('componentType','componentSubType'),
-                           ('circular',),
-                           ('vectorBackbone','marker','insert' ),
-                           ('created_by','owners'),
-                           ('registration_date','source')
-                            )
-            }
-             ),
-            ('Details', {
-                'fields' : (('description',),
-                            ('sequence','attachements',)
-                            )
-                          }
-             ),            
-        )
+        (None, {
+            'fields': (('displayId', 'name','status'),
+                       ('componentType','componentSubType'),
+                       ('circular',),
+                       ('vectorBackbone','marker','insert' ),
+                       ('created_by','owners'),
+                       ('registration_date','source')
+                       )
+        }
+         ),
+        ('Details', {
+            'fields' : (('description',),
+                        ('sequence','attachements',)
+                        )
+        }
+         ),            
+    )
 
-    #add short_description + 
-    #DiplayId +Name +Insert (clickable) + Vector  (clickable) + Marker  (clickable) + User +Shorten Description + Status + Edit 
-    
-    # Fiktler by : status + vector(?) + marker
-    list_display = ('diplayId_readOnly', 'name', 'insert_url','vectorBackbone_url', 'marker_url', 'created_by_user','shorten_description','status','dnaComponent_editOnly')
+
+    list_display = ('diplayId_readOnly', 'name', 'created_by_user','insert_url','vectorBackbone_url', 'marker_url', 'shorten_description','status','dnaComponent_editOnly')
 
     search_fields = ComponentAdmin.search_fields.__add__(('sequence',))
     list_filter = ComponentAdmin.list_filter.__add__(( vectorBackboneFilter, markerFilter))
-    
-      
-        
+
+
+
     def shorten_description(self,obj):
         if not obj.comment:
             return u''
@@ -418,11 +495,11 @@ class DnaComponentAdmin(ComponentAdmin):
 
     def diplayId_readOnly(self, obj):
         return mark_safe('<a href="%s/%s/%s/">%s</a>' % (S.admin_root,'../../reviewdna', obj.displayId,obj.displayId))
-        
+
         #return mark_safe('<a href="%s/%s/%s">%s</a>' % (S.search_root,'dnacomponent/objects', obj.id,obj.displayId))
     diplayId_readOnly.allow_tags = True    
     diplayId_readOnly.short_description = 'ID'
-    
+
     def created_by_user(self,obj):
         return obj.created_by
     created_by_user.allow_tags = True
@@ -433,7 +510,7 @@ class DnaComponentAdmin(ComponentAdmin):
             return mark_safe('')
     vectorBackbone_readOnly.allow_tags = True
     vectorBackbone_readOnly.short_description = 'Vector'
-    
+
     def vectorBackbone_url(self, obj):
         if (obj.vectorBackbone==None):
             return mark_safe('')
@@ -442,7 +519,7 @@ class DnaComponentAdmin(ComponentAdmin):
             return mark_safe('<a href="../../%s">%s</a>' % (url, obj.vectorBackbone.__unicode__()))            
     vectorBackbone_url.allow_tags = True
     vectorBackbone_url.short_description = 'Vector'    
-    
+
     def marker_url(self, obj):
         if (obj.marker==None):
             return mark_safe('')
@@ -454,11 +531,11 @@ class DnaComponentAdmin(ComponentAdmin):
                     ln += mark_safe('<a href="../../%s">%s</a>' % (url, m.__unicode__()))
                 else:
                     ln += " ,"+mark_safe('<a href="../../%s">%s</a>' % (url, m.__unicode__()))
-                    
+
             return ln
     marker_url.allow_tags = True
     marker_url.short_description = 'Marker'   
-    
+
     def insert_url(self, obj):
         if (obj.insert==None):
             return mark_safe('')
@@ -469,38 +546,40 @@ class DnaComponentAdmin(ComponentAdmin):
     insert_url.short_description = 'Insert'        
 
     def dnaComponent_editOnly(self, obj):
-        
+
         return mark_safe('<a href="%s/%s/%s/?edit=1"><img src="http://icons.iconarchive.com/icons/custom-icon-design/office/16/edit-icon.png"/></a>' % (S.admin_root,'dnacomponent', obj.id))
-        
+
     dnaComponent_editOnly.allow_tags = True    
     dnaComponent_editOnly.short_description = 'Edit'    
-    
+
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'created_by':
             kwargs['queryset'] = User.objects.filter(username=request.user.username)
         if db_field.name == 'vectorBackbone':
             dnaOfBaseVector = DnaComponent.objects.filter(componentSubType__subTypeOf__name='Vector Backbone')        
-           
+
             kwargs['queryset'] = dnaOfBaseVector
-                  
+
         if db_field.name == 'insert':
             #dnaOfInsert = DnaComponent.objects.filter(componentSubType__name='Insert')
             dnaOfInsert = DnaComponent.objects.filter(componentSubType__subTypeOf__name='Insert')
             kwargs['queryset'] = dnaOfInsert
-        
+
         return super(DnaComponentAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
-    
+
     def formfield_for_manytomany(self, db_field, request, **kwargs):
+        
+            
         if db_field.name == "componentType":
             kwargs['queryset'] = DnaComponentType.objects.filter(subTypeOf=None)
 
         if db_field.name == 'marker':
             kwargs['queryset'] = DnaComponent.objects.filter(componentSubType__subTypeOf__name='Marker')        
 
-         
+
         return super(DnaComponentAdmin, self).formfield_for_manytomany(
             db_field, request, **kwargs)    
-    
+
     def get_readonly_fields(self, request, obj=None):
         if obj is not None:
             return self.readonly_fields + ('created_by',)
@@ -509,17 +588,17 @@ class DnaComponentAdmin(ComponentAdmin):
     def add_view(self, request, form_url="", extra_context=None):
         data = request.GET.copy()
         data['created_by'] = request.user
-        
+
         #initialUser = str(request.user)[:2]
         proposedDisplayId = utilLabrack.getNextAvailableDNAName(request.user)
         #if (proposedDisplayId==''):
         #    proposedDisplayId = initialUser+'0001a'
         data['displayId'] = proposedDisplayId
 
-        
+
         request.GET = data
         return super(DnaComponentAdmin, self).add_view(request, form_url="", extra_context=extra_context)
-    
+
 
 
 
@@ -532,10 +611,10 @@ admin.site.register(DnaComponent, DnaComponentAdmin)
 admin.site.register(DnaComponentType)
 admin.site.register(ExtraFile)
 admin.site.register(Source)
-admin.site.register(PlasmidSample)
-#admin.site.register(User)
-#admin.site.register(Group)
-#admin.site.register(Site)
+admin.site.register(PlasmidSample,PlasmidSampleAdmin)
+
+admin.site.register(Yeast)
+
 
 
 
