@@ -18,14 +18,11 @@ class Location(UserMixinModel):
 
     room = models.CharField('Room', max_length=20)
 
-    #creation_date = models.DateTimeField('Created at', auto_now_add=True)
-
-    #modification_date = models.DateTimeField('Modified at', auto_now=True)
 
     description = models.CharField( 'short Description', max_length=200,
                                             help_text='Very short description for listings')    
 
-    registration_date = models.DateField(default=datetime.now(), verbose_name="registred")
+    registrationDate = models.DateField(default=datetime.now(), verbose_name="registred")
    
 
     def __unicode__(self):
@@ -64,12 +61,12 @@ class Rack(UserMixinModel):
     name = models.CharField('Name', max_length=200, 
                             blank=True, help_text='Informative name of rack ex : R1-F1 for a rack named R1 that will not move from Fridge 1')
 
-    current_location = models.ForeignKey( 'Location', blank=True, null=True )
+    currentLocation = models.ForeignKey( 'Location', blank=True, null=True )
     
     description = models.CharField( 'short Description', max_length=200,
                                             help_text='Very short description for listings')    
     
-    registration_date = models.DateField(default=datetime.now(), verbose_name="registred")
+    registrationDate = models.DateField(default=datetime.now(), verbose_name="registred")
        
     def __unicode__(self):
         return u'%s' % (self.displayId)
@@ -113,13 +110,13 @@ class Container( UserMixinModel ):
 
     rack = models.ForeignKey(Rack)
 
-    registration_date = models.DateField(default=datetime.now(), verbose_name="registred")
+    registrationDate = models.DateField(default=datetime.now(), verbose_name="registred")
        
     #: optional long description
     description = models.TextField( 'Detailed description', blank=True)
 
     def __unicode__( self ):
-        return "%s  ,%s, %s" % (self.displayId,self.rack,self.rack.current_location)
+        return "%s  ,%s, %s" % (self.displayId,self.rack,self.rack.currentLocation)
 
     def get_relative_url(self):
         """
@@ -151,8 +148,6 @@ class Unit(models.Model):
                                    help_text='Factor for conversion to SI unit')
 
     unitType = models.CharField(max_length=25, choices=UNIT_TYPE)
-
-
 
     def __unicode__(self):
         return self.name
