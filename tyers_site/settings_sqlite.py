@@ -7,7 +7,6 @@ sys.path = [T.approot()] + sys.path
 
 ## system-wide definition of admin base URL
 admin_root = "/admin/labrack"
-search_root = "/databrowse/labrack"
 
 DEBUG = True
 #TEMPLATE_DEBUG = DEBUG
