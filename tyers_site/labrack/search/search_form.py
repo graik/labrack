@@ -5,7 +5,7 @@ from labrack.models import DnaComponent
 
 class MultipleItemSearchForm(SearchForm):
     
-    marker = forms.ChoiceField( choices=(),widget=forms.Select(attrs={})) 
+    marker = forms.ChoiceField( choices=(),widget=forms.Select(attrs={}))
     marker_Search = forms.ChoiceField(choices=(('include','include'),('exclude','exclude')))
     start_date = forms.DateField(required=False)
     end_date = forms.DateField(required=False)

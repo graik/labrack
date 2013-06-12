@@ -14,9 +14,7 @@ class DnaComponentForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request', None)
-        # Voila, now you can access request anywhere in your form methods by using self.request!
         super(DnaComponentForm, self).__init__(*args, **kwargs)
-        #migrationToronto.import_plasmid()
                 
     class Meta:
         model = DnaComponent 
@@ -30,7 +28,6 @@ class CellForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request', None)
-        # Voila, now you can access request anywhere in your form methods by using self.request!
         super(CellForm, self).__init__(*args, **kwargs)
                 
     class Meta:
@@ -45,7 +42,6 @@ class PlasmidSampleForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request', None)
-        # Voila, now you can access request anywhere in your form methods by using self.request!
         super(PlasmidSampleForm, self).__init__(*args, **kwargs)
                 
     class Meta:
@@ -60,7 +56,6 @@ class CellSampleForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request', None)
-        # Voila, now you can access request anywhere in your form methods by using self.request!
         super(PlasmidSampleForm, self).__init__(*args, **kwargs)
                 
     class Meta:

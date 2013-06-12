@@ -86,21 +86,11 @@ def import_plasmid():
         plasmid_insert, plasmid_type, parental_vector, host_genotype, \
         attached_sheet, base_vector , synonyms, comments, disabled from plasmids"""
     cursor.execute(sql)
-    #f = open('LIMS_Plasmid.txt','w')
-    #for row in cursor.fetchall():
-        ## Source
-         
-        #f.write(row[0]+'\t'+row[1]+'\t'+row[2]+'\t'+row[3]+'\t'+row[4]+'\n')        
-    #f.close()
-    #with open('LIMS_Plasmid.txt') as f:
-        #content = f.readlines()    
+   
     DnaComponent.objects.all().delete()
     markerList = []
     for row in cursor.fetchall():
-        # Source
-        #row = line.split('\t')
-        #f.write(row[0]+'\t'+row[1]+'\t'+row[2]+'\t'+row[3]+'\t'+row[4])    
-        
+  
         if (row[0] <> '00000000'):
             try:
                 try:                

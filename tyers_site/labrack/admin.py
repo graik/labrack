@@ -57,7 +57,6 @@ class AutoAssignAdmin():
 
         self.obj = obj  # store the obj for save_related method
         self.obj.createdBy = request.user
-        #self.obj.owners.add(request.user)
         self.obj.save()
 
 
@@ -150,18 +149,7 @@ class ContainerAdmin(AutoAssignAdmin, admin.ModelAdmin):
 
     def make_csv(self, request, queryset):
         return importexport.generate_csv(self, request, queryset, 
-                                         self.exportFields, 'Container')
-
-
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == 'createdBy':
-            kwargs['queryset'] = User.objects.filter(username=request.user.username)
-        return super(ContainerAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
-
-    #def get_readonly_fields(self, request, obj=None):
-        #if obj is not None:
-            #return self.readonly_fields + ('created_by',)
-        #return self.readonly_fields
+                                        self.exportFields, 'Container')
 
     def add_view(self, request, form_url="", extra_context=None):
         data = request.GET.copy()
@@ -200,17 +188,6 @@ class LocationAdmin(AutoAssignAdmin,admin.ModelAdmin):
 
     make_csv.short_description = 'Export as CSV'
 
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == 'createdBy':
-            kwargs['queryset'] = User.objects.filter(username=request.user.username)
-        return super(LocationAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
-
-
-    #def get_readonly_fields(self, request, obj=None):
-        #if obj is not None:
-            #return self.readonly_fields + ('createdBy',)
-        #return self.readonly_fields
-
     def add_view(self, request, form_url="", extra_context=None):
         data = request.GET.copy()
         data['createdBy'] = request.user
@@ -220,6 +197,7 @@ class LocationAdmin(AutoAssignAdmin,admin.ModelAdmin):
 
 class RackAdmin(AutoAssignAdmin,admin.ModelAdmin):
 
+    
     actions = ['make_csv']
 
     readonly_fields = ('registrationDate',)
@@ -256,15 +234,6 @@ class RackAdmin(AutoAssignAdmin,admin.ModelAdmin):
 
     make_csv.short_description = 'Export as CSV'
 
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == 'createdBy':
-            kwargs['queryset'] = User.objects.filter(username=request.user.username)
-        return super(RackAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
-
-    #def get_readonly_fields(self, request, obj=None):
-        #if obj is not None:
-            #return self.readonly_fields + ('createdBy',)
-        #return self.readonly_fields
 
     def add_view(self, request, form_url="", extra_context=None):
         data = request.GET.copy()
@@ -301,12 +270,12 @@ class DnaComponentTypeAdmin(admin.ModelAdmin):
         }
          ),
     )
-
     list_display = ('name', 'categorie','categorieSubType',)
+    
     list_filter = (categorieFilterForDnaComponentType,)
+
     ordering = ('subTypeOf',)
     
-
     search_fields = ('name', 'subTypeOf')
 
     def categorie(self, obj):
@@ -324,7 +293,6 @@ class DnaComponentTypeAdmin(admin.ModelAdmin):
     categorieSubType.short_description = 'Category / Type'
 
 class ComponentAdmin(admin.ModelAdmin):
-
 
     actions = ['make_csv']
 
@@ -359,18 +327,16 @@ class ComponentAdmin(admin.ModelAdmin):
 
     def make_csv(self, request, queryset):
         return importexport.generate_csv(self, request, queryset, 
-                                         self.exportFields, 'Component')
-    
-    
+                                         self.exportFields, 'Component')    
     make_csv.short_description = 'Export as CSV'
-
-
+    
+    
+    ### Custom filter for Vector Backbone 
 class vectorBackboneFilter(SimpleListFilter):
     title = 'vector Backbone'
     parameter_name = 'vectorBackbone'
 
     def lookups(self, request, model_admin):
-        #dnaOfBaseVector = DnaComponent.objects.filter(componentType__name='Base Vector')        
         dnaOfBaseVector = DnaComponent.objects.filter(componentSubType__subTypeOf=DnaComponentType.objects.get(name='Vector Backbone'))        
         r = [(c.id, c.displayId) for c in dnaOfBaseVector]
         return r
@@ -382,8 +348,9 @@ class vectorBackboneFilter(SimpleListFilter):
         else:
             return queryset.filter(vectorBackbone__id__exact=self.value())
 
-
+    ### Custom filter for Markers
 class markerFilter(SimpleListFilter):
+
     title = 'Marker'
     parameter_name = 'marker'
 
@@ -400,7 +367,9 @@ class markerFilter(SimpleListFilter):
             return queryset.filter(marker__id__exact=self.value())
  
 
+    ### Custom filter for Plasmid Categorie 
 class categorieFilterForPlasmid(SimpleListFilter):
+
     title = 'Categorie'
     parameter_name = 'categorie'
 
@@ -417,7 +386,9 @@ class categorieFilterForPlasmid(SimpleListFilter):
             dnaOfType = DnaComponent.objects.filter(componentSubType__subTypeOf__name=val)        
             return queryset.filter(dnaComponent__in=dnaOfType)
         
+    ### Custom filter for Dna Categorie
 class categorieFilterForDna(SimpleListFilter):
+
     title = 'Categorie'
     parameter_name = 'categorie'
 
@@ -430,14 +401,14 @@ class categorieFilterForDna(SimpleListFilter):
     def queryset(self, request, queryset):
         val = self.value()
         if (val == '-1'):
-                        #return queryset.exclude(componentType__name__exact='Annotation')
             return queryset
         else:        
             if (val == None):
-                #return queryset
                 return queryset.filter(componentSubType__subTypeOf__name='Plasmid')
             else:
                 return queryset.filter(componentSubType__subTypeOf__name=val)
+
+
 
 class PlasmidSampleAdmin(admin.ModelAdmin):
     form = PlasmidSampleForm     
@@ -473,7 +444,7 @@ class PlasmidSampleAdmin(admin.ModelAdmin):
                         }),
           
     ]
-    list_display   = ('diplayId_readOnly', 'location_url', 'preparationDate',
+    list_display   = ('displayId_readOnly', 'location_url', 'preparationDate',
                       'createdBy_User', 'content_url', 'concentraunit', 'amtunit',
                        'shorten_description','status','plasmidSample_editOnly')
     
@@ -489,13 +460,13 @@ class PlasmidSampleAdmin(admin.ModelAdmin):
                       'container__rack__currentLocation__location__room')
 
     list_filter = ComponentAdmin.list_filter.__add__((categorieFilterForPlasmid,))
-    ##raw_id_fields = ComponentAdmin.raw_id_fields.__add__(('dnaComponent',))
+    raw_id_fields = ComponentAdmin.raw_id_fields.__add__(('dnaComponent',))
     
-    def diplayId_readOnly(self, obj):
+    def displayId_readOnly(self, obj):
         return mark_safe('<a href="%s/%s/%s/">%s</a>' % (S.admin_root,'../../reviewplasmid', obj.id,obj.displayId))
-    diplayId_readOnly.allow_tags = True    
-    diplayId_readOnly.short_description = 'ID'
- 
+    displayId_readOnly.allow_tags = True    
+    displayId_readOnly.short_description = 'ID'
+
     def concentraunit(self,obj):
         if obj.concentration == None:
             conc = ''
@@ -547,8 +518,6 @@ class PlasmidSampleAdmin(admin.ModelAdmin):
     shorten_description.short_description = 'Comment' 
 
     def content_url(self, obj):
-        ##url = obj.dnaComponent.get_relative_url()
-        ##return mark_safe('<a href="%s/%s">%s</a>' % (S.admin_root, url, obj.dnaComponent.__unicode__()))
         url = obj.dnaComponent.get_absolute_url()
         return mark_safe('<a href="../%s">%s</a>' % (url, obj.dnaComponent.__unicode__()))
     content_url.allow_tags = True
@@ -576,9 +545,7 @@ class PlasmidSampleAdmin(admin.ModelAdmin):
 class DnaComponentAdmin(ComponentAdmin):
     form = DnaComponentForm
 
-
     readonly_fields = ('registrationDate',)
-
 
     fieldsets = (
         (None, {
@@ -598,12 +565,10 @@ class DnaComponentAdmin(ComponentAdmin):
          ),            
     )
 
-
-    list_display = ('diplayId_readOnly', 'name', 'created_by_user','insert_url','vectorBackbone_url', 'marker_url', 'shorten_description','status','dnaComponent_editOnly')
+    list_display = ('displayId_readOnly', 'name', 'created_by_user','insert_url','vectorBackbone_url', 'marker_url', 'shorten_description','status','dnaComponent_editOnly')
 
     search_fields = ComponentAdmin.search_fields.__add__(('sequence',))
     list_filter = ComponentAdmin.list_filter.__add__(( vectorBackboneFilter, markerFilter, categorieFilterForDna,userFilter))
-
 
 
     def shorten_description(self,obj):
@@ -614,12 +579,11 @@ class DnaComponentAdmin(ComponentAdmin):
         return unicode(obj.comment[:38] + '..')
     shorten_description.short_description = 'Comment'        
 
-    def diplayId_readOnly(self, obj):
+    ## Display in the list the ID of DNA and link to the view 
+    def displayId_readOnly(self, obj):
         return mark_safe('<a href="%s/%s/%s/">%s</a>' % (S.admin_root,'../../reviewdna', obj.displayId,obj.displayId))
-
-        #return mark_safe('<a href="%s/%s/%s">%s</a>' % (S.search_root,'dnacomponent/objects', obj.id,obj.displayId))
-    diplayId_readOnly.allow_tags = True    
-    diplayId_readOnly.short_description = 'ID'
+    displayId_readOnly.allow_tags = True    
+    displayId_readOnly.short_description = 'ID'
 
     def created_by_user(self,obj):
         return obj.createdBy
@@ -655,9 +619,7 @@ class DnaComponentAdmin(ComponentAdmin):
                 ln += mark_safe('<a href="../../%s">%s</a>' % (url, m.name))
             else:
                 ln += " ,"+mark_safe('<a href="../../%s">%s</a>' % (url, m.name))
-
         return ln        
-        
     marker_url.allow_tags = True
     marker_url.short_description = 'Marker'   
 
@@ -672,29 +634,24 @@ class DnaComponentAdmin(ComponentAdmin):
 
     def dnaComponent_editOnly(self, obj):
 
-        return mark_safe('<a href="%s/%s/%s"><img src="http://icons.iconarchive.com/icons/custom-icon-design/office/16/edit-icon.png"/></a>' % (S.admin_root,'dnacomponent', obj.id))
+        return mark_safe('<a href="%s/%s/%s" onclick="opener.dismissRelatedLookupPopup(window, '"%s"'); return false;"><img src="http://icons.iconarchive.com/icons/custom-icon-design/office/16/edit-icon.png"/></a>' % (S.admin_root,'dnacomponent', obj.id, obj.id))
 
     dnaComponent_editOnly.allow_tags = True    
-    dnaComponent_editOnly.short_description = 'Edit'    
+    dnaComponent_editOnly.short_description = 'Edit / Select'    
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == 'createdBy':
-            kwargs['queryset'] = User.objects.filter(username=request.user.username)
         if db_field.name == 'vectorBackbone':
             dnaOfBaseVector = DnaComponent.objects.filter(componentSubType__subTypeOf__name='Vector Backbone')        
 
             kwargs['queryset'] = dnaOfBaseVector
 
         if db_field.name == 'insert':
-            #dnaOfInsert = DnaComponent.objects.filter(componentSubType__name='Insert')
             dnaOfInsert = DnaComponent.objects.filter(componentSubType__subTypeOf__name='Insert')
             kwargs['queryset'] = dnaOfInsert
 
         return super(DnaComponentAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
-        
-            
         if db_field.name == "componentType":
             kwargs['queryset'] = DnaComponentType.objects.filter(subTypeOf=None)
 
@@ -705,7 +662,13 @@ class DnaComponentAdmin(ComponentAdmin):
         return super(DnaComponentAdmin, self).formfield_for_manytomany(
             db_field, request, **kwargs)    
 
+    def add_view(self, request, form_url="", extra_context=None):
+        data = request.GET.copy()
+        data['createdBy'] = request.user
+        request.GET = data
+        return super(DnaComponentAdmin, self).add_view(request, form_url="", extra_context=extra_context)
 
+    
 class categorieFilterForCellType(SimpleListFilter):
     title = 'Categorie'
     parameter_name = 'categorie'
@@ -734,9 +697,7 @@ class CellTypeAdmin(ComponentAdmin):
 
     list_display = ('name', 'categorie','categorieSubType',)
     list_filter = (categorieFilterForCellType,)
-    
     ordering = ('subTypeOf',)
-
     search_fields = ('name', 'subTypeOf')
 
     def categorie(self, obj):
@@ -779,12 +740,6 @@ class CellAdmin(ComponentAdmin):
     
     list_display = ( 'name', 'createdBy', 'shorten_description','status')
     
-    
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == 'createdBy':
-            kwargs['queryset'] = User.objects.filter(username=request.user.username)
-        return super(ChassisAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
-    
     def shorten_description(self,obj):
             if not obj.comment:
                 return u''
@@ -793,21 +748,18 @@ class CellAdmin(ComponentAdmin):
             return unicode(obj.comment[:38] + '..')
     shorten_description.short_description = 'Comment'     
 
-    #def get_readonly_fields(self, request, obj=None):
-        #if obj is not None:
-            #return self.readonly_fields + ('createdBy',)
-        #return self.readonly_fields
-
     def make_csv(self, request, queryset):
         return importexport.generate_csv(self, request, queryset, 
                                          self.exportFields, 'Cell')
-    make_csv.short_description = 'Export as CSV'    
+    make_csv.short_description = 'Export as CSV'  
+        
+    def add_view(self, request, form_url="", extra_context=None):
+        data = request.GET.copy()
+        data['createdBy'] = request.user
+        request.GET = data
+        return super(CellAdmin, self).add_view(request, form_url="", extra_context=extra_context)
     
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == 'createdBy':
-            kwargs['queryset'] = User.objects.filter(username=request.user.username)
-        return super(CellAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
-    
+   
     
 class CellSampleAdmin(admin.ModelAdmin):
     form = CellSampleForm     
@@ -855,6 +807,13 @@ class CellSampleAdmin(admin.ModelAdmin):
                       'container__rack__currentLocation__location__room')
 
     list_filter = ComponentAdmin.list_filter.__add__((categorieFilterForPlasmid,))
+    
+    def add_view(self, request, form_url="", extra_context=None):
+        data = request.GET.copy()
+        data['createdBy'] = request.user
+        request.GET = data
+        return super(CellSampleAdmin, self).add_view(request, form_url="", extra_context=extra_context)
+    
 
 ## Register regular admin panels
 admin.site.register(Container, ContainerAdmin)

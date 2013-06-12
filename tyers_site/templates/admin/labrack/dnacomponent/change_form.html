@@ -114,9 +114,7 @@
                 }
         }
         return 0;
-
     }
-    
     function listTypeOnChange(e){
 
     listContent = document.getElementById("id_componentType");
@@ -127,12 +125,11 @@
     }
     function initIdDiv()
     {
-    //blockAllTextFieldFromEditing();
         try{
             var scr = "";
             var divs = document.getElementsByTagName("div");
                 for(var i = 0; i < divs.length; i++){
-                    //do something to each div like
+                    //do assigning an id name to be retrieved later on to each div like
                     if (divs[i].className=='field-box field-insert') {
                         divs[i].id = 'id_field_insert';
                         } else {
@@ -194,12 +191,10 @@
                     var mylistbox = document.getElementById(elementID);
                     for (var key in p) {
                                 if (p.hasOwnProperty(key)) {
-                                //mylistbox.options[key] = new Option(p[key].fields.name, p[key].pk);
                                 var selectobject=document.getElementById(elementID)
                                     for (var i=0; i<selectobject.length; i++){
                                         if (selectobject.options[i].value==p[key].pk){
                                         selectobject.options[i].selected = true;
-                                        //alert('p[key].pk'+p[key].pk);
                                         }
                                 }
                             }
@@ -224,12 +219,10 @@
                         type: 'GET',
                         url: "/getTypeDnaInfo/"+selectedType+"/",
                         success: function(data){
-                        //alert(data);
                             p = jQuery.parseJSON(data);
                             var mylistbox = document.getElementById(elementID);
                             for (var key in p) {
                                         if (p.hasOwnProperty(key)) {
-                                        //alert(''+p[key].fields.name+ p[key].pk);
                                         mylistbox.options[key] = new Option(p[key].fields.name, p[key].pk);
                                     }
                                 }                            
