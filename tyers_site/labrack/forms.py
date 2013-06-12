@@ -1,7 +1,6 @@
 from django import forms
 from labrack.models import DnaComponent, DnaComponentType, Attachement, \
      PlasmidSample, Cell,CellType
-from labrack import migrationToronto
 
 
 
