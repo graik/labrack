@@ -320,23 +320,9 @@ class Cell(Component):
                                                verbose_name='Type',
                                                related_name='Type',  blank=True, null=True) 
     
-    #MATING_TYPE_CHOICES = (('a','a'),('alpha','alpha'),('a/alpha','a/alpha'))
-    #matingType = models.CharField('matingType',max_length=200, null=True, blank=True, choices=MATING_TYPE_CHOICES)
-        
-    #background = models.ForeignKey(Background,
-                            #verbose_name='Background',
-                            #null=True, blank=True)
-    
-    #GENO_CHOICES = (('ade2','ade2'),('his3','his3'),('leu2','leu2'),('lys2','lys2'),('trp1','trp1'),('ura3','ura3'),('gal','gal'),('kan','kan'),('nat','nat'))
-    #genoList = models.CharField('genoList',max_length=200, null=True, blank=True, choices=GENO_CHOICES)
-    
-   
-    
-    #relevantGeno = models.TextField('RelevantGeno', null=True,blank=True)
-    
-    #strainConstruction = models.TextField('strainConstruction', null=True,blank=True)    
     def __unicode__(self):
-        return self.name
+         
+        return self.displayId +'-'+self.name
     class Meta:
         app_label = 'labrack' 
 
