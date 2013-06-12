@@ -1,4 +1,0 @@
-{{ object.displayId }}
-{{ object.name }}
-{{ object.registration_date }}
-{{ object.circular }}

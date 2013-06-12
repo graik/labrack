@@ -5,8 +5,6 @@ from django.contrib import admin
 from labrack.views import getTypeDnaInfo,reviewdna,getParentTypeDnaInfo \
      ,getParentTypeCellInfo, getTypeCellInfo, reviewplasmid
 from django.contrib.auth.decorators import login_required
-from django.contrib import databrowse
-from labrack.search.search_view import basic_search
 import settings
 
 
@@ -23,7 +21,6 @@ urlpatterns = patterns('',
     url(r'^getTypeCellInfo/(?P<maintype>.*)/$',getTypeCellInfo,name='getTypeCellInfo'),
     url(r'^getParentTypeDnaInfo/(?P<subtype>.*)/$',getParentTypeDnaInfo,name='getParentTypeDnaInfo'),
     url(r'^getParentTypeCellInfo/(?P<subtype>.*)/$',getParentTypeCellInfo,name='getParentTypeCellInfo'),
-    url(r'^search/', basic_search,name='basic_search'),
     url(r'^reviewdna/(?P<displayId>.*)/$',reviewdna,name='reviewdna'),
     url(r'^reviewplasmid/(?P<id>.*)/$',reviewplasmid,name='reviewplasmid'),
     url(r'^media/(?P<path>.*)$', 'django.views.static.serve',{'document_root': settings.MEDIA_ROOT})    
